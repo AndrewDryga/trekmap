@@ -1,41 +1,62 @@
 defmodule Trekmap do
   def scan do
-    session =
-      Trekmap.Session.start_session()
-      |> Trekmap.Session.start_session_instance()
+    {:ok, session} = Trekmap.SessionManager.fetch_session()
 
-    file = File.stream!("bases.csv")
+    bases_file = File.stream!("bases.csv")
+    miners_file = File.stream!("miners.csv")
 
-    Trekmap.System.list_systems(session)
-    |> Task.async_stream(
-      fn system ->
-        IO.puts("Scanning #{system.name} (#{system.id}) ##{inspect(system.trans_id)}..")
+    {bases, miners} =
+      Trekmap.System.list_systems(session)
+      |> Task.async_stream(
+        fn system ->
+          IO.puts("Scanning #{system.name} (#{system.id}) ##{inspect(system.trans_id)}..")
 
-        Trekmap.System.list_bases(system, session)
-        |> Trekmap.Base.enrich_bases_information(session)
-      end,
-      max_concurrency: 20,
-      timeout: 120_000
-    )
-    |> Stream.flat_map(fn {:ok, bases} ->
-      Enum.map(bases, fn base ->
-        [
-          base.alliance_tag,
-          base.name,
-          base.level,
-          base.parsteel,
-          base.thritanium,
-          base.dlithium,
-          base.system_name,
-          base.system_id,
-          base.system_tid,
-          base.planet_name,
-          base.shield_expires_at
-        ]
+          {bases, miners} = Trekmap.System.list_bases_and_miners(system, session)
+          bases = Trekmap.Base.enrich_bases_information(bases, session)
+          miners = Trekmap.Ship.enrich_ships_information(miners, session)
+
+          {bases, miners}
+        end,
+        max_concurrency: 30,
+        timeout: 120_000
+      )
+      |> Enum.reduce({[], []}, fn {:ok, {bases, miners}}, {bases_acc, miners_acc} ->
+        {bases ++ bases_acc, miners ++ miners_acc}
       end)
+
+    bases
+    |> Stream.map(fn base ->
+      [
+        base.alliance_tag,
+        base.name,
+        base.level,
+        base.parsteel,
+        base.thritanium,
+        base.dlithium,
+        base.system_name,
+        base.system_id,
+        base.system_tid,
+        base.planet_name,
+        base.shield_expires_at
+      ]
     end)
     |> NimbleCSV.RFC4180.dump_to_stream()
-    |> Stream.into(file)
+    |> Stream.into(bases_file)
+    |> Stream.run()
+
+    miners
+    |> Stream.map(fn miner ->
+      [
+        miner.alliance_tag,
+        miner.name,
+        miner.level,
+        miner.system_name,
+        miner.system_id,
+        miner.system_tid
+      ]
+    end)
+    |> NimbleCSV.RFC4180.dump_to_stream()
+    |> Stream.into(miners_file)
     |> Stream.run()
   end
 
@@ -51,37 +72,16 @@ defmodule Trekmap do
     ]
   end
 
-  def protobuf_to_json(body) do
-    body
-    |> String.replace(~r/^[^{]*/, "")
-    |> String.replace(~r/}\*.*$/, "}")
-    |> case do
-      "" ->
-        %{}
+  def get_protobuf_response(binary, struct \\ Trekmap.APIClient.JsonResponse) do
+    case struct.decode(binary) do
+      %{response: response} = map when is_map(response) ->
+        {:ok, map}
 
-      binary ->
-        case Jason.decode(binary) do
-          {:ok, map} ->
-            map
+      %{error: error} when not is_nil(error) ->
+        {:error, error}
 
-          _other ->
-            IO.warn("failed to decode: #{inspect(binary)}")
-            %{}
-        end
+      %{error: nil, response: nil} ->
+        :ok
     end
-  end
-
-  def raw_binary_to_string(raw) do
-    codepoints = String.codepoints(raw)
-
-    Enum.reduce(codepoints, fn w, result ->
-      cond do
-        String.valid?(w) ->
-          result <> w
-
-        true ->
-          result
-      end
-    end)
   end
 end

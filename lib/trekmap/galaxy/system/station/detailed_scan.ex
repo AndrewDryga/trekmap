@@ -1,4 +1,4 @@
-defmodule Trekmap.Base.DetailedScan do
+defmodule Trekmap.Galaxy.System.Station.DetailedScan do
   use Protobuf, syntax: :proto3
 
   defmodule Result do
@@ -22,22 +22,26 @@ defmodule Trekmap.Base.DetailedScan do
         defstruct [:resources]
 
         field(:resources, 4,
-          type: Trekmap.Base.DetailedScan.Result.Information.Properties.Resources,
+          type:
+            Trekmap.Galaxy.System.Station.DetailedScan.Result.Information.Properties.Resources,
           repeated: true
         )
       end
 
       defstruct [:properties]
 
-      field(:properties, 1, type: Trekmap.Base.DetailedScan.Result.Information.Properties)
+      field(:properties, 1,
+        type: Trekmap.Galaxy.System.Station.DetailedScan.Result.Information.Properties
+      )
     end
 
     defstruct [:information]
 
-    field(:information, 2, type: Trekmap.Base.DetailedScan.Result.Information)
+    field(:information, 2, type: Trekmap.Galaxy.System.Station.DetailedScan.Result.Information)
   end
 
   defstruct [:result]
 
-  field(:result, 1, type: Trekmap.Base.DetailedScan.Result)
+  field(:result, 1, type: Trekmap.Galaxy.System.Station.DetailedScan.Result)
+  field(:error, 6, type: Trekmap.APIClient.JsonResponse.Payload, optional: true)
 end
