@@ -1,4 +1,4 @@
-defmodule Trekmap.Guardian do
+defmodule Trekmap.Bots.Guardian do
   use GenServer
   require Logger
 

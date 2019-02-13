@@ -10,21 +10,24 @@ defmodule Trekmap.Galaxy do
 
     with {:ok, %{response: %{"galaxy" => galaxy}}} <-
            APIClient.protobuf_request(:get, @galaxy_nodes_endpoint, additional_headers, "") do
-      Enum.flat_map(galaxy, fn {_system_bid, system} ->
-        %{
-          "tree_root" => %{
-            "id" => id,
-            "attributes" => %{"name" => name, "trans_id" => transport_id},
-            "is_active" => is_active
-          }
-        } = system
+      systems =
+        Enum.flat_map(galaxy, fn {_system_bid, system} ->
+          %{
+            "tree_root" => %{
+              "id" => id,
+              "attributes" => %{"name" => name, "trans_id" => transport_id},
+              "is_active" => is_active
+            }
+          } = system
 
-        if is_active do
-          [System.build(id, transport_id, name)]
-        else
-          []
-        end
-      end)
+          if is_active do
+            [System.build(id, transport_id, name)]
+          else
+            []
+          end
+        end)
+
+      {:ok, systems}
     end
   end
 

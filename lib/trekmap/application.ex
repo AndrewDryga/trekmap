@@ -4,7 +4,8 @@ defmodule Trekmap.Application do
   def start(_type, _args) do
     children = [
       Trekmap.SessionManager,
-      Trekmap.Guardian
+      Trekmap.Bots.Guardian,
+      Trekmap.Bots.GalaxyScanner
     ]
 
     opts = [strategy: :one_for_all, name: Trekmap.Application.Supervisor]
