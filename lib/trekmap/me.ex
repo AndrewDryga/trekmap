@@ -109,6 +109,10 @@ defmodule Trekmap.Me do
              :ok <- finish_fleet_repair(repair_job, session) do
           {home_fleet, _deployed_fleets, _defense_stations} = list_ships_and_defences(session)
           repair_all_fleet(home_fleet, session)
+        else
+          {:error, :not_found} ->
+            {home_fleet, _deployed_fleets, _defense_stations} = list_ships_and_defences(session)
+            repair_all_fleet(home_fleet, session)
         end
     end
   end
@@ -136,6 +140,10 @@ defmodule Trekmap.Me do
       :ok ->
         fetch_ship_repair_job(session)
     end
+  end
+
+  def finish_fleet_repair({:error, :not_found}, _session) do
+    :ok
   end
 
   def finish_fleet_repair(%{id: id, remaining_duration: duration}, session) do

@@ -1,7 +1,7 @@
 defmodule Trekmap.Galaxy.System do
-  alias Trekmap.{APIClient, Session, Player}
+  alias Trekmap.{APIClient, Session}
   alias Trekmap.Galaxy
-  alias Trekmap.Galaxy.{Spacecraft, Alliances, Alliances.Alliance}
+  alias Trekmap.Galaxy.{Spacecraft, Player, Alliances, Alliances.Alliance}
   alias Trekmap.Galaxy.System.{Planet, Station}
 
   @system_nodes_endpoint "https://live-193-web.startrek.digitgaming.com/game_world/system/dynamic_nodes"
@@ -32,9 +32,9 @@ defmodule Trekmap.Galaxy.System do
          miners = build_miners_list(system, mining_slots),
          {:ok, stations} <- enrich_stations_with_planet_names(stations),
          {:ok, {stations, miners}} <- enrich_with_scan_info({stations, miners}, session),
-         {:ok, {stations, miners}} <- enrich_with_alliance_info({stations, miners}, session) do
-      {:ok, stations} = enrich_with_resources(stations, session)
-      {stations, miners}
+         {:ok, {stations, miners}} <- enrich_with_alliance_info({stations, miners}, session),
+         {:ok, stations} <- enrich_with_resources(stations, session) do
+      {:ok, {stations, miners}}
     else
       {:error, %{body: "deployment", type: 1}} ->
         # System is not visited
@@ -46,12 +46,13 @@ defmodule Trekmap.Galaxy.System do
   end
 
   defp build_stations_list(system, player_container) do
-    Enum.flat_map(player_container, fn {planet_id, player_ids} ->
-      player_ids
+    Enum.flat_map(player_container, fn {planet_id, station_ids} ->
+      station_ids
       |> Enum.reject(&(&1 == "None"))
-      |> Enum.map(fn player_id ->
+      |> Enum.map(fn station_id ->
         %Station{
-          player: %Player{id: player_id},
+          id: station_id,
+          player: nil,
           system: system,
           planet: %Planet{id: planet_id}
         }
@@ -78,7 +79,9 @@ defmodule Trekmap.Galaxy.System do
   end
 
   defp enrich_with_scan_info({stations, miners}, session) do
-    target_ids = (stations ++ miners) |> Enum.map(& &1.player.id) |> Enum.uniq()
+    station_ids = stations |> Enum.map(& &1.id)
+    miner_ids = miners |> Enum.map(& &1.player.id)
+    target_ids = Enum.uniq(station_ids ++ miner_ids)
 
     with {:ok, scan_results} <- Galaxy.scan_targets(target_ids, session) do
       stations = apply_scan_info_to_stations(stations, scan_results)
@@ -94,9 +97,10 @@ defmodule Trekmap.Galaxy.System do
           "owner_alliance_id" => alliance_id,
           "owner_level" => level,
           "owner_name" => name,
+          "owner_user_id" => player_id,
           "player_shield" => shield
         }
-      } = Map.fetch!(scan_results, station.player.id)
+      } = Map.fetch!(scan_results, station.id)
 
       shield_expires_at =
         case shield do
@@ -110,15 +114,15 @@ defmodule Trekmap.Galaxy.System do
           _other -> nil
         end
 
-      alliance = if alliance_id, do: %Alliance{id: alliance_id}
+      alliance = if not is_nil(alliance_id) and alliance_id != 0, do: %Alliance{id: alliance_id}
 
       %{
         station
-        | player: %{
-            station.player
-            | alliance: alliance,
-              level: level,
-              name: name
+        | player: %Player{
+            id: player_id,
+            alliance: alliance,
+            level: level,
+            name: name
           },
           shield_expires_at: shield_expires_at,
           shield_triggered_at: shield_triggered_at
@@ -184,12 +188,6 @@ defmodule Trekmap.Galaxy.System do
       |> Enum.map(& &1.player.alliance.id)
       |> Enum.uniq()
 
-    payload =
-      Jason.encode!(%{
-        "alliance_id" => 0,
-        "alliance_ids" => alliance_ids
-      })
-
     with {:ok, alliances} <- Alliances.list_alliances_by_ids(alliance_ids, session) do
       stations = apply_alliance_info(stations, alliances)
       miners = apply_alliance_info(miners, alliances)
@@ -200,7 +198,7 @@ defmodule Trekmap.Galaxy.System do
   defp apply_alliance_info(stations_or_miners, alliances) do
     Enum.map(stations_or_miners, fn station_or_miner ->
       if alliance = station_or_miner.player.alliance do
-        alliance = Map.get(alliances, to_string(alliance.id), alliance)
+        alliance = Map.get(alliances, alliance.id, alliance)
         %{station_or_miner | player: %{station_or_miner.player | alliance: alliance}}
       else
         station_or_miner

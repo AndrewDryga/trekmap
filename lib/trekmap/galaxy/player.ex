@@ -1,4 +1,4 @@
-defmodule Trekmap.Player do
+defmodule Trekmap.Galaxy.Player do
   defstruct id: nil,
             level: nil,
             name: nil,

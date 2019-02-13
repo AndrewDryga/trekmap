@@ -1,7 +1,7 @@
 defmodule Trekmap.Galaxy.System.Station.DetailedScan do
   use Protobuf, syntax: :proto3
 
-  defmodule Result do
+  defmodule Response do
     use Protobuf, syntax: :proto3
 
     defmodule Information do
@@ -23,7 +23,7 @@ defmodule Trekmap.Galaxy.System.Station.DetailedScan do
 
         field(:resources, 4,
           type:
-            Trekmap.Galaxy.System.Station.DetailedScan.Result.Information.Properties.Resources,
+            Trekmap.Galaxy.System.Station.DetailedScan.Response.Information.Properties.Resources,
           repeated: true
         )
       end
@@ -31,17 +31,17 @@ defmodule Trekmap.Galaxy.System.Station.DetailedScan do
       defstruct [:properties]
 
       field(:properties, 1,
-        type: Trekmap.Galaxy.System.Station.DetailedScan.Result.Information.Properties
+        type: Trekmap.Galaxy.System.Station.DetailedScan.Response.Information.Properties
       )
     end
 
     defstruct [:information]
 
-    field(:information, 2, type: Trekmap.Galaxy.System.Station.DetailedScan.Result.Information)
+    field(:information, 2, type: Trekmap.Galaxy.System.Station.DetailedScan.Response.Information)
   end
 
-  defstruct [:result]
+  defstruct [:response]
 
-  field(:result, 1, type: Trekmap.Galaxy.System.Station.DetailedScan.Result)
+  field(:response, 1, type: Trekmap.Galaxy.System.Station.DetailedScan.Response)
   field(:error, 6, type: Trekmap.APIClient.JsonResponse.Payload, optional: true)
 end

@@ -50,21 +50,22 @@ defmodule Trekmap.Job.Speedup do
   end
 
   def boost_job(job_id, @free_station_repair_token, amount, session) do
-    Logger.info("Using free repair token to boost job #{job_id}")
+    amount = trunc(amount)
+    Logger.info("Using Thritanium repair token to boost station repair #{job_id}, #{amount}")
 
     additional_headers = Session.session_headers(session)
 
     body =
       Jason.encode!(%{
         "job_id" => job_id,
-        "expected_cost" => [%{"Key" => @free_station_repair_token, "Value" => amount}]
+        "expected_cost" => [%{"Key" => @free_station_repair_token_id, "Value" => amount}]
       })
 
     APIClient.protobuf_request(:post, @free_speedup_job_endpoint, additional_headers, body)
   end
 
   def boost_job(job_id, @free_ship_repair_token, session) do
-    Logger.info("Using free repair token to boost job #{job_id}")
+    Logger.info("Using free repair token to boost ship repair #{job_id}")
 
     additional_headers = Session.session_headers(session)
 
@@ -79,6 +80,7 @@ defmodule Trekmap.Job.Speedup do
   end
 
   def boost_job(job_id, {duration, _cost, id} = token, session) do
+    Logger.info("Using custom repair token to boost ship repair #{job_id}, #{inspect(token)}")
     additional_headers = Session.session_headers(session)
 
     body =
@@ -90,7 +92,7 @@ defmodule Trekmap.Job.Speedup do
 
     with :ok <-
            APIClient.protobuf_request(:post, @paid_speedup_job_endpoint, additional_headers, body) do
-      Logger.info("Using paid repair token for #{duration} seconds to boost job #{job_id}")
+      Logger.info("Using paid repair token for #{duration} seconds to boost ship job #{job_id}")
       :ok
     else
       {:error, %{body: "resources", type: 2}} ->
