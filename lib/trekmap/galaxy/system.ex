@@ -132,13 +132,15 @@ defmodule Trekmap.Galaxy.System do
 
       shield_expires_at =
         case shield do
+          %{"expiry_time" => "0001-01-01T00:00:00.000Z"} -> nil
           %{"expiry_time" => shield_expires_at} -> shield_expires_at
           _other -> nil
         end
 
       shield_triggered_at =
         case shield do
-          %{"expiry_time" => shield_triggered_at} -> shield_triggered_at
+          %{"triggered_on" => "0001-01-01T00:00:00.000Z"} -> nil
+          %{"triggered_on" => shield_triggered_at} -> shield_triggered_at
           _other -> nil
         end
 

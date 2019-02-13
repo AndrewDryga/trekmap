@@ -52,8 +52,8 @@ defmodule Trekmap.Bots.GalaxyScanner do
             :error
         end
       end,
-      max_concurrency: 10,
-      timeout: 120_000
+      max_concurrency: 5,
+      timeout: :infinity
     )
     |> Enum.to_list()
   end
