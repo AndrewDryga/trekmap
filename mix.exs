@@ -27,7 +27,8 @@ defmodule Trekmap.MixProject do
       {:jason, "~> 1.1"},
       {:protobuf, "~> 0.5.4"},
       {:google_protos, "~> 0.1"},
-      {:nimble_csv, "~> 0.5.0"}
+      {:nimble_csv, "~> 0.5.0"},
+      {:distillery, "~> 2.0"}
     ]
   end
 end
