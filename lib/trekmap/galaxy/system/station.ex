@@ -62,6 +62,7 @@ defmodule Trekmap.Galaxy.System.Station do
     }
   end
 
+  defp expiry_time("0001-01-01T00:00:00"), do: nil
   defp expiry_time("0001-01-01T00:00:00.000Z"), do: nil
   defp expiry_time(other), do: other
 
