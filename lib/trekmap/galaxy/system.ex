@@ -65,8 +65,7 @@ defmodule Trekmap.Galaxy.System do
       {:ok, {stations, miners}}
     else
       {:error, %{body: "deployment", type: 1}} ->
-        # System is not visited
-        {:ok, {[], []}}
+        {:error, :system_not_visited}
 
       {:error, :session_expired} ->
         {:error, :session_expired}

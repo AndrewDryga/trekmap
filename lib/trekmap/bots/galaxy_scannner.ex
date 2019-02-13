@@ -13,9 +13,26 @@ defmodule Trekmap.Bots.GalaxyScanner do
   end
 
   def handle_info(:timeout, %{session: session, systems: nil} = state) do
-    Logger.info("[Galaxy Scanner] Scanning Galaxy")
+    Logger.info("[Galaxy Scanner] Scanning Galaxy for first time")
     {:ok, systems} = Trekmap.Galaxy.list_active_systems(session)
-    Process.send_after(self(), :timeout, 5_000)
+
+    {:ok, systems} =
+      Enum.reduce_while(systems, {:ok, []}, fn system, {status, acc} ->
+        with {:ok, system} <- Trekmap.AirDB.create_or_update(system),
+             {:ok, _list} <- Trekmap.Galaxy.System.list_stations_and_miners(system, session) do
+          {:cont, {status, [system] ++ acc}}
+        else
+          {:error, :system_not_visited} ->
+            {:cont, {status, acc}}
+
+          error ->
+            {:halt, error}
+        end
+      end)
+
+    Logger.info("[Galaxy Scanner] #{length(systems)} available for scanning")
+
+    Process.send_after(self(), :timeout, 1_000)
     {:noreply, %{state | systems: systems}}
   end
 
@@ -33,8 +50,7 @@ defmodule Trekmap.Bots.GalaxyScanner do
       fn system ->
         # IO.puts("Scanning #{system.name}")
 
-        with {:ok, system} <- Trekmap.AirDB.create_or_update(system),
-             {:ok, {stations, miners}} <-
+        with {:ok, {stations, miners}} <-
                Trekmap.Galaxy.System.list_stations_and_miners(system, session),
              {:ok, stations} <- sync_stations(system, stations),
              {:ok, miners} <- sync_miners(system, miners) do
@@ -45,6 +61,9 @@ defmodule Trekmap.Bots.GalaxyScanner do
 
           {stations, miners}
         else
+          {:error, :system_not_visited} ->
+            {[], []}
+
           other ->
             Logger.error(
               "Error scanning the System #{system.name}, reason: #{inspect(other, pretty: true)}"
