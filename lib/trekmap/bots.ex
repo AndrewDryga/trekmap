@@ -7,8 +7,8 @@ defmodule Trekmap.Bots do
   end
 
   def pause_bots_for(timeout) do
-    timeout = :timer.seconds(timeout)
     Logger.warn("Stopping bots for #{timeout} seconds")
+    timeout = :timer.seconds(timeout)
 
     with :ok <- GenServer.call(__MODULE__, {:start_in, timeout}) do
       Trekmap.Bots.Supervisor.stop_bots()
