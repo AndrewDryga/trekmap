@@ -43,9 +43,7 @@ defmodule Trekmap.Galaxy.System.Station do
     %{
       "ID" => id,
       "Player" => [player_external_id],
-      "Planet" => [planet_external_id],
-      "Shield Enabled At" => shield_triggered_at,
-      "Shield Ends At" => shield_expires_at
+      "Planet" => [planet_external_id]
     } = fields
 
     %__MODULE__{
@@ -59,8 +57,8 @@ defmodule Trekmap.Galaxy.System.Station do
         dlithium: Map.get(fields, "Dlithium")
       },
       system: :unfetched,
-      shield_triggered_at: shield_triggered_at,
-      shield_expires_at: shield_expires_at
+      shield_triggered_at: Map.get(fields, "Shield Enabled At"),
+      shield_expires_at: Map.get(fields, "Shield Ends At")
     }
   end
 
