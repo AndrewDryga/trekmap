@@ -1,4 +1,4 @@
-defmodule Trekmap.SessionManager do
+defmodule Trekmap.Bots.SessionManager do
   use GenServer
   require Logger
 

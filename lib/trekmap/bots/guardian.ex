@@ -8,7 +8,7 @@ defmodule Trekmap.Bots.Guardian do
 
   def init([]) do
     Logger.info("[Guardian] I'm on watch")
-    {:ok, session} = Trekmap.SessionManager.fetch_session()
+    {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
     {:ok, %{session: session}, 0}
   end
 

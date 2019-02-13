@@ -3,14 +3,17 @@ defmodule Trekmap.Application do
 
   def start(_type, _args) do
     children = [
-      Trekmap.SessionManager,
-      Trekmap.Bots.Guardian,
-      Trekmap.Bots.GalaxyScanner,
+      Trekmap.Bots.Supervisor,
+      Trekmap.Bots,
       Plug.Cowboy.child_spec(scheme: :http, plug: Trekmap.Router, options: [port: port()])
     ]
 
     opts = [strategy: :one_for_all, name: Trekmap.Application.Supervisor]
-    Supervisor.start_link(children, opts)
+    {:ok, pid} = Supervisor.start_link(children, opts)
+
+    {:ok, _bots_pid} = Trekmap.Bots.Supervisor.start_bots()
+
+    {:ok, pid}
   end
 
   defp port do

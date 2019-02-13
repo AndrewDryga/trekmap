@@ -8,7 +8,7 @@ defmodule Trekmap.Bots.GalaxyScanner do
 
   def init([]) do
     Logger.info("[Galaxy Scanner] Looking for a good hunt")
-    {:ok, session} = Trekmap.SessionManager.fetch_session()
+    {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
     {:ok, %{session: session, systems: nil}, 0}
   end
 
