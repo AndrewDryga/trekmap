@@ -28,6 +28,7 @@ defmodule Trekmap.Bots.GalaxyScanner do
 
   def scan_galaxy(session, systems) do
     systems
+    |> Enum.shuffle()
     |> Task.async_stream(
       fn system ->
         # IO.puts("Scanning #{system.name}")
@@ -52,7 +53,7 @@ defmodule Trekmap.Bots.GalaxyScanner do
             :error
         end
       end,
-      max_concurrency: 5,
+      max_concurrency: 6,
       timeout: :infinity
     )
     |> Enum.to_list()
