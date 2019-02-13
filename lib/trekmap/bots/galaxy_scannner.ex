@@ -18,19 +18,15 @@ defmodule Trekmap.Bots.GalaxyScanner do
 
     {:ok, systems} =
       Enum.reduce_while(systems, {:ok, []}, fn system, {status, acc} ->
-        with {:ok, system} <- Trekmap.AirDB.create_or_update(system),
-             {:ok, _list} <- Trekmap.Galaxy.System.list_stations_and_miners(system, session) do
+        with {:ok, system} <- Trekmap.AirDB.create_or_update(system) do
           {:cont, {status, [system] ++ acc}}
         else
-          {:error, :system_not_visited} ->
-            {:cont, {status, acc}}
-
           error ->
             {:halt, error}
         end
       end)
 
-    Logger.info("[Galaxy Scanner] #{length(systems)} available for scanning")
+    Logger.info("[Galaxy Scanner] #{length(systems)} systems found")
 
     Process.send_after(self(), :timeout, 1_000)
     {:noreply, %{state | systems: systems}}

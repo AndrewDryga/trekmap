@@ -16,11 +16,11 @@ defmodule Trekmap.Galaxy.System.Planet do
   end
 
   def record_to_struct(%{"id" => external_id, "fields" => fields}) do
-    %{"ID" => id, "Name" => name, "System" => [system_external_id]} = fields
+    %{"ID" => id, "System" => [system_external_id]} = fields
 
     %__MODULE__{
       id: id,
-      name: name,
+      name: Map.get(fields, "Name", "N/A"),
       external_id: external_id,
       system_external_id: system_external_id
     }
