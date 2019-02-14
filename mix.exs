@@ -30,7 +30,8 @@ defmodule Trekmap.MixProject do
       {:nimble_csv, "~> 0.5.0"},
       {:distillery, "~> 2.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:cachex, "~> 3.1"}
+      {:cachex, "~> 3.1"},
+      {:basic_auth, "~> 2.2"}
     ]
   end
 end

@@ -3,6 +3,9 @@ defmodule Trekmap.Router do
 
   plug(:fetch_query_params)
   plug(Plug.Logger)
+
+  plug(BasicAuth, use_config: {:trekmap, :auth})
+
   plug(:match)
   plug(:dispatch)
 

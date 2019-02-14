@@ -10,3 +10,10 @@ config :trekmap, Trekmap.AirDB,
   api_key: "keypqweij1k3jaI0m",
   endpoint: "https://api.airtable.com/v0",
   base_id: "appoB3R8Hs39k5GHd"
+
+config :trekmap,
+  auth: [
+    username: "andrew",
+    password: "iscool",
+    realm: "Admin Area"
+  ]
