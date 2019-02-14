@@ -5,7 +5,8 @@ defmodule Trekmap.Application do
     children = [
       Trekmap.Bots.Supervisor,
       Trekmap.Bots,
-      Plug.Cowboy.child_spec(scheme: :http, plug: Trekmap.Router, options: [port: port()])
+      Plug.Cowboy.child_spec(scheme: :http, plug: Trekmap.Router, options: [port: port()]),
+      {Cachex, :airdb_cache}
     ]
 
     opts = [strategy: :one_for_all, name: Trekmap.Application.Supervisor]

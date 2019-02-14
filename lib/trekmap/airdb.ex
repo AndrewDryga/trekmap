@@ -5,6 +5,8 @@ defmodule Trekmap.AirDB do
   @callback record_to_struct(map()) :: map()
   @callback struct_to_record(map()) :: map()
 
+  @cache_opts [ttl: :timer.minutes(5)]
+
   def list(struct, query_params \\ %{}) when is_atom(struct) do
     with {:ok, %{"records" => records}} <- get(struct.table_name(), query_params) do
       {:ok, Enum.map(records, &struct.record_to_struct/1)}
@@ -19,11 +21,15 @@ defmodule Trekmap.AirDB do
 
     with {:ok, struct} <- fetch_by_id(struct_module, struct.id),
          {:ok, record} <- update(table_name, struct.external_id, attrs) do
-      {:ok, struct_module.record_to_struct(record)}
+      struct = struct_module.record_to_struct(record)
+      {:ok, _ttl} = Cachex.put(:airdb_cache, {struct_module, struct.id}, struct, @cache_opts)
+      {:ok, struct}
     else
       {:error, :not_found} ->
         with {:ok, record} <- create(table_name, attrs) do
-          {:ok, struct_module.record_to_struct(record)}
+          struct = struct_module.record_to_struct(record)
+          {:ok, _ttl} = Cachex.put(:airdb_cache, {struct_module, struct.id}, struct, @cache_opts)
+          {:ok, struct}
         end
 
       other ->
@@ -32,33 +38,31 @@ defmodule Trekmap.AirDB do
   end
 
   def fetch_by_external_id(struct, id) when is_atom(struct) do
-    query_params = %{"maxRecords" => 1, "filterByFormula" => "{ID} = '#{id}'"}
     table_name = "#{struct.table_name()}/#{id}"
 
-    with {:ok, record} <- get(table_name, query_params) do
+    with {:ok, record} <- get(table_name) do
       {:ok, struct.record_to_struct(record)}
-    end
-
-    with {:ok, [struct]} <- list(struct, query_params) do
-      {:ok, struct}
-    else
-      {:ok, []} -> {:error, :not_found}
-      other -> other
     end
   end
 
   def fetch_by_id(struct, id) when is_atom(struct) do
-    query_params = %{"maxRecords" => 1, "filterByFormula" => "{ID} = '#{id}'"}
-
-    with {:ok, [struct]} <- list(struct, query_params) do
+    with {:ok, %{} = struct} <- Cachex.get(:airdb_cache, {struct, id}) do
       {:ok, struct}
     else
-      {:ok, []} -> {:error, :not_found}
-      other -> other
+      _other ->
+        query_params = %{"maxRecords" => 1, "filterByFormula" => "{ID} = '#{id}'"}
+
+        with {:ok, [struct]} <- list(struct, query_params) do
+          {:ok, _ttl} = Cachex.put(:airdb_cache, {struct, id}, struct, @cache_opts)
+          {:ok, struct}
+        else
+          {:ok, []} -> {:error, :not_found}
+          other -> other
+        end
     end
   end
 
-  defp get(table, query_params) do
+  defp get(table, query_params \\ %{}) do
     config = config()
     endpoint = Keyword.fetch!(config, :endpoint)
     base_id = Keyword.fetch!(config, :base_id)

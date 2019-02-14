@@ -29,7 +29,8 @@ defmodule Trekmap.MixProject do
       {:google_protos, "~> 0.1"},
       {:nimble_csv, "~> 0.5.0"},
       {:distillery, "~> 2.0"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:cachex, "~> 3.1"}
     ]
   end
 end
