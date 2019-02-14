@@ -9,6 +9,14 @@ defmodule Trekmap.APIClient do
     with {:ok, 200, _headers, body} <-
            :hackney.request(method, endpoint, headers, body, [:with_body]) do
       {:ok, body}
+    else
+      {:error, :timeout} ->
+        Logger.warn("Request timed out, #{inspect({method, endpoint, body})}. Retrying in 2s")
+        :timer.sleep(2_000)
+        request(method, endpoint, additional_headers, body)
+
+      other ->
+        other
     end
   end
 
