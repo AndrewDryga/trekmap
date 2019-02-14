@@ -107,12 +107,15 @@ defmodule Trekmap.Galaxy.System do
 
   defp enrich_with_scan_info({stations, miners}, session) do
     station_ids = stations |> Enum.map(& &1.id)
-    miner_ids = miners |> Enum.map(& &1.player.id)
-    target_ids = Enum.uniq(station_ids ++ miner_ids)
+    miner_user_ids = miners |> Enum.map(& &1.player.id)
+    target_ids = Enum.uniq(station_ids ++ miner_user_ids)
 
-    with {:ok, scan_results} <- Galaxy.scan_targets(target_ids, session) do
-      stations = apply_scan_info_to_stations(stations, scan_results)
-      miners = apply_scan_info_to_miners(miners, scan_results)
+    miner_ids = miners |> Enum.map(& &1.id) |> Enum.uniq()
+
+    with {:ok, user_scan_results} <- Galaxy.scan_players(target_ids, session),
+         {:ok, spaceships_scan_results} <- Galaxy.scan_spaceships(miner_ids, session) do
+      stations = apply_scan_info_to_stations(stations, user_scan_results)
+      miners = apply_scan_info_to_miners(miners, user_scan_results, spaceships_scan_results)
       {:ok, {stations, miners}}
     end
   end
@@ -163,26 +166,45 @@ defmodule Trekmap.Galaxy.System do
     end)
   end
 
-  defp apply_scan_info_to_miners(stations, scan_results) do
-    Enum.map(stations, fn station ->
+  defp apply_scan_info_to_miners(miners, scan_results, spaceships_scan_results) do
+    Enum.map(miners, fn miner ->
       %{
         "attributes" => %{
           "owner_alliance_id" => alliance_id,
           "owner_level" => level,
           "owner_name" => name
         }
-      } = Map.fetch!(scan_results, station.player.id)
+      } = Map.fetch!(scan_results, miner.player.id)
 
-      alliance = if alliance_id, do: %Alliance{id: alliance_id}
+      spaceships_attributes =
+        Map.get(spaceships_scan_results, to_string(miner.id), %{})["attributes"] || %{}
+
+      alliance =
+        if alliance_id do
+          %Alliance{id: alliance_id}
+        end
+
+      bounty_score =
+        if resources = Map.get(spaceships_attributes, "resources") do
+          Spacecraft.calculate_bounty_score(resources)
+        end
+
+      strength =
+        if strength = Map.get(spaceships_attributes, "strength") do
+          strength + Map.get(spaceships_attributes, "officer_rating", 0) +
+            Map.get(spaceships_attributes, "offense_rating", 0)
+        end
 
       %{
-        station
+        miner
         | player: %{
-            station.player
+            miner.player
             | alliance: alliance,
               level: level,
               name: name
-          }
+          },
+          strength: strength,
+          bounty_score: bounty_score
       }
     end)
   end

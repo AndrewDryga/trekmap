@@ -17,7 +17,16 @@ defmodule Trekmap.Bots.SessionManager do
       Trekmap.Session.start_session()
       |> Trekmap.Session.start_session_instance()
 
-    {:ok, %{session: session}}
+    {home_fleet, _deployed_fleets, _defense_stations} =
+      Trekmap.Me.list_ships_and_defences(session)
+
+    fleet_id =
+      home_fleet
+      |> List.first()
+      |> Map.get("fleet_id")
+      |> String.to_integer()
+
+    {:ok, %{session: %{session | fleet_id: fleet_id}}}
   end
 
   def handle_call(:fetch_session, _rom, %{session: session} = state) do

@@ -4,7 +4,7 @@ defmodule Trekmap.Session do
   @accounts_endpoint "https://nv3-live.startrek.digitgaming.com/accounts/v1"
   @sessions_endpoint "#{@accounts_endpoint}/sessions"
 
-  defstruct account_id: nil, master_session_id: nil, session_instance_id: nil
+  defstruct account_id: nil, master_session_id: nil, session_instance_id: nil, fleet_id: nil
 
   def start_session do
     config = Application.fetch_env!(:trekmap, __MODULE__)

@@ -31,7 +31,7 @@ defmodule Trekmap.Galaxy do
     end
   end
 
-  def scan_targets(target_ids, %Session{} = session) do
+  def scan_players(target_ids, %Session{} = session) do
     body =
       Jason.encode!(%{
         "target_ids" => target_ids,
@@ -44,7 +44,27 @@ defmodule Trekmap.Galaxy do
 
     with {:ok, %{response: %{"quick_scan_results" => scan_results}}} <-
            APIClient.protobuf_request(:post, @scanning_endpoint, additional_headers, body) do
-      # TODO: Resolve into nice structs
+      {:ok, scan_results}
+    end
+  end
+
+  def scan_spaceships(_target_ids, %Session{fleet_id: -1}) do
+    raise "fleet_id is not set"
+  end
+
+  def scan_spaceships(target_ids, %Session{fleet_id: fleet_id} = session) do
+    body =
+      Jason.encode!(%{
+        "target_ids" => target_ids,
+        "fleet_id" => fleet_id,
+        "user_id" => session.account_id,
+        "target_type" => 0
+      })
+
+    additional_headers = Session.session_headers(session)
+
+    with {:ok, %{response: %{"quick_scan_results" => scan_results}}} <-
+           APIClient.protobuf_request(:post, @scanning_endpoint, additional_headers, body) do
       {:ok, scan_results}
     end
   end
