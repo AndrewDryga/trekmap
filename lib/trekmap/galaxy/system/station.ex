@@ -35,7 +35,8 @@ defmodule Trekmap.Galaxy.System.Station do
       "Shield Ends At" => expiry_time(shield_expires_at),
       "Parsteel" => Map.get(resources, :parsteel),
       "Thritanium" => Map.get(resources, :thritanium),
-      "Dlithium" => Map.get(resources, :dlithium)
+      "Dlithium" => Map.get(resources, :dlithium),
+      "Last Updated At" => DateTime.to_iso8601(DateTime.utc_now())
     }
   end
 
