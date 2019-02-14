@@ -29,12 +29,13 @@ defmodule Trekmap.Bots.SessionManager do
     {:ok, %{session: %{session | fleet_id: fleet_id}}}
   end
 
-  def handle_call(:fetch_session, _rom, %{session: session} = state) do
+  def handle_call(:fetch_session, _from, %{session: session} = state) do
     if Trekmap.Session.session_instance_valid?(session) do
       {:reply, {:ok, session}, state}
     else
-      Logger.info("Session instance invalidated")
-      {:stop, :session_expired, state}
+      Logger.info("Session invalidated")
+      {:ok, %{session: session} = state} = init([])
+      {:reply, {:ok, session}, state}
     end
   end
 end

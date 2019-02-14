@@ -3,6 +3,7 @@ defmodule Trekmap.Session do
 
   @accounts_endpoint "https://nv3-live.startrek.digitgaming.com/accounts/v1"
   @sessions_endpoint "#{@accounts_endpoint}/sessions"
+  @check_account_endpoint "https://live-193-web.startrek.digitgaming.com/check_account"
 
   defstruct account_id: nil, master_session_id: nil, session_instance_id: nil, fleet_id: nil
 
@@ -37,16 +38,11 @@ defmodule Trekmap.Session do
     %{session | session_instance_id: instance_session_id}
   end
 
-  def session_instance_valid?(%__MODULE__{
-        master_session_id: master_session_id,
-        session_instance_id: session_instance_id
-      })
-      when not is_nil(session_instance_id) do
-    url = "#{@sessions_endpoint}/#{master_session_id}/instances/#{session_instance_id}"
-    body = {:form, []}
+  def session_instance_valid?(%__MODULE__{} = session) do
+    additional_headers = session_headers(session)
 
-    case APIClient.request(:post, url, additional_headers(), body) do
-      {:ok, _body} -> true
+    case APIClient.protobuf_request(:post, @check_account_endpoint, additional_headers, "") do
+      {:ok, %{response: %{"consistency_state" => %{}}}} -> true
       _other -> false
     end
   end
@@ -59,7 +55,8 @@ defmodule Trekmap.Session do
     [{"Accept", "*/*"}, {"X-Api-Key", api_key}]
   end
 
-  def session_headers(%__MODULE__{} = session) do
-    [{"X-AUTH-SESSION-ID", session.session_instance_id}]
+  def session_headers(%__MODULE__{session_instance_id: session_instance_id})
+      when not is_nil(session_instance_id) do
+    [{"X-AUTH-SESSION-ID", session_instance_id}]
   end
 end
