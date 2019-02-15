@@ -49,16 +49,14 @@ defmodule Trekmap.Bots.GalaxyScanner do
     |> Enum.shuffle()
     |> Task.async_stream(
       fn system ->
-        # IO.puts("Scanning #{system.name}")
-
         with {:ok, {stations, miners}} <-
                Trekmap.Galaxy.System.list_stations_and_miners(system, session),
              {:ok, stations} <- sync_stations(system, stations),
              {:ok, miners} <- sync_miners(system, miners) do
-          # IO.puts(
-          #   "Scanning #{system.name}: updated #{length(stations)} stations " <>
-          #     "and #{length(miners)} miners"
-          # )
+          Logger.debug(
+            "[Galaxy Scanner] Scanning #{system.name}: updated #{length(stations)} stations " <>
+              "and #{length(miners)} miners"
+          )
 
           {stations, miners}
         else
@@ -67,7 +65,9 @@ defmodule Trekmap.Bots.GalaxyScanner do
 
           other ->
             Logger.error(
-              "Error scanning the System #{system.name}, reason: #{inspect(other, pretty: true)}"
+              "[Galaxy Scanner] Error scanning the System #{system.name}, reason: #{
+                inspect(other, pretty: true)
+              }"
             )
 
             :error
