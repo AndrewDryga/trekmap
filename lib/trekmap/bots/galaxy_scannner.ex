@@ -48,7 +48,6 @@ defmodule Trekmap.Bots.GalaxyScanner do
     systems =
       systems
       |> Enum.shuffle()
-      |> Enum.take(2)
       |> Task.async_stream(
         fn system ->
           with {:ok, {stations, miners}} <-
