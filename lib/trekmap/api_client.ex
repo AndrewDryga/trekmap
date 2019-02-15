@@ -3,11 +3,17 @@ defmodule Trekmap.APIClient do
 
   @decoder Trekmap.APIClient.JsonResponse
 
+  @hackney_opts [
+    :with_body,
+    recv_timeout: 20_000,
+    connect_timeout: 10_000
+  ]
+
   def request(method, endpoint, additional_headers, body) do
     headers = request_headers() ++ additional_headers
 
     with {:ok, 200, _headers, body} <-
-           :hackney.request(method, endpoint, headers, body, [:with_body]) do
+           :hackney.request(method, endpoint, headers, body, @hackney_opts) do
       {:ok, body}
     else
       {:error, :timeout} ->

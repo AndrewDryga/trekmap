@@ -7,6 +7,12 @@ defmodule Trekmap.AirDB do
 
   @cache_opts [ttl: :timer.minutes(5)]
 
+  @hackney_opts [
+    :with_body,
+    recv_timeout: 30_000,
+    connect_timeout: 15_000
+  ]
+
   def list(struct, query_params \\ %{}) when is_atom(struct) do
     with {:ok, %{"records" => records}} <- get(struct.table_name(), query_params) do
       {:ok, Enum.map(records, &struct.record_to_struct/1)}
@@ -72,7 +78,7 @@ defmodule Trekmap.AirDB do
     headers = [{"Authorization", "Bearer #{api_key}"}, {"Content-Type", "application/json"}]
 
     with {:ok, 200, _headers, body} <-
-           :hackney.request(:get, url, headers, "", [:with_body]) do
+           :hackney.request(:get, url, headers, "", @hackney_opts) do
       {:ok, Jason.decode!(body)}
     else
       {:ok, 429, _headers, _body} ->
@@ -96,7 +102,7 @@ defmodule Trekmap.AirDB do
     headers = [{"Authorization", "Bearer #{api_key}"}, {"Content-Type", "application/json"}]
 
     with {:ok, 200, _headers, body} <-
-           :hackney.request(:post, url, headers, body, [:with_body]) do
+           :hackney.request(:post, url, headers, body, @hackney_opts) do
       {:ok, Jason.decode!(body)}
     else
       {:ok, 429, _headers, _body} ->
@@ -120,7 +126,7 @@ defmodule Trekmap.AirDB do
     headers = [{"Authorization", "Bearer #{api_key}"}, {"Content-Type", "application/json"}]
 
     with {:ok, 200, _headers, body} <-
-           :hackney.request(:patch, url, headers, body, [:with_body]) do
+           :hackney.request(:patch, url, headers, body, @hackney_opts) do
       {:ok, Jason.decode!(body)}
     else
       {:ok, 429, _headers, _body} ->
