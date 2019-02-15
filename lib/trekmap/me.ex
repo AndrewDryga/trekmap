@@ -5,7 +5,7 @@ defmodule Trekmap.Me do
   @sync_endpoint "https://live-193-web.startrek.digitgaming.com/sync"
   @fleet_repair_endpoint "https://live-193-web.startrek.digitgaming.com/fleet/repair"
 
-  def full_repair(session) do
+  def full_repair(%Session{} = session) do
     with {{:error, :not_found}, {:error, :not_found}} <- fetch_repair_jobs(session) do
       {home_fleet, _deployed_fleets, _defense_stations} = list_ships_and_defences(session)
       :ok = repair_all_fleet(home_fleet, session)
