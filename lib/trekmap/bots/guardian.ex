@@ -9,13 +9,18 @@ defmodule Trekmap.Bots.Guardian do
   def init([]) do
     Logger.info("[Guardian] I'm on watch")
     {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
-    {:ok, %{session: session}, 0}
+    {:ok, %{session: session, under_attack?: false}, 0}
   end
 
-  def handle_info(:timeout, %{session: session} = state) do
+  def handle_info(:cancel_attack, state) do
+    {:noreply, %{state | under_attack?: false}}
+  end
+
+  def handle_info(:timeout, state) do
+    %{session: session, under_attack?: under_attack?} = state
     {home_fleet, deployed_fleets, defense_stations} = Trekmap.Me.list_ships_and_defences(session)
 
-    base_well_defended? = length(home_fleet) - length(Map.keys(deployed_fleets)) > 2
+    base_well_defended? = length(home_fleet) - length(Map.keys(deployed_fleets)) >= 2
 
     defence_broken? =
       Enum.any?(defense_stations, fn {_id, defense_station} ->
@@ -31,27 +36,60 @@ defmodule Trekmap.Bots.Guardian do
 
     fleet_damage_ratio = fleet_total_damage / (fleet_total_health / 100)
 
-    if fleet_damage_ratio > 50 or not base_well_defended? or defence_broken? do
-      with :ok <- Trekmap.Me.full_repair(session) do
-        Process.send_after(self(), :timeout, 5_000)
-        {:noreply, state}
-      else
-        {:error, :timeout} ->
-          {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
-          Process.send_after(self(), :timeout, 100)
-          {:noreply, %{session: session}}
-      end
-    else
-      if fleet_damage_ratio > 0 do
-        Logger.info(
-          "Baiting, damaged by #{trunc(fleet_damage_ratio)}%, " <>
-            "base has enough ships: #{inspect(base_well_defended?)}, " <>
-            "defence stations seriously damaged #{inspect(defence_broken?)}"
-        )
-      end
+    cond do
+      fleet_damage_ratio > 95 ->
+        Logger.warn("Base broken")
+        :ok = Trekmap.Me.activate_shield(session)
+        {:ok, session} = full_repair(session)
+        Process.send_after(self(), :timeout, 1)
+        {:noreply, %{state | session: session}}
 
-      Process.send_after(self(), :timeout, 5_000)
-      {:noreply, state}
+      under_attack? == true ->
+        Logger.warn("Base is under continous attack")
+        {:ok, session} = full_repair(session)
+        Process.send_after(self(), :timeout, 1)
+        {:noreply, %{state | session: session}}
+
+      fleet_damage_ratio > 50 ->
+        Logger.warn("Base is damaged, switching to under attack mode")
+        {:ok, session} = full_repair(session)
+        Process.send_after(self(), :timeout, 1)
+        Process.send_after(self(), :cancel_attack, :timer.minutes(15))
+        {:noreply, %{state | session: session, under_attack?: true}}
+
+      defence_broken? == true ->
+        Logger.warn("Base defence is damaged, switching to under attack mode")
+        {:ok, session} = full_repair(session)
+        Process.send_after(self(), :timeout, 1)
+        Process.send_after(self(), :cancel_attack, :timer.minutes(15))
+        {:noreply, %{state | session: session, under_attack?: true}}
+
+      not base_well_defended? ->
+        Logger.warn("Base is not well defended, do not bait")
+        {:ok, session} = full_repair(session)
+        Process.send_after(self(), :timeout, 1)
+        {:noreply, %{state | session: session}}
+
+      fleet_damage_ratio > 0 ->
+        Logger.info("Baiting, damaged by #{trunc(fleet_damage_ratio)}%")
+        Process.send_after(self(), :timeout, 2_000)
+        {:noreply, state}
+
+      true ->
+        {:noreply, state}
+    end
+  end
+
+  defp full_repair(session) do
+    with :ok <- Trekmap.Me.full_repair(session) do
+      {:ok, session}
+    else
+      {:error, :session_expired} ->
+        {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
+        full_repair(session)
+
+      {:error, :timeout} ->
+        full_repair(session)
     end
   end
 end

@@ -4,18 +4,38 @@ defmodule Trekmap.Me do
 
   @sync_endpoint "https://live-193-web.startrek.digitgaming.com/sync"
   @fleet_repair_endpoint "https://live-193-web.startrek.digitgaming.com/fleet/repair"
+  @shield_endpoint "https://live-193-web.startrek.digitgaming.com/resources/use_shield_token"
+
+  def activate_shield(%Session{} = session) do
+    {token, duration} = Trekmap.Products.get_shield_token(1, :hour)
+    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "1"}]
+
+    body =
+      Jason.encode!(%{
+        "resource_id" => token,
+        "target_type" => 1,
+        "shield_duration" => duration,
+        "user_id" => session.account_id
+      })
+
+    with {:ok, %{response: %{"message" => message}}} <-
+           APIClient.protobuf_request(:post, @shield_endpoint, additional_headers, body) do
+      Logger.info(to_string(message))
+      :ok
+    end
+  end
 
   def full_repair(%Session{} = session) do
     with {{:error, :not_found}, {:error, :not_found}} <- fetch_repair_jobs(session) do
       {home_fleet, _deployed_fleets, _defense_stations} = list_ships_and_defences(session)
       :ok = repair_all_fleet(home_fleet, session)
     else
-      {_ship_repair_job, {:ok, station_repair_job}} ->
-        :ok = finish_station_repair(station_repair_job, session)
-        full_repair(session)
-
       {{:ok, ship_repair_job}, _station_repair_job} ->
         :ok = finish_fleet_repair(ship_repair_job, session)
+        full_repair(session)
+
+      {_ship_repair_job, {:ok, station_repair_job}} ->
+        :ok = finish_station_repair(station_repair_job, session)
         full_repair(session)
 
       {:error, %{body: "user_authentication", type: 102}} ->
@@ -125,13 +145,13 @@ defmodule Trekmap.Me do
 
     APIClient.protobuf_request(:post, @fleet_repair_endpoint, additional_headers, body)
     |> case do
-      {:error, %{code: 4, response: "fleet"}} ->
+      {:error, %{type: 4, response: "fleet"}} ->
         Logger.warn("Ship is already repairing")
 
         fetch_ship_repair_job(session)
         |> finish_fleet_repair(session)
 
-      {:error, %{code: 14, response: "fleet"}} ->
+      {:error, %{body: "fleet", type: 14}} ->
         Logger.warn("Other ship is already repairing")
 
         fetch_ship_repair_job(session)

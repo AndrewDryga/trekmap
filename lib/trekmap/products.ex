@@ -32,6 +32,8 @@ defmodule Trekmap.Products do
   def resource_name(743_985_951), do: "thritanium"
   def resource_name(2_614_028_847), do: "dlithium"
 
+  def get_shield_token(1, :hour), do: {3_788_095_604, 60}
+
   def buy_resources(resource_id, _amount \\ 1, session) do
     Logger.info("Purchasing additional repair token ID #{resource_id}")
 

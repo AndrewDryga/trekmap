@@ -36,7 +36,7 @@ defmodule Trekmap.APIClient do
         # Sometimes API returns response in format we can't read, requesting it again solves
         # the issue
         Protobuf.DecodeError ->
-          :timer.sleep(2_000)
+          :timer.sleep(100)
           Logger.error("Retrying request..")
           protobuf_request(method, endpoint, additional_headers, body, decode_struct)
       end
