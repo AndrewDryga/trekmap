@@ -20,18 +20,20 @@ defmodule Trekmap.Bots.Guardian do
     %{session: session, under_attack?: under_attack?} = state
     {home_fleet, deployed_fleets, defense_stations} = Trekmap.Me.list_ships_and_defences(session)
 
-    base_well_defended? = length(home_fleet) - length(Map.keys(deployed_fleets)) >= 2
-
-    defence_broken? =
-      Enum.any?(defense_stations, fn {_id, defense_station} ->
-        Map.fetch!(defense_station, "damage") > 100
-      end)
-
-    {fleet_total_health, fleet_total_damage} =
-      home_fleet
-      |> Enum.reject(fn ship ->
+    ships_at_base =
+      Enum.reject(home_fleet, fn ship ->
         Map.has_key?(deployed_fleets, Map.fetch!(ship, "fleet_id"))
       end)
+
+    ships_at_base_alive =
+      Enum.reject(ships_at_base, fn ship ->
+        Map.fetch!(ship, "damage") == Map.fetch!(ship, "max_hp")
+      end)
+
+    base_well_defended? = length(ships_at_base_alive) >= 2
+
+    {fleet_total_health, fleet_total_damage} =
+      ships_at_base
       |> Enum.reduce({0, 0}, fn ship, {fleet_total_health, fleet_total_damage} ->
         damage = Map.fetch!(ship, "damage")
         max_hp = Map.fetch!(ship, "max_hp")
@@ -39,6 +41,11 @@ defmodule Trekmap.Bots.Guardian do
       end)
 
     fleet_damage_ratio = fleet_total_damage / (fleet_total_health / 100)
+
+    defence_broken? =
+      Enum.any?(defense_stations, fn {_id, defense_station} ->
+        Map.fetch!(defense_station, "damage") > 100
+      end)
 
     cond do
       fleet_damage_ratio > 95 ->
@@ -76,10 +83,11 @@ defmodule Trekmap.Bots.Guardian do
 
       fleet_damage_ratio > 0 ->
         Logger.info("Baiting, damaged by #{trunc(fleet_damage_ratio)}%")
-        Process.send_after(self(), :timeout, 2_000)
+        Process.send_after(self(), :timeout, 1_000)
         {:noreply, state}
 
       true ->
+        Process.send_after(self(), :timeout, 1_000)
         {:noreply, state}
     end
   end

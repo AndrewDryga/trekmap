@@ -6,22 +6,39 @@ defmodule Trekmap.Me do
   @fleet_repair_endpoint "https://live-193-web.startrek.digitgaming.com/fleet/repair"
   @shield_endpoint "https://live-193-web.startrek.digitgaming.com/resources/use_shield_token"
 
+  def shield_enabled?(%Session{} = session) do
+    with {:ok, result} <- Trekmap.Galaxy.scan_players([session.account_id], %Session{} = session) do
+      %{
+        "attributes" => %{"player_shield" => %{"expiry_time" => shield_expiry_time}}
+      } = Map.fetch!(result, to_string(session.account_id))
+
+      NaiveDateTime.compare(
+        NaiveDateTime.from_iso8601!(shield_expiry_time),
+        NaiveDateTime.utc_now()
+      ) == :gt
+    end
+  end
+
   def activate_shield(%Session{} = session) do
-    {token, duration} = Trekmap.Products.get_shield_token(1, :hour)
-    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "1"}]
-
-    body =
-      Jason.encode!(%{
-        "resource_id" => token,
-        "target_type" => 1,
-        "shield_duration" => duration,
-        "user_id" => session.account_id
-      })
-
-    with {:ok, %{response: %{"message" => message}}} <-
-           APIClient.protobuf_request(:post, @shield_endpoint, additional_headers, body) do
-      Logger.info(to_string(message))
+    if shield_enabled?(session) do
       :ok
+    else
+      {token, duration} = Trekmap.Products.get_shield_token(1, :hour)
+      additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "1"}]
+
+      body =
+        Jason.encode!(%{
+          "resource_id" => token,
+          "target_type" => 1,
+          "shield_duration" => duration,
+          "user_id" => session.account_id
+        })
+
+      with {:ok, %{response: %{"message" => message}}} <-
+             APIClient.protobuf_request(:post, @shield_endpoint, additional_headers, body) do
+        Logger.info(to_string(message))
+        :ok
+      end
     end
   end
 
