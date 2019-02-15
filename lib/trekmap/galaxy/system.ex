@@ -67,8 +67,8 @@ defmodule Trekmap.Galaxy.System do
       {:error, %{body: "deployment", type: 1}} ->
         {:error, :system_not_visited}
 
-      {:error, :session_expired} ->
-        {:error, :session_expired}
+      other ->
+        other
     end
   end
 
