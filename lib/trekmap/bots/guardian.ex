@@ -13,8 +13,14 @@ defmodule Trekmap.Bots.Guardian do
   end
 
   def handle_info(:timeout, %{session: session} = state) do
-    :ok = Trekmap.Me.full_repair(session)
-    Process.send_after(self(), :timeout, 5_000)
-    {:noreply, state}
+    with :ok <- Trekmap.Me.full_repair(session) do
+      Process.send_after(self(), :timeout, 5_000)
+      {:noreply, state}
+    else
+      {:error, :timeout} ->
+        {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
+        Process.send_after(self(), :timeout, 100)
+        {:noreply, %{session: session}}
+    end
   end
 end
