@@ -28,7 +28,11 @@ defmodule Trekmap.Bots.Guardian do
       end)
 
     {fleet_total_health, fleet_total_damage} =
-      Enum.reduce(home_fleet, {0, 0}, fn ship, {fleet_total_health, fleet_total_damage} ->
+      home_fleet
+      |> Enum.reject(fn ship ->
+        Map.has_key?(deployed_fleets, Map.fetch!(ship, "fleet_id"))
+      end)
+      |> Enum.reduce({0, 0}, fn ship, {fleet_total_health, fleet_total_damage} ->
         damage = Map.fetch!(ship, "damage")
         max_hp = Map.fetch!(ship, "max_hp")
         {fleet_total_health + max_hp, fleet_total_damage + damage}
