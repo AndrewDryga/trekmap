@@ -25,11 +25,17 @@ defmodule Trekmap.Bots.GalaxyScanner do
             {:halt, error}
         end
       end)
+      |> case do
+        {:ok, systems} ->
+          Logger.info("[Galaxy Scanner] #{length(systems)} systems found")
 
-    Logger.info("[Galaxy Scanner] #{length(systems)} systems found")
+          Process.send_after(self(), :timeout, 1_000)
+          {:noreply, %{state | systems: systems}}
 
-    Process.send_after(self(), :timeout, 1_000)
-    {:noreply, %{state | systems: systems}}
+        {:error, reason} ->
+          Logger.info("[Galaxy Scanner] error persisting systems")
+          {:noreply, state}
+      end
   end
 
   def handle_info(:timeout, %{session: session, systems: systems} = state) do
