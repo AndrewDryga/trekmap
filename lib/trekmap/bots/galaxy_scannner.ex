@@ -58,10 +58,10 @@ defmodule Trekmap.Bots.GalaxyScanner do
               "and #{length(miners)} miners"
           )
 
-          {stations, miners}
+          system
         else
           {:error, :system_not_visited} ->
-            {[], []}
+            nil
 
           other ->
             Logger.error(
@@ -70,7 +70,7 @@ defmodule Trekmap.Bots.GalaxyScanner do
               }"
             )
 
-            :error
+            system
         end
       end,
       max_concurrency: 20,
