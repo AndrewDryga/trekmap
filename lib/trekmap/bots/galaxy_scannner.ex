@@ -39,44 +39,54 @@ defmodule Trekmap.Bots.GalaxyScanner do
 
   def handle_info(:timeout, %{session: session, systems: systems} = state) do
     Logger.info("[Galaxy Scanner] Scanning Systems")
-    _ = scan_galaxy(session, systems)
+    {:ok, systems} = scan_galaxy(session, systems)
     Process.send_after(self(), :timeout, 5_000)
-    {:noreply, state}
+    {:noreply, %{state | systems: systems}}
   end
 
   def scan_galaxy(session, systems) do
-    systems
-    |> Enum.shuffle()
-    |> Task.async_stream(
-      fn system ->
-        with {:ok, {stations, miners}} <-
-               Trekmap.Galaxy.System.list_stations_and_miners(system, session),
-             {:ok, stations} <- sync_stations(system, stations),
-             {:ok, miners} <- sync_miners(system, miners) do
-          Logger.debug(
-            "[Galaxy Scanner] Scanning #{system.name}: updated #{length(stations)} stations " <>
-              "and #{length(miners)} miners"
-          )
-
-          system
-        else
-          {:error, :system_not_visited} ->
-            nil
-
-          other ->
-            Logger.error(
-              "[Galaxy Scanner] Error scanning the System #{system.name}, reason: #{
-                inspect(other, pretty: true)
-              }"
+    systems =
+      systems
+      |> Enum.shuffle()
+      |> Enum.take(2)
+      |> Task.async_stream(
+        fn system ->
+          with {:ok, {stations, miners}} <-
+                 Trekmap.Galaxy.System.list_stations_and_miners(system, session),
+               {:ok, stations} <- sync_stations(system, stations),
+               {:ok, miners} <- sync_miners(system, miners) do
+            Logger.debug(
+              "[Galaxy Scanner] Scanning #{system.name}: updated #{length(stations)} stations " <>
+                "and #{length(miners)} miners"
             )
 
             system
-        end
-      end,
-      max_concurrency: 25,
-      timeout: :infinity
-    )
-    |> Enum.to_list()
+          else
+            {:error, :system_not_visited} ->
+              nil
+
+            other ->
+              Logger.error(
+                "[Galaxy Scanner] Error scanning the System #{system.name}, " <>
+                  "reason: #{inspect(other, pretty: true)}"
+              )
+
+              system
+          end
+        end,
+        max_concurrency: 25,
+        timeout: :infinity
+      )
+      |> Enum.flat_map(fn
+        {:ok, nil} ->
+          Logger.info("Skipping not visited system")
+          []
+
+        {:ok, system} ->
+          [system]
+      end)
+
+    {:ok, systems}
   end
 
   defp sync_stations(system, stations) do
