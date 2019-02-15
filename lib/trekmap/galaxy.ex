@@ -66,6 +66,9 @@ defmodule Trekmap.Galaxy do
     with {:ok, %{response: %{"quick_scan_results" => scan_results}}} <-
            APIClient.protobuf_request(:post, @scanning_endpoint, additional_headers, body) do
       {:ok, scan_results}
+    else
+      {:error, %{body: "scan", type: 2}} -> {:ok, %{"attributes" => %{}}}
+      other -> other
     end
   end
 end
