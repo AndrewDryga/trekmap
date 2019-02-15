@@ -24,7 +24,7 @@ defmodule Trekmap.Products do
 
   for {name, level, _type, id} <- @refined_resources do
     score = :math.pow(level, 4)
-    def get_resource_name_and_value_score(unquote(id)), do: {unquote(name), unquote(level)}
+    def get_resource_name_and_value_score(unquote(id)), do: {unquote(name), unquote(score)}
   end
 
   def get_resource_name_and_value_score(_other), do: {"Unknown", 1}
