@@ -15,13 +15,13 @@ defmodule Trekmap.Galaxy do
           %{
             "tree_root" => %{
               "id" => id,
-              "attributes" => %{"name" => name, "trans_id" => transport_id},
+              "attributes" => %{"name" => name, "trans_id" => _transport_id},
               "is_active" => is_active
             }
           } = system
 
           if is_active do
-            [System.build(id, transport_id, name)]
+            [System.build(id, name)]
           else
             []
           end

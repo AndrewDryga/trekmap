@@ -11,16 +11,14 @@ defmodule Trekmap.Galaxy.System do
 
   defstruct id: nil,
             external_id: nil,
-            transport_id: nil,
             name: nil,
             fraction: nil,
             level: nil
 
-  def build(id, transport_id, name) do
+  def build(id, name) do
     %__MODULE__{
       id: id,
-      name: name,
-      transport_id: transport_id
+      name: name
     }
   end
 

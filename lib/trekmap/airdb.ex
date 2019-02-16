@@ -25,11 +25,16 @@ defmodule Trekmap.AirDB do
 
     attrs = struct_module.struct_to_record(struct)
 
-    with {:ok, struct} <- fetch_by_id(struct_module, struct.id),
-         {:ok, record} <- update(table_name, struct.external_id, attrs) do
-      struct = struct_module.record_to_struct(record)
-      {:ok, _ttl} = Cachex.put(:airdb_cache, {struct_module, struct.id}, struct, @cache_opts)
-      {:ok, struct}
+    with {:ok, fetched} <- fetch_by_id(struct_module, struct.id) do
+      if structs_equal?(struct, fetched) do
+        {:ok, fetched}
+      else
+        with {:ok, record} <- update(table_name, fetched.external_id, attrs) do
+          fetched = struct_module.record_to_struct(record)
+          Cachex.put(:airdb_cache, {struct_module, fetched.id}, fetched, @cache_opts)
+          {:ok, fetched}
+        end
+      end
     else
       {:error, :not_found} ->
         with {:ok, record} <- create(table_name, attrs) do
@@ -41,6 +46,18 @@ defmodule Trekmap.AirDB do
       other ->
         other
     end
+  end
+
+  defp structs_equal?(local, remote) do
+    local
+    |> Map.from_struct()
+    |> Enum.all?(fn {key, value} ->
+      if is_nil(value) do
+        true
+      else
+        Map.fetch!(remote, key) == value
+      end
+    end)
   end
 
   def fetch_by_external_id(struct, id) when is_atom(struct) do

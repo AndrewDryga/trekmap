@@ -76,7 +76,7 @@ defmodule Trekmap.Bots.GalaxyScanner do
               system
           end
         end,
-        max_concurrency: 25,
+        max_concurrency: 40,
         timeout: :infinity
       )
       |> Enum.flat_map(fn
