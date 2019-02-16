@@ -64,6 +64,9 @@ defmodule Trekmap.Bots.GalaxyScanner do
             {:error, :system_not_visited} ->
               nil
 
+            {:error, %{body: "user_authentication", type: 102}} ->
+              raise "Session expired"
+
             other ->
               Logger.error(
                 "[Galaxy Scanner] Error scanning the System #{system.name}, " <>
