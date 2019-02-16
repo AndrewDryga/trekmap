@@ -5,7 +5,7 @@ defmodule Trekmap.AirDB do
   @callback record_to_struct(map()) :: map()
   @callback struct_to_record(map()) :: map()
 
-  @cache_opts [ttl: :timer.minutes(5)]
+  @cache_opts [ttl: :timer.minutes(120)]
 
   @hackney_opts [
     :with_body,
