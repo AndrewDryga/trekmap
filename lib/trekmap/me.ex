@@ -141,6 +141,9 @@ defmodule Trekmap.Me do
         Map.fetch!(ships, to_string(ship_id))
         |> Map.put("fleet_id", fleet_id)
       end)
+      |> Enum.reject(fn ship ->
+        Map.has_key?(deployed_fleets, Map.fetch!(ship, "fleet_id"))
+      end)
 
     {home_fleet, deployed_fleets, defenses}
   end
@@ -159,6 +162,10 @@ defmodule Trekmap.Me do
           {home_fleet, _deployed_fleets, _defense_stations} = list_ships_and_defences(session)
           repair_all_fleet(home_fleet, session)
         else
+          :ok ->
+            {home_fleet, _deployed_fleets, _defense_stations} = list_ships_and_defences(session)
+            repair_all_fleet(home_fleet, session)
+
           {:error, :not_found} ->
             {home_fleet, _deployed_fleets, _defense_stations} = list_ships_and_defences(session)
             repair_all_fleet(home_fleet, session)
@@ -177,26 +184,20 @@ defmodule Trekmap.Me do
       {:error, %{body: "fleet", type: 4}} ->
         Logger.warn("Ship is already repairing")
 
-        fetch_ship_repair_job(session)
-        |> finish_fleet_repair(session)
+        with {:ok, job} <- fetch_ship_repair_job(session) do
+          finish_fleet_repair(job, session)
+        end
 
       {:error, %{body: "fleet", type: 14}} ->
         Logger.warn("Other ship is already repairing")
 
-        fetch_ship_repair_job(session)
-        |> finish_fleet_repair(session)
+        with {:ok, job} <- fetch_ship_repair_job(session) do
+          finish_fleet_repair(job, session)
+        end
 
       :ok ->
         fetch_ship_repair_job(session)
     end
-  end
-
-  def finish_fleet_repair({:ok, job}, session) do
-    finish_fleet_repair(job, session)
-  end
-
-  def finish_fleet_repair({:error, :not_found}, _session) do
-    :ok
   end
 
   def finish_fleet_repair(%{id: id, remaining_duration: duration}, session) do
