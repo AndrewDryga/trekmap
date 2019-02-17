@@ -69,6 +69,12 @@ defmodule Trekmap.Me do
     with {:ok, result} <-
            APIClient.protobuf_request(:post, @sync_endpoint, additional_headers, "", decoder) do
       {Job.fetch_ship_repair_job(result), Job.fetch_station_repair_job(result)}
+    else
+      {:ok, 413, _headers, _body} ->
+        {:error, :not_found}
+
+      other ->
+        other
     end
   end
 
@@ -105,6 +111,12 @@ defmodule Trekmap.Me do
     with {:ok, result} <-
            APIClient.protobuf_request(:post, @sync_endpoint, additional_headers, "", decoder) do
       Job.fetch_ship_repair_job(result)
+    else
+      {:ok, 413, _headers, _body} ->
+        {:error, :not_found}
+
+      other ->
+        other
     end
   end
 
@@ -162,7 +174,7 @@ defmodule Trekmap.Me do
 
     APIClient.protobuf_request(:post, @fleet_repair_endpoint, additional_headers, body)
     |> case do
-      {:error, %{type: 4, response: "fleet"}} ->
+      {:error, %{body: "fleet", type: 4}} ->
         Logger.warn("Ship is already repairing")
 
         fetch_ship_repair_job(session)
@@ -177,6 +189,10 @@ defmodule Trekmap.Me do
       :ok ->
         fetch_ship_repair_job(session)
     end
+  end
+
+  def finish_fleet_repair({:ok, job}, session) do
+    finish_fleet_repair(job, session)
   end
 
   def finish_fleet_repair({:error, :not_found}, _session) do
