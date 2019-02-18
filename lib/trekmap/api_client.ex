@@ -56,6 +56,9 @@ defmodule Trekmap.APIClient do
           :ok -> :error
           {:error, reason} -> {:error, reason}
         end
+
+      other ->
+        other
     end
   end
 
