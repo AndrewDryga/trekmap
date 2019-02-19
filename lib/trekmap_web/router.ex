@@ -15,6 +15,9 @@ defmodule Trekmap.Router do
         :running ->
           "Running"
 
+        :starting ->
+          "Starting"
+
         {:scheduled, timeout} ->
           minutes = trunc(timeout / 60)
           seconds = rem(timeout, 60) |> to_string() |> String.pad_leading(2, "0")
