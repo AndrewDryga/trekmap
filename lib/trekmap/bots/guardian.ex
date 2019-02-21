@@ -40,7 +40,8 @@ defmodule Trekmap.Bots.Guardian do
         {fleet_total_health + max_hp, fleet_total_damage + damage}
       end)
 
-    fleet_damage_ratio = fleet_total_damage / (fleet_total_health / 100)
+    fleet_damage_ratio =
+      if fleet_total_health == 0, do: 0, else: fleet_total_damage / (fleet_total_health / 100)
 
     defence_broken? =
       Enum.any?(defense_stations, fn {_id, defense_station} ->

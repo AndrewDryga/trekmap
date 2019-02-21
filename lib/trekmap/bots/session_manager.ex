@@ -17,14 +17,18 @@ defmodule Trekmap.Bots.SessionManager do
       Trekmap.Session.start_session()
       |> Trekmap.Session.start_session_instance()
 
-    {home_fleet, _deployed_fleets, _defense_stations} =
-      Trekmap.Me.list_ships_and_defences(session)
-
     fleet_id =
-      home_fleet
-      |> List.first()
-      |> Map.get("fleet_id")
-      |> String.to_integer()
+      case Trekmap.Me.list_ships_and_defences(session) do
+        {[%{"fleet_id" => fleet_id} | _], _deployed_fleets, _defense_stations} ->
+          fleet_id
+
+        {[], deployed_fleets, _defense_stations} ->
+          deployed_fleets
+          |> Enum.to_list()
+          |> List.first()
+          |> elem(1)
+          |> Map.fetch!("fleet_id")
+      end
 
     {:ok, %{session: %{session | fleet_id: fleet_id}}}
   end
