@@ -5,19 +5,28 @@ defmodule Trekmap.Galaxy.Player do
             external_id: nil,
             level: nil,
             name: nil,
-            alliance: nil
+            alliance: nil,
+            other_known_names: []
 
   def table_name, do: "Players"
 
-  def struct_to_record(%__MODULE__{} = system) do
-    %{id: id, level: level, name: name, alliance: alliance} = system
+  def struct_to_record(%__MODULE__{} = player) do
+    %{
+      id: id,
+      level: level,
+      name: name,
+      alliance: alliance,
+      other_known_names: other_known_names
+    } = player
+
     alliance_external_id = if alliance, do: [alliance.external_id], else: []
 
     %{
       "ID" => to_string(id),
       "Name" => name,
       "Level" => level,
-      "Alliance" => alliance_external_id
+      "Alliance" => alliance_external_id,
+      "AKA" => Enum.join(Enum.uniq(other_known_names ++ [name]), ",")
     }
   end
 
@@ -34,12 +43,18 @@ defmodule Trekmap.Galaxy.Player do
         {:unfetched, Trekmap.Galaxy.Alliances.Alliance, alliance_external_id}
       end
 
+    other_known_names =
+      Map.get(fields, "AKA", "")
+      |> String.split(",")
+      |> Enum.reject(&(&1 == ""))
+
     %__MODULE__{
       id: id,
       external_id: external_id,
       level: level,
       name: name,
-      alliance: alliance
+      alliance: alliance,
+      other_known_names: other_known_names
     }
   end
 end
