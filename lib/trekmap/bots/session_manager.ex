@@ -13,9 +13,8 @@ defmodule Trekmap.Bots.SessionManager do
   def init([]) do
     Logger.info("Starting new auth session")
 
-    session =
-      Trekmap.Session.start_session()
-      |> Trekmap.Session.start_session_instance()
+    {:ok, session} = Trekmap.Session.start_session()
+    {:ok, session} = start_session_instance(session)
 
     fleet_id =
       case Trekmap.Me.list_ships_and_defences(session) do
@@ -31,6 +30,17 @@ defmodule Trekmap.Bots.SessionManager do
       end
 
     {:ok, %{session: %{session | fleet_id: fleet_id}}}
+  end
+
+  def start_session_instance(session) do
+    with {:ok, session} <- Trekmap.Session.start_session_instance(session) do
+      {:ok, session}
+    else
+      {:error, :retry_later} ->
+        Logger.info("Game server is under maintenance")
+        :timer.sleep(5_000)
+        start_session_instance(session)
+    end
   end
 
   def handle_call(:fetch_session, _from, %{session: session} = state) do
