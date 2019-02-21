@@ -33,7 +33,8 @@ defmodule Trekmap.Bots do
     if Trekmap.Bots.Supervisor.bots_active?() do
       {:reply, :running, state}
     else
-      if timer = Process.read_timer(state.timer_ref) do
+      if timer_ref = state.timer_ref do
+        timer = Process.read_timer(timer_ref)
         {:reply, {:scheduled, trunc(timer / 1000)}, state}
       else
         {:reply, :starting, state}
