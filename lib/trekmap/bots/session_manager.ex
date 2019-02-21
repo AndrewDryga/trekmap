@@ -19,7 +19,7 @@ defmodule Trekmap.Bots.SessionManager do
     fleet_id =
       case Trekmap.Me.list_ships_and_defences(session) do
         {[%{"fleet_id" => fleet_id} | _], _deployed_fleets, _defense_stations} ->
-          fleet_id
+          to_integer(fleet_id)
 
         {[], deployed_fleets, _defense_stations} ->
           deployed_fleets
@@ -27,10 +27,14 @@ defmodule Trekmap.Bots.SessionManager do
           |> List.first()
           |> elem(1)
           |> Map.fetch!("fleet_id")
+          |> to_integer()
       end
 
     {:ok, %{session: %{session | fleet_id: fleet_id}}}
   end
+
+  defp to_integer(binary) when is_binary(binary), do: String.to_integer(binary)
+  defp to_integer(numeric), do: numeric
 
   def start_session_instance(session) do
     with {:ok, session} <- Trekmap.Session.start_session_instance(session) do

@@ -89,7 +89,7 @@ defmodule Trekmap.APIClient do
   defp request_headers do
     [
       {"X-Unity-Version", "5.6.4p3"},
-      {"X-PRIME-VERSION", "0.543.9378"},
+      {"X-PRIME-VERSION", "0.543.9442"},
       {"X-Suppress-Codes", "1"},
       {"X-PRIME-SYNC", "0"},
       {"Accept-Language", "en"},
