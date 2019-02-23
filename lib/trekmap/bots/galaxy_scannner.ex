@@ -94,16 +94,20 @@ defmodule Trekmap.Bots.GalaxyScanner do
   defp sync_stations(system, stations) do
     stations
     |> Enum.reduce_while({:ok, []}, fn station, {status, acc} ->
-      with {:ok, player} <- sync_player(station.player),
-           planet = %{station.planet | system_external_id: system.external_id},
-           {:ok, planet} <- Trekmap.AirDB.create_or_update(planet),
-           station = %{station | player: player, planet: planet},
-           {:ok, station} <- Trekmap.AirDB.create_or_update(station) do
-        station = %{station | player: player, planet: planet, system: system}
-        {:cont, {status, [station] ++ acc}}
+      if station.player.level < 15 do
+        {:cont, {status, acc}}
       else
-        error ->
-          {:halt, error}
+        with {:ok, player} <- sync_player(station.player),
+             planet = %{station.planet | system_external_id: system.external_id},
+             {:ok, planet} <- Trekmap.AirDB.create_or_update(planet),
+             station = %{station | player: player, planet: planet},
+             {:ok, station} <- Trekmap.AirDB.create_or_update(station) do
+          station = %{station | player: player, planet: planet, system: system}
+          {:cont, {status, [station] ++ acc}}
+        else
+          error ->
+            {:halt, error}
+        end
       end
     end)
   end
@@ -111,14 +115,18 @@ defmodule Trekmap.Bots.GalaxyScanner do
   defp sync_miners(system, miners) do
     miners
     |> Enum.reduce_while({:ok, []}, fn miner, {status, acc} ->
-      with {:ok, player} <- sync_player(miner.player),
-           miner = %{miner | player: player},
-           {:ok, miner} <- Trekmap.AirDB.create_or_update(miner) do
-        miner = %{miner | player: player, system: system}
-        {:cont, {status, [miner] ++ acc}}
+      if miner.player.level < 15 do
+        {:cont, {status, acc}}
       else
-        error ->
-          {:halt, error}
+        with {:ok, player} <- sync_player(miner.player),
+             miner = %{miner | player: player},
+             {:ok, miner} <- Trekmap.AirDB.create_or_update(miner) do
+          miner = %{miner | player: player, system: system}
+          {:cont, {status, [miner] ++ acc}}
+        else
+          error ->
+            {:halt, error}
+        end
       end
     end)
   end
