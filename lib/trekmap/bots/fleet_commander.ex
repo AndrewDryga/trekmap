@@ -152,7 +152,7 @@ defmodule Trekmap.Bots.FleetCommander do
     %{session: session, enemies: enemies, allies: allies} = state
     {:ok, targets} = find_targets_in_current_system(fleet, enemies, allies, session)
 
-    {fleet, continue?} =
+    {fleet, continue} =
       targets
       |> Enum.sort_by(&distance(&1.coords, fleet.coords))
       |> Enum.reduce_while({fleet, false}, fn target, {fleet, false} ->
@@ -163,69 +163,85 @@ defmodule Trekmap.Bots.FleetCommander do
 
         case Trekmap.Me.attack_miner(fleet, target, session) do
           {:ok, fleet} ->
-            {:halt, {fleet, true}}
+            {:halt, {fleet, :current_system}}
 
           {:error, :in_warp} ->
             fleet = get_initial_fleet(session)
-            {:halt, {fleet, true}}
+            {:halt, {fleet, :current_system}}
 
           {:error, :fleet_on_repair} ->
             fleet = get_initial_fleet(session)
-            {:halt, {fleet, true}}
+            {:halt, {fleet, :current_system}}
+
+          {:error, :shield_is_enabled} ->
+            {:halt, {fleet, :recall}}
 
           other ->
             Logger.warn("[FleetCommander] Cant kill #{inspect({target, other}, pretty: true)}")
-            {:cont, {fleet, false}}
+            {:cont, {fleet, :next_system}}
         end
       end)
 
-    if continue? do
-      Process.send_after(
-        self(),
-        {:continue_mission, fleet},
-        :timer.seconds(fleet.remaining_travel_time)
-      )
-    else
-      nearby_systems_with_targets =
-        Enum.sort_by(@patrol_systems, fn system_id ->
-          path = Trekmap.Galaxy.find_path(session.galaxy, fleet.system_id, system_id)
-          Trekmap.Galaxy.get_path_distance(session.galaxy, path)
-        end)
-        |> Enum.filter(fn system_id ->
-          system = Trekmap.Me.get_system(system_id, session)
-          {:ok, targets} = find_targets_in_system(fleet, system, enemies, allies, session)
-          length(targets) > 5
-        end)
+    case continue do
+      :next_system ->
+        nearby_systems_with_targets =
+          Enum.sort_by(@patrol_systems, fn system_id ->
+            path = Trekmap.Galaxy.find_path(session.galaxy, fleet.system_id, system_id)
+            Trekmap.Galaxy.get_path_distance(session.galaxy, path)
+          end)
+          |> Enum.filter(fn system_id ->
+            system = Trekmap.Me.get_system(system_id, session)
+            {:ok, targets} = find_targets_in_system(fleet, system, enemies, allies, session)
+            length(targets) > 5
+          end)
 
-      if length(nearby_systems_with_targets) > 0 do
-        system_id = List.first(nearby_systems_with_targets)
-        Logger.info("[FleetCommander] Warping to next system #{system_id}")
+        if length(nearby_systems_with_targets) > 0 do
+          system_id = List.first(nearby_systems_with_targets)
+          Logger.info("[FleetCommander] Warping to next system #{system_id}")
 
-        with {:ok, fleet} <- Trekmap.Me.warp_to_system(fleet, system_id, session) do
-          Process.send_after(
-            self(),
-            {:continue_mission, fleet},
-            :timer.seconds(fleet.remaining_travel_time)
-          )
-        else
-          {:error, :in_warp} ->
-            fleet = get_initial_fleet(session)
-
+          with {:ok, fleet} <- Trekmap.Me.warp_to_system(fleet, system_id, session) do
             Process.send_after(
               self(),
               {:continue_mission, fleet},
               :timer.seconds(fleet.remaining_travel_time)
             )
-        end
-      else
-        Logger.info("[FleetCommander] No more targets in any systems")
+          else
+            {:error, :in_warp} ->
+              fleet = get_initial_fleet(session)
 
+              Process.send_after(
+                self(),
+                {:continue_mission, fleet},
+                :timer.seconds(fleet.remaining_travel_time)
+              )
+          end
+        else
+          Logger.info("[FleetCommander] No more targets in any systems")
+
+          Process.send_after(
+            self(),
+            {:continue_mission, fleet},
+            :timer.seconds(fleet.remaining_travel_time)
+          )
+        end
+
+      :current_system ->
         Process.send_after(
           self(),
           {:continue_mission, fleet},
           :timer.seconds(fleet.remaining_travel_time)
         )
-      end
+
+      :recall ->
+        Logger.info("[FleetCommander] Shield is active, delaying missions by 1 hour")
+
+        :ok = recall_all_fleet(session)
+
+        Process.send_after(
+          self(),
+          {:continue_mission, fleet},
+          :timer.minutes(60)
+        )
     end
 
     {:noreply, state}

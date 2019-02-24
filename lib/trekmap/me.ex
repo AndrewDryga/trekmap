@@ -117,12 +117,14 @@ defmodule Trekmap.Me do
 
     additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
 
-    with {:ok, %{response: response}} <-
+    with false <- shield_enabled?(session),
+         {:ok, %{response: response}} <-
            APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
       %{"my_deployed_fleets" => deployed_fleets} = response
       fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
       {:ok, Fleet.build(fleet_map)}
     else
+      true -> {:error, :shield_is_enabled}
       {:error, %{body: "course", type: 2}} -> {:ok, fleet}
       {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
       {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
