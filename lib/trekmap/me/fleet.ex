@@ -101,6 +101,7 @@ defmodule Trekmap.Me.Fleet do
     |> Enum.sum()
   end
 
+  defp state(6), do: :fighting
   defp state(5), do: :mining
   defp state(2), do: :warping
   defp state(1), do: :flying

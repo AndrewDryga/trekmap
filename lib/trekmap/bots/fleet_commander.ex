@@ -49,7 +49,7 @@ defmodule Trekmap.Bots.FleetCommander do
   end
 
   def handle_cast(:stop_missions, %{session: session} = state) do
-    Logger.info("[FleetCommander] Stopping alll missions and recalling fleet)}")
+    Logger.info("[FleetCommander] Stopping all missions and recalling fleet")
     :ok = recall_all_fleet(session)
     {:noreply, %{state | on_mission: false}}
   end
@@ -69,10 +69,20 @@ defmodule Trekmap.Bots.FleetCommander do
     {:noreply, state}
   end
 
-  def handle_info({:continue_mission, %{status: status} = fleet}, %{session: session} = state)
-      when status in [:warping, :flying, :charging] do
+  def handle_info({:continue_mission, %{state: :fighting} = fleet}, state) do
+    Logger.info("[FleetCommander] Fleet is fighting")
+
+    :timer.sleep(:timer.seconds(5))
+    send(self(), {:continue_mission, fleet})
+
+    {:noreply, state}
+  end
+
+  def handle_info({:continue_mission, %{state: state} = fleet}, %{session: session} = state)
+      when state in [:warping, :flying, :charging] do
     Logger.info(
-      "Fleet is #{inspect(status)}, remaining_duration: #{inspect(fleet.remaining_travel_time)}"
+      "[FleetCommander] Fleet is #{inspect(state)}, " <>
+        "remaining_duration: #{inspect(fleet.remaining_travel_time)}"
     )
 
     :timer.sleep(:timer.seconds(fleet.remaining_travel_time))
@@ -112,7 +122,7 @@ defmodule Trekmap.Bots.FleetCommander do
         {:continue_mission, %{cargo_bay_size: cargo_bay_size, cargo_size: cargo_size} = fleet},
         %{session: session} = state
       )
-      when cargo_bay_size * 0.8 < cargo_size do
+      when cargo_bay_size * 0.95 < cargo_size do
     Logger.info("[FleetCommander] Fleet is full, recalling")
 
     case Trekmap.Me.recall_fleet(fleet, session) do
@@ -138,21 +148,33 @@ defmodule Trekmap.Bots.FleetCommander do
   end
 
   def handle_info({:continue_mission, fleet}, %{on_mission: true} = state) do
-    Logger.info("[FleetCommander] Continue, #{inspect(fleet)}")
+    Logger.debug("[FleetCommander] Continue, #{inspect(fleet, pretty: true)}")
     %{session: session, enemies: enemies, allies: allies} = state
     {:ok, targets} = find_targets_in_current_system(fleet, enemies, allies, session)
 
     targets_by_distance = Enum.sort_by(targets, &distance(&1.coords, fleet.coords))
 
     if length(targets_by_distance) > 0 do
-      target = List.first(targets_by_distance)
+      fleet =
+        Enum.reduce_while(targets_by_distance, fleet, fn target, fleet ->
+          Logger.info(
+            "[FleetCommander] Killing [#{target.player.alliance.tag}] #{target.player.name}, " <>
+              "score: #{inspect(target.bounty_score)}"
+          )
 
-      Logger.info(
-        "[FleetCommander] Killing [#{target.player.alliance.tag}] #{target.player.name}, " <>
-          "score: #{inspect(target.bounty_score)}"
-      )
+          case Trekmap.Me.attack_miner(fleet, target, session) do
+            {:ok, fleet} ->
+              {:halt, fleet}
 
-      {:ok, fleet} = Trekmap.Me.attack_miner(fleet, target, session)
+            other ->
+              Logger.warn(
+                "[FleetCommander] Cant kill [#{target.player.alliance.tag}] #{target.player.name}, " <>
+                  "reason: #{inspect(other)}"
+              )
+
+              {:cont, fleet}
+          end
+        end)
 
       Process.send_after(
         self(),
@@ -200,15 +222,22 @@ defmodule Trekmap.Bots.FleetCommander do
 
     cond do
       deployed_fleets == %{} ->
+        Logger.info("[FleetCommander] No fleets deployed, picking jellyfish")
         fleet = %Fleet{id: Fleet.jellyfish_fleet_id(), system_id: session.home_system_id}
+        Logger.info("[FleetCommander] Repairing ships before mission")
+        :ok = Trekmap.Me.full_repair(session)
         {:ok, fleet} = Trekmap.Me.fly_to_coords(fleet, {0, 0}, session)
         fleet
 
       jellyfish = Map.get(deployed_fleets, to_string(Fleet.jellyfish_fleet_id())) ->
+        Logger.info("[FleetCommander] Jellyfish is already deployed")
         Fleet.build(jellyfish)
 
       true ->
+        Logger.info("[FleetCommander] Jellyfish is not deployed, recalling all ships")
         :ok = recall_all_fleet(session, [Fleet.jellyfish_fleet_id()])
+        Logger.info("[FleetCommander] Repairing ships before mission")
+        :ok = Trekmap.Me.full_repair(session)
         fleet = %Fleet{id: Fleet.jellyfish_fleet_id(), system_id: session.home_system_id}
         {:ok, fleet} = Trekmap.Me.fly_to_coords(fleet, {0, 0}, session)
         fleet
