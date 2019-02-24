@@ -154,28 +154,28 @@ defmodule Trekmap.Bots.FleetCommander do
 
     targets_by_distance = Enum.sort_by(targets, &distance(&1.coords, fleet.coords))
 
-    if length(targets_by_distance) > 0 do
-      fleet =
-        Enum.reduce_while(targets_by_distance, fleet, fn target, fleet ->
-          Logger.info(
-            "[FleetCommander] Killing [#{target.player.alliance.tag}] #{target.player.name}, " <>
-              "score: #{inspect(target.bounty_score)}"
-          )
+    {fleet, killed_any?} =
+      Enum.reduce_while(targets_by_distance, {fleet, false}, fn target, {fleet, false} ->
+        Logger.info(
+          "[FleetCommander] Killing [#{target.player.alliance.tag}] #{target.player.name}, " <>
+            "score: #{inspect(target.bounty_score)}"
+        )
 
-          case Trekmap.Me.attack_miner(fleet, target, session) do
-            {:ok, fleet} ->
-              {:halt, fleet}
+        case Trekmap.Me.attack_miner(fleet, target, session) do
+          {:ok, fleet} ->
+            {:halt, {fleet, true}}
 
-            other ->
-              Logger.warn(
-                "[FleetCommander] Cant kill [#{target.player.alliance.tag}] #{target.player.name}, " <>
-                  "reason: #{inspect(other)}"
-              )
+          other ->
+            Logger.warn(
+              "[FleetCommander] Cant kill [#{target.player.alliance.tag}] #{target.player.name}, " <>
+                "reason: #{inspect(other)}"
+            )
 
-              {:cont, fleet}
-          end
-        end)
+            {:cont, {fleet, false}}
+        end
+      end)
 
+    if killed_any? do
       Process.send_after(
         self(),
         {:continue_mission, fleet},
