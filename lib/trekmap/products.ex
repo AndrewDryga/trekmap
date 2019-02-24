@@ -9,9 +9,9 @@ defmodule Trekmap.Products do
   # ]
 
   @refined_resources [
-    {"Parsteel", 1, :raw, 2_325_683_920},
-    {"Thritanium", 1, :raw, 743_985_951},
-    {"Dlithium", 1, :raw, 2_614_028_847},
+    {"Parsteel", 0.5, :raw, 2_325_683_920},
+    {"Thritanium", 0.5, :raw, 743_985_951},
+    {"Dlithium", 0.5, :raw, 2_614_028_847},
     {"Gas ***", 3, :unusual, 2_599_869_530},
     {"Crystal ***", 3, :unusual, 2_367_328_925},
     {"Raw Gas **", 2, :raw, 96_209_859},

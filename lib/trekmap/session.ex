@@ -5,7 +5,12 @@ defmodule Trekmap.Session do
   @sessions_endpoint "#{@accounts_endpoint}/sessions"
   @check_account_endpoint "https://live-193-web.startrek.digitgaming.com/check_account"
 
-  defstruct account_id: nil, master_session_id: nil, session_instance_id: nil, fleet_id: nil
+  defstruct account_id: nil,
+            master_session_id: nil,
+            session_instance_id: nil,
+            fleet_id: nil,
+            home_system_id: nil,
+            galaxy: Graph.new()
 
   def start_session do
     config = Application.fetch_env!(:trekmap, __MODULE__)

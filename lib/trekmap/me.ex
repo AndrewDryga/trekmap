@@ -1,10 +1,158 @@
 defmodule Trekmap.Me do
-  alias Trekmap.{APIClient, Session, Job}
+  alias Trekmap.{APIClient, Session, Job, Galaxy, Galaxy.Spacecraft}
+  alias Trekmap.Me.Fleet
   require Logger
 
   @sync_endpoint "https://live-193-web.startrek.digitgaming.com/sync"
   @fleet_repair_endpoint "https://live-193-web.startrek.digitgaming.com/fleet/repair"
   @shield_endpoint "https://live-193-web.startrek.digitgaming.com/resources/use_shield_token"
+  @fleet_recall_endpoint "https://live-193-web.startrek.digitgaming.com/courses/recall_fleet_warp"
+  @fleet_course_endpoint "https://live-193-web.startrek.digitgaming.com/courses/set_fleet_warp_course"
+
+  ## Me
+
+  def get_system(system_id, %Session{} = session) do
+    [system] = Graph.vertex_labels(session.galaxy, system_id)
+    system
+  end
+
+  def get_home_system(%Session{} = session) do
+    [system] = Graph.vertex_labels(session.galaxy, session.home_system_id)
+    system
+  end
+
+  def fetch_current_state(%Session{} = session) do
+    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
+
+    with {:ok, %{response: response}} <-
+           APIClient.protobuf_request(:post, @sync_endpoint, additional_headers, "") do
+      %{
+        "starbase" => starbase,
+        "fleets" => fleets,
+        "my_deployed_fleets" => deployed_fleets
+      } = response
+
+      {:ok, {starbase, fleets, deployed_fleets}}
+    end
+  end
+
+  ## Navigation
+
+  def warp_to_system(%Fleet{} = fleet, system_id, %Session{} = session) do
+    path = Galaxy.find_path(session.galaxy, fleet.system_id || session.home_system_id, system_id)
+
+    body =
+      Jason.encode!(%{
+        "target_action" => -1,
+        "target_action_id" => 0,
+        "fleet_id" => fleet.id,
+        "client_warp_path" => path,
+        "target_node" => system_id,
+        "target_x" => 0,
+        "target_y" => 0
+      })
+
+    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
+
+    with {:ok, %{response: response}} <-
+           APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
+      %{"my_deployed_fleets" => deployed_fleets} = response
+      fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
+      {:ok, %{Fleet.build(fleet_map) | state: :charging, remaining_travel_time: 6}}
+    else
+      {:error, %{body: "course", type: 2}} -> {:ok, fleet}
+      {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
+      {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
+      {:error, %{body: "fleet", type: 9}} -> {:error, :fleet_on_repair}
+      {:error, %{body: "course", type: 13}} -> {:error, :invalid_course}
+    end
+  end
+
+  def fly_to_coords(%Fleet{} = fleet, {x, y}, %Session{} = session) do
+    path = [fleet.system_id]
+
+    body =
+      Jason.encode!(%{
+        "target_action" => -1,
+        "target_action_id" => 0,
+        "fleet_id" => fleet.id,
+        "client_warp_path" => path,
+        "target_node" => fleet.system_id,
+        "target_x" => x,
+        "target_y" => y
+      })
+
+    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
+
+    with {:ok, %{response: response}} <-
+           APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
+      %{"my_deployed_fleets" => deployed_fleets} = response
+      fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
+      {:ok, Fleet.build(fleet_map)}
+    else
+      {:error, %{body: "course", type: 2}} -> {:ok, fleet}
+      {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
+      {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
+      {:error, %{body: "fleet", type: 9}} -> {:error, :fleet_on_repair}
+      {:error, %{body: "course", type: 13}} -> {:error, :invalid_course}
+    end
+  end
+
+  def attack_miner(%Fleet{} = fleet, %Spacecraft{} = spacecraft, %Session{} = session) do
+    %{coords: {x, y}} = spacecraft
+    path = [fleet.system_id]
+
+    body =
+      Jason.encode!(%{
+        "target_action" => 4,
+        "target_action_id" => spacecraft.mining_node_id,
+        "fleet_id" => fleet.id,
+        "client_warp_path" => path,
+        "target_node" => fleet.system_id,
+        "target_x" => x,
+        "target_y" => y
+      })
+
+    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
+
+    with {:ok, %{response: response}} <-
+           APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
+      %{"my_deployed_fleets" => deployed_fleets} = response
+      fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
+      {:ok, Fleet.build(fleet_map)}
+    else
+      {:error, %{body: "course", type: 2}} -> {:ok, fleet}
+      {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
+      {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
+      {:error, %{body: "fleet", type: 9}} -> {:error, :fleet_on_repair}
+      {:error, %{body: "course", type: 13}} -> {:error, :invalid_course}
+    end
+  end
+
+  def recall_fleet(%Fleet{} = fleet, %Session{} = session) do
+    path = Galaxy.find_path(session.galaxy, fleet.system_id, session.home_system_id)
+    body = Jason.encode!(%{"fleet_id" => fleet.id, "client_warp_path" => path})
+    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
+
+    with {:ok, %{response: response}} <-
+           APIClient.protobuf_request(:post, @fleet_recall_endpoint, additional_headers, body) do
+      %{"my_deployed_fleets" => deployed_fleets} = response
+
+      if fleet_map = Map.get(deployed_fleets, to_string(fleet.id)) do
+        {:ok, Fleet.build(fleet_map)}
+      else
+        :ok
+      end
+    else
+      {:error, %{body: "course", type: 2}} -> :ok
+      {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
+      {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
+      {:error, %{body: "fleet", type: 9}} -> {:error, :fleet_on_repair}
+      {:error, %{body: "course", type: 13}} -> {:error, :invalid_course}
+    end
+  end
+
+  ## Shield
 
   def shield_enabled?(%Session{} = session) do
     with {:ok, result} <- Trekmap.Galaxy.scan_players([session.account_id], %Session{} = session) do
@@ -41,6 +189,8 @@ defmodule Trekmap.Me do
       end
     end
   end
+
+  ## Repair
 
   def full_repair(%Session{} = session) do
     with {{:error, :not_found}, {:error, :not_found}} <- fetch_repair_jobs(session) do

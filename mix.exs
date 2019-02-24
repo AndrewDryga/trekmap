@@ -31,7 +31,8 @@ defmodule Trekmap.MixProject do
       {:distillery, "~> 2.0"},
       {:plug_cowboy, "~> 2.0"},
       {:cachex, "~> 3.1"},
-      {:basic_auth, "~> 2.2"}
+      {:basic_auth, "~> 2.2"},
+      {:libgraph, "~> 0.7"}
     ]
   end
 end

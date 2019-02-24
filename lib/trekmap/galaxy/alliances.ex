@@ -1,5 +1,5 @@
 defmodule Trekmap.Galaxy.Alliances do
-  alias Trekmap.{APIClient, Session}
+  alias Trekmap.{APIClient, Session, AirDB}
   alias Trekmap.Galaxy.Alliances.Alliance
 
   @alliances_endpoint "https://live-193-web.startrek.digitgaming.com/alliance/get_alliances_public_info"
@@ -28,5 +28,28 @@ defmodule Trekmap.Galaxy.Alliances do
 
       {:ok, alliances}
     end
+  end
+
+  def list_allies do
+    query_params = %{
+      "maxRecords" => 100,
+      "filterByFormula" => "OR({Relation} = 'Ally', {Relation} = 'NAP')"
+    }
+
+    with {:ok, [struct]} <- AirDB.list(Alliance, query_params) do
+      {:ok, struct}
+    else
+      {:ok, []} -> {:error, :not_found}
+      other -> other
+    end
+  end
+
+  def list_enemies do
+    query_params = %{
+      "maxRecords" => 100,
+      "filterByFormula" => "OR({Relation} = 'Enemy')"
+    }
+
+    AirDB.list(Alliance, query_params)
   end
 end

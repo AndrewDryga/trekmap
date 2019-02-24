@@ -53,9 +53,13 @@ defmodule Trekmap.Galaxy.System do
 
     with {:ok, %{response: response}} <-
            APIClient.protobuf_request(:post, @system_nodes_endpoint, additional_headers, body),
-         %{"player_container" => player_container, "mining_slots" => mining_slots} = response,
+         %{
+           "player_container" => player_container,
+           "mining_slots" => mining_slots,
+           "deployed_fleets" => deployed_fleets
+         } = response,
          stations = build_stations_list(system, player_container),
-         miners = build_miners_list(system, mining_slots),
+         miners = build_miners_list(system, mining_slots, deployed_fleets),
          {:ok, stations} <- enrich_stations_with_planet_names(stations),
          {:ok, {stations, miners}} <- enrich_with_scan_info({stations, miners}, session),
          {:ok, {stations, miners}} <- enrich_with_alliance_info({stations, miners}, session),
@@ -85,15 +89,26 @@ defmodule Trekmap.Galaxy.System do
     end)
   end
 
-  defp build_miners_list(system, mining_slots) do
+  defp build_miners_list(system, mining_slots, deployed_fleets) do
     Enum.flat_map(mining_slots, fn {_mining_slot_id, mining_nodes} ->
       case List.first(mining_nodes) do
-        %{"is_occupied" => true, "user_id" => player_id, "fleet_id" => fleet_id} ->
+        %{"is_occupied" => true, "user_id" => player_id, "fleet_id" => fleet_id} = mining_node ->
+          {mining_node_id, coords} =
+            if deployed_fleet = Map.get(deployed_fleets, to_string(fleet_id)) do
+              mining_node_id = Map.fetch!(mining_node, "id")
+              %{"x" => x, "y" => y} = Map.fetch!(deployed_fleet, "current_coords")
+              {mining_node_id, {x, y}}
+            else
+              {nil, {0, 0}}
+            end
+
           [
             %Spacecraft{
               player: %Player{id: player_id},
               system: system,
-              id: fleet_id
+              id: fleet_id,
+              mining_node_id: mining_node_id,
+              coords: coords
             }
           ]
 
@@ -190,7 +205,7 @@ defmodule Trekmap.Galaxy.System do
       strength =
         if strength = Map.get(spaceships_attributes, "strength") do
           strength + Map.get(spaceships_attributes, "officer_rating", 0) +
-            Map.get(spaceships_attributes, "offense_rating", 0)
+            Map.get(spaceships_attributes, "defense_rating", 0)
         end
 
       %{

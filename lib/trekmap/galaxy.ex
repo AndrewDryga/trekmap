@@ -31,6 +31,78 @@ defmodule Trekmap.Galaxy do
     end
   end
 
+  def build_systems_graph(session) do
+    additional_headers = Session.session_headers(session)
+
+    with {:ok, %{response: %{"galaxy" => galaxy}}} <-
+           APIClient.protobuf_request(:get, @galaxy_nodes_endpoint, additional_headers, "") do
+      graph =
+        Enum.reduce(galaxy, Graph.new(), fn {_system_bid, system}, graph ->
+          %{
+            "tree_root" => %{
+              "id" => id,
+              "attributes" => %{"name" => name, "trans_id" => _transport_id},
+              "is_active" => is_active
+            },
+            "connections" => connections
+          } = system
+
+          if is_active do
+            graph =
+              graph
+              |> Graph.add_vertex(id)
+              |> Graph.label_vertex(id, System.build(id, name))
+
+            Enum.reduce(connections, graph, fn {_id, connection}, graph ->
+              %{
+                "from_system_id" => from,
+                "to_system_id" => to,
+                "distance" => distance
+              } = connection
+
+              graph
+              |> Graph.add_edge(from, to, weight: distance)
+              |> Graph.add_edge(to, from, weight: distance)
+            end)
+          else
+            graph
+          end
+        end)
+
+      {:ok, graph}
+    end
+  end
+
+  def reject_long_warp_edges(graph, max_warp_distance) do
+    Graph.edges(graph)
+    |> Enum.reject(&(&1.weight < max_warp_distance))
+    |> Enum.reduce(graph, fn edge, graph ->
+      Graph.delete_edge(graph, edge.v1, edge.v2)
+    end)
+  end
+
+  def find_path(_graph, system_id, system_id), do: [system_id]
+
+  def find_path(graph, system_id1, system_id2) do
+    if path = Graph.get_shortest_path(graph, system_id1, system_id2) do
+      path
+    else
+      :error
+    end
+  end
+
+  def get_path_distance(graph, path) do
+    {initial_point, rest_path} = List.pop_at(path, 0)
+
+    {_node, distance} =
+      Enum.reduce(rest_path, {initial_point, 0}, fn vertex, {prev_vertex, acc} ->
+        [%{weight: weight}] = Graph.edges(graph, prev_vertex, vertex)
+        {vertex, acc + weight}
+      end)
+
+    distance
+  end
+
   def scan_players(target_ids, %Session{} = session) do
     body =
       Jason.encode!(%{

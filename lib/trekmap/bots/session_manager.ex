@@ -16,21 +16,19 @@ defmodule Trekmap.Bots.SessionManager do
     {:ok, session} = Trekmap.Session.start_session()
     {:ok, session} = start_session_instance(session)
 
+    {:ok, galaxy} = Trekmap.Galaxy.build_systems_graph(session)
+
+    {:ok, {starbase, fleets, deployed_fleets}} = Trekmap.Me.fetch_current_state(session)
+
     fleet_id =
-      case Trekmap.Me.list_ships_and_defences(session) do
-        {[%{"fleet_id" => fleet_id} | _], _deployed_fleets, _defense_stations} ->
-          to_integer(fleet_id)
+      (Map.keys(fleets) ++ Map.keys(deployed_fleets))
+      |> List.first()
+      |> to_integer()
 
-        {[], deployed_fleets, _defense_stations} ->
-          deployed_fleets
-          |> Enum.to_list()
-          |> List.first()
-          |> elem(1)
-          |> Map.fetch!("fleet_id")
-          |> to_integer()
-      end
+    home_system_id = starbase["location"]["system"]
 
-    {:ok, %{session: %{session | fleet_id: fleet_id}}}
+    {:ok,
+     %{session: %{session | fleet_id: fleet_id, home_system_id: home_system_id, galaxy: galaxy}}}
   end
 
   defp to_integer(binary) when is_binary(binary), do: String.to_integer(binary)

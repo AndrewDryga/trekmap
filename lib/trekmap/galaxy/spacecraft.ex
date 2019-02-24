@@ -6,7 +6,9 @@ defmodule Trekmap.Galaxy.Spacecraft do
             player: nil,
             id: nil,
             strength: nil,
-            bounty_score: nil
+            bounty_score: nil,
+            coords: {0, 0},
+            mining_node_id: nil
 
   def table_name, do: "Spacecrafts"
 

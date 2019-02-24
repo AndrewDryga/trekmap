@@ -50,44 +50,51 @@ defmodule Trekmap.Bots.Guardian do
 
     cond do
       fleet_damage_ratio > 95 ->
-        Logger.warn("Base broken")
+        # Logger.warn("Base broken")
         :ok = Trekmap.Me.activate_shield(session)
+        Trekmap.Bots.FleetCommander.stop_missions()
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)
         {:noreply, %{state | session: session}}
 
       under_attack? == true ->
-        Logger.warn("Base is under continous attack")
+        # Logger.warn("Base is under continous attack")
+        Trekmap.Bots.FleetCommander.stop_missions()
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)
         {:noreply, %{state | session: session}}
 
       fleet_damage_ratio > 50 ->
-        Logger.warn("Base is damaged, switching to under attack mode")
+        # Logger.warn("Base is damaged, switching to under attack mode")
         {:ok, session} = full_repair(session)
+        Trekmap.Bots.FleetCommander.stop_missions()
         Process.send_after(self(), :timeout, 1)
         Process.send_after(self(), :cancel_attack, :timer.minutes(15))
         {:noreply, %{state | session: session, under_attack?: true}}
 
       defence_broken? == true ->
-        Logger.warn("Base defence is damaged, switching to under attack mode")
+        # Logger.warn("Base defence is damaged, switching to under attack mode")
         {:ok, session} = full_repair(session)
+        Trekmap.Bots.FleetCommander.stop_missions()
         Process.send_after(self(), :timeout, 1)
         Process.send_after(self(), :cancel_attack, :timer.minutes(15))
         {:noreply, %{state | session: session, under_attack?: true}}
 
       not base_well_defended? ->
-        Logger.warn("Base is not well defended, do not bait")
+        # Logger.warn("Base is not well defended, do not bait")
+        Trekmap.Bots.FleetCommander.stop_missions()
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)
         {:noreply, %{state | session: session}}
 
       fleet_damage_ratio > 0 ->
-        Logger.info("Baiting, damaged by #{trunc(fleet_damage_ratio)}%")
+        # Logger.info("Baiting, damaged by #{trunc(fleet_damage_ratio)}%")
+        Trekmap.Bots.FleetCommander.stop_missions()
         Process.send_after(self(), :timeout, 1_000)
         {:noreply, state}
 
       true ->
+        Trekmap.Bots.FleetCommander.continue_missions()
         Process.send_after(self(), :timeout, 1_000)
         {:noreply, state}
     end
