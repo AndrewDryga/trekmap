@@ -155,7 +155,7 @@ defmodule Trekmap.Bots.FleetCommander do
     {fleet, continue} =
       targets
       |> Enum.sort_by(&distance(&1.coords, fleet.coords))
-      |> Enum.reduce_while({fleet, false}, fn target, {fleet, false} ->
+      |> Enum.reduce_while({fleet, :next_system}, fn target, {fleet, _next_step} ->
         Logger.info(
           "[FleetCommander] Killing [#{target.player.alliance.tag}] #{target.player.name}, " <>
             "score: #{inspect(target.bounty_score)}"
