@@ -89,6 +89,7 @@ defmodule Trekmap.Bots.Guardian do
 
       fleet_damage_ratio > 0 ->
         Logger.info("Baiting, damaged by #{trunc(fleet_damage_ratio)}%")
+        Trekmap.Bots.FleetCommander.continue_missions()
         Process.send_after(self(), :timeout, 1_000)
         {:noreply, state}
 

@@ -47,6 +47,32 @@ defmodule Trekmap.Galaxy.System do
   defp put_if_not_nil(map, _key, nil), do: map
   defp put_if_not_nil(map, key, value), do: Map.put(map, key, value)
 
+  def list_miners(%__MODULE__{} = system, %Session{} = session) do
+    body = Jason.encode!(%{system_id: system.id})
+    additional_headers = Session.session_headers(session)
+
+    with {:ok, %{response: response}} <-
+           APIClient.protobuf_request(:post, @system_nodes_endpoint, additional_headers, body),
+         %{
+           "mining_slots" => mining_slots,
+           "deployed_fleets" => deployed_fleets
+         } = response,
+         stations = [],
+         miners = build_miners_list(system, mining_slots, deployed_fleets),
+         {:ok, stations} <- enrich_stations_with_planet_names(stations),
+         {:ok, {stations, miners}} <- enrich_with_scan_info({stations, miners}, session),
+         {:ok, {stations, miners}} <- enrich_with_alliance_info({stations, miners}, session),
+         {:ok, stations} <- enrich_with_resources(stations, session) do
+      {:ok, {stations, miners}}
+    else
+      {:error, %{body: "deployment", type: 1}} ->
+        {:error, :system_not_visited}
+
+      other ->
+        other
+    end
+  end
+
   def list_stations_and_miners(%__MODULE__{} = system, %Session{} = session) do
     body = Jason.encode!(%{system_id: system.id})
     additional_headers = Session.session_headers(session)

@@ -210,6 +210,9 @@ defmodule Trekmap.Me do
         :ok = finish_station_repair(station_repair_job, session)
         full_repair(session)
 
+      {:error, :not_found} ->
+        :ok
+
       {:error, %{body: "user_authentication", type: 102}} ->
         {:error, :session_expired}
     end

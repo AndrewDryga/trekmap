@@ -56,7 +56,7 @@ defmodule Trekmap.Bots.FleetCommander do
 
   def handle_cast(:continue_missions, %{session: session, on_mission: false} = state) do
     fleet = get_initial_fleet(session)
-    Logger.info("[FleetCommander] Starting missions using fleet: #{inspect(fleet)}")
+    Logger.info("[FleetCommander] Starting missions using fleet: #{inspect(fleet.id)}")
     send(self(), {:continue_mission, fleet})
     {:noreply, %{state | on_mission: true}}
   end
@@ -152,10 +152,10 @@ defmodule Trekmap.Bots.FleetCommander do
     %{session: session, enemies: enemies, allies: allies} = state
     {:ok, targets} = find_targets_in_current_system(fleet, enemies, allies, session)
 
-    targets_by_distance = Enum.sort_by(targets, &distance(&1.coords, fleet.coords))
-
-    {fleet, killed_any?} =
-      Enum.reduce_while(targets_by_distance, {fleet, false}, fn target, {fleet, false} ->
+    {fleet, continue?} =
+      targets
+      |> Enum.sort_by(&distance(&1.coords, fleet.coords))
+      |> Enum.reduce_while({fleet, false}, fn target, {fleet, false} ->
         Logger.info(
           "[FleetCommander] Killing [#{target.player.alliance.tag}] #{target.player.name}, " <>
             "score: #{inspect(target.bounty_score)}"
@@ -165,17 +165,21 @@ defmodule Trekmap.Bots.FleetCommander do
           {:ok, fleet} ->
             {:halt, {fleet, true}}
 
-          other ->
-            Logger.warn(
-              "[FleetCommander] Cant kill [#{target.player.alliance.tag}] #{target.player.name}, " <>
-                "reason: #{inspect(other)}"
-            )
+          {:error, :in_warp} ->
+            fleet = get_initial_fleet(session)
+            {:halt, {fleet, true}}
 
+          {:error, :fleet_on_repair} ->
+            fleet = get_initial_fleet(session)
+            {:halt, {fleet, true}}
+
+          other ->
+            Logger.warn("[FleetCommander] Cant kill #{inspect({target, other}, pretty: true)}")
             {:cont, {fleet, false}}
         end
       end)
 
-    if killed_any? do
+    if continue? do
       Process.send_after(
         self(),
         {:continue_mission, fleet},
@@ -196,13 +200,23 @@ defmodule Trekmap.Bots.FleetCommander do
       if length(nearby_systems_with_targets) > 0 do
         system_id = List.first(nearby_systems_with_targets)
         Logger.info("[FleetCommander] Warping to next system #{system_id}")
-        {:ok, fleet} = Trekmap.Me.warp_to_system(fleet, system_id, session)
 
-        Process.send_after(
-          self(),
-          {:continue_mission, fleet},
-          :timer.seconds(fleet.remaining_travel_time)
-        )
+        with {:ok, fleet} <- Trekmap.Me.warp_to_system(fleet, system_id, session) do
+          Process.send_after(
+            self(),
+            {:continue_mission, fleet},
+            :timer.seconds(fleet.remaining_travel_time)
+          )
+        else
+          {:error, :in_warp} ->
+            fleet = get_initial_fleet(session)
+
+            Process.send_after(
+              self(),
+              {:continue_mission, fleet},
+              :timer.seconds(fleet.remaining_travel_time)
+            )
+        end
       else
         Logger.info("[FleetCommander] No more targets in any systems")
 
@@ -225,7 +239,7 @@ defmodule Trekmap.Bots.FleetCommander do
         Logger.info("[FleetCommander] No fleets deployed, picking jellyfish")
         fleet = %Fleet{id: Fleet.jellyfish_fleet_id(), system_id: session.home_system_id}
         Logger.info("[FleetCommander] Repairing ships before mission")
-        :ok = Trekmap.Me.full_repair(session)
+        Trekmap.Me.full_repair(session)
         {:ok, fleet} = Trekmap.Me.fly_to_coords(fleet, {0, 0}, session)
         fleet
 
@@ -237,7 +251,7 @@ defmodule Trekmap.Bots.FleetCommander do
         Logger.info("[FleetCommander] Jellyfish is not deployed, recalling all ships")
         :ok = recall_all_fleet(session, [Fleet.jellyfish_fleet_id()])
         Logger.info("[FleetCommander] Repairing ships before mission")
-        :ok = Trekmap.Me.full_repair(session)
+        Trekmap.Me.full_repair(session)
         fleet = %Fleet{id: Fleet.jellyfish_fleet_id(), system_id: session.home_system_id}
         {:ok, fleet} = Trekmap.Me.fly_to_coords(fleet, {0, 0}, session)
         fleet
@@ -251,7 +265,7 @@ defmodule Trekmap.Bots.FleetCommander do
 
   defp find_targets_in_system(fleet, system, enemies, allies, session) do
     with {:ok, {_stations, miners}} <-
-           Trekmap.Galaxy.System.list_stations_and_miners(system, session) do
+           Trekmap.Galaxy.System.list_miners(system, session) do
       targets =
         miners
         |> Enum.filter(&can_attack?(&1, allies))
@@ -268,7 +282,7 @@ defmodule Trekmap.Bots.FleetCommander do
     ally? = if miner.player.alliance, do: miner.player.alliance.tag in allies, else: false
 
     not ally? and not is_nil(x) and not is_nil(y) and
-      miner.player.level > 16 and miner.player.level < 23
+      miner.player.level > 16 and miner.player.level < 23 and not is_nil(miner.mining_node_id)
   end
 
   defp can_kill?(miner, fleet) do
@@ -280,7 +294,9 @@ defmodule Trekmap.Bots.FleetCommander do
   end
 
   defp should_kill?(miner, enemies) do
-    miner.player.alliance.tag in enemies or miner.bounty_score > 300
+    enemy? = if miner.player.alliance, do: miner.player.alliance.tag in enemies, else: false
+
+    enemy? or miner.bounty_score > 300
   end
 
   defp distance({x1, y1}, {x2, y2}) do
