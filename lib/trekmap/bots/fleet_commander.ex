@@ -78,6 +78,16 @@ defmodule Trekmap.Bots.FleetCommander do
     {:noreply, state}
   end
 
+  def handle_info({:continue_mission, %{state: :at_dock}}, %{session: session} = state) do
+    Logger.info("[FleetCommander] Fleet is at docks")
+
+    Trekmap.Me.full_repair(session)
+    fleet = get_initial_fleet(session)
+    send(self(), {:continue_mission, fleet})
+
+    {:noreply, state}
+  end
+
   def handle_info({:continue_mission, %{state: :fighting}}, %{session: session} = state) do
     Logger.info("[FleetCommander] Fleet is fighting")
 

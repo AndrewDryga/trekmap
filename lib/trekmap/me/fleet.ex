@@ -11,7 +11,7 @@ defmodule Trekmap.Me.Fleet do
             shield_regeneration_duration: nil,
             max_warp_distance: nil,
             warp_time: nil,
-            state: nil
+            state: :at_dock
 
   def build(deployed_fleet) do
     %{
