@@ -4,9 +4,15 @@ defmodule Trekmap.Bots.FleetCommander do
   require Logger
 
   @patrol_systems [
+    # Dlith,
+    958_423_648,
+    1_017_582_787,
     # 2** raw
+    81250,
+    83345,
     81459,
     81497,
+    601_072_182,
     1_854_874_708,
     1_718_038_036,
     849_541_812,
@@ -23,7 +29,10 @@ defmodule Trekmap.Bots.FleetCommander do
     186_798_495,
     1_691_252_927,
     717_782_925,
-    955_177_926
+    955_177_926,
+    1_016_428_829,
+    739_609_161,
+    1_744_652_289
   ]
 
   def start_link(_opts) do
