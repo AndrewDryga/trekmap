@@ -96,6 +96,7 @@ defmodule Trekmap.Me do
       {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
       {:error, %{body: "deployment", type: 5}} -> {:error, :in_warp}
       {:error, %{body: "fleet", type: 9}} -> {:error, :fleet_on_repair}
+      {:error, %{body: "fleet", type: 4}} -> {:error, :fleet_on_repair}
       {:error, %{body: "course", type: 13}} -> {:error, :invalid_course}
     end
   end
@@ -130,6 +131,7 @@ defmodule Trekmap.Me do
       {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
       {:error, %{body: "deployment", type: 5}} -> {:error, :in_warp}
       {:error, %{body: "fleet", type: 9}} -> {:error, :fleet_on_repair}
+      {:error, %{body: "fleet", type: 4}} -> {:error, :fleet_on_repair}
       {:error, %{body: "course", type: 13}} -> {:error, :invalid_course}
       {:error, %{"code" => 400}} -> {:error, :invalid_target}
     end

@@ -69,32 +69,50 @@ defmodule Trekmap.Bots.FleetCommander do
     {:noreply, state}
   end
 
-  def handle_info({:continue_mission, %{state: :fighting} = fleet}, state) do
+  def handle_info({:continue_mission, %{state: :fighting}}, %{session: session} = state) do
     Logger.info("[FleetCommander] Fleet is fighting")
 
     :timer.sleep(:timer.seconds(5))
+    fleet = reload_jelly_fleet(session)
     send(self(), {:continue_mission, fleet})
 
     {:noreply, state}
   end
 
-  def handle_info({:continue_mission, %{state: state} = fleet}, %{session: session} = state)
-      when state in [:warping, :flying, :charging] do
+  def handle_info({:continue_mission, %{state: :mining}}, %{session: session} = state) do
+    fleet = reload_jelly_fleet(session)
+    Logger.info("[FleetCommander] Fleet is mining, hiding at #{inspect(fleet.coords)}")
+
+    with {:ok, fleet} <- Trekmap.Me.fly_to_coords(fleet, fleet.coords, session) do
+      send(self(), {:continue_mission, %{fleet | state: :idle}})
+    else
+      _other ->
+        send(self(), {:continue_mission, %{fleet | state: :idle}})
+    end
+
+    {:noreply, state}
+  end
+
+  def handle_info({:continue_mission, %{state: fleet_state} = fleet}, %{session: session} = state)
+      when fleet_state in [:warping, :flying, :charging] do
     Logger.info(
-      "[FleetCommander] Fleet is #{inspect(state)}, " <>
+      "[FleetCommander] Fleet is #{inspect(fleet_state)}, " <>
         "remaining_duration: #{inspect(fleet.remaining_travel_time)}"
     )
 
-    :timer.sleep(:timer.seconds(fleet.remaining_travel_time))
-    fleet = get_initial_fleet(session)
+    :timer.sleep(:timer.seconds(fleet.remaining_travel_time + 1))
+    fleet = reload_jelly_fleet(session)
     send(self(), {:continue_mission, fleet})
 
     {:noreply, state}
   end
 
-  def handle_info({:continue_mission, %{health: health} = fleet}, %{session: session} = state)
-      when health < 30 do
-    Logger.info("[FleetCommander] Fleet is damaged #{health}, recalling")
+  def handle_info(
+        {:continue_mission, %{hull_health: hull_health} = fleet},
+        %{session: session} = state
+      )
+      when hull_health < 50 do
+    Logger.info("[FleetCommander] Fleet hull is damaged #{hull_health}, recalling")
 
     case Trekmap.Me.recall_fleet(fleet, session) do
       {:ok, fleet} ->
@@ -107,16 +125,34 @@ defmodule Trekmap.Bots.FleetCommander do
 
       {:error, :fleet_on_repair} ->
         Trekmap.Me.full_repair(session)
+        :timer.sleep(1_000)
         fleet = get_initial_fleet(session)
         send(self(), {:continue_mission, fleet})
 
       :ok ->
+        Trekmap.Me.full_repair(session)
         fleet = get_initial_fleet(session)
         send(self(), {:continue_mission, fleet})
     end
 
     {:noreply, state}
   end
+
+  # The game does not update shield damage in api resource
+  # def handle_info(
+  #       {:continue_mission, %{shield_health: shield_health} = fleet},
+  #       %{session: session} = state
+  #     )
+  #     when shield_health < 50 do
+  #   Logger.info("[FleetCommander] Fleet shield is damaged #{shield_health}, waiting")
+  #
+  #   Trekmap.Me.fly_to_coords(fleet, fleet.coords, session)
+  #   :timer.sleep(:timer.seconds(10))
+  #   fleet = get_initial_fleet(session)
+  #   Process.send_after(self(), {:continue_mission, fleet}, :timer.seconds(30))
+  #
+  #   {:noreply, state}
+  # end
 
   def handle_info(
         {:continue_mission, %{cargo_bay_size: cargo_bay_size, cargo_size: cargo_size} = fleet},
@@ -156,29 +192,63 @@ defmodule Trekmap.Bots.FleetCommander do
       targets
       |> Enum.sort_by(&distance(&1.coords, fleet.coords))
       |> Enum.reduce_while({fleet, :next_system}, fn target, {fleet, _next_step} ->
-        Logger.info(
-          "[FleetCommander] Killing [#{target.player.alliance.tag}] #{target.player.name}, " <>
-            "score: #{inspect(target.bounty_score)}"
-        )
+        if distance(target.coords, fleet.coords) < 50 do
+          Logger.info(
+            "[FleetCommander] Killing [#{target.player.alliance.tag}] #{target.player.name}, " <>
+              "score: #{inspect(target.bounty_score)} at #{to_string(target.system.name)}"
+          )
 
-        case Trekmap.Me.attack_miner(fleet, target, session) do
-          {:ok, fleet} ->
-            {:halt, {fleet, :current_system}}
+          case Trekmap.Me.attack_miner(fleet, target, session) do
+            {:ok, fleet} ->
+              :timer.sleep(:timer.seconds(fleet.remaining_travel_time) + 3)
+              fleet = reload_jelly_fleet(session)
+              {:halt, {fleet, :current_system}}
 
-          {:error, :in_warp} ->
-            fleet = get_initial_fleet(session)
-            {:halt, {fleet, :current_system}}
+            {:error, :in_warp} ->
+              fleet = get_initial_fleet(session)
+              {:halt, {fleet, :current_system}}
 
-          {:error, :fleet_on_repair} ->
-            fleet = get_initial_fleet(session)
-            {:halt, {fleet, :current_system}}
+            {:error, :fleet_on_repair} ->
+              fleet = get_initial_fleet(session)
+              {:halt, {fleet, :current_system}}
 
-          {:error, :shield_is_enabled} ->
-            {:halt, {fleet, :recall}}
+            {:error, :shield_is_enabled} ->
+              {:halt, {fleet, :recall}}
 
-          other ->
-            Logger.warn("[FleetCommander] Cant kill #{inspect({target, other}, pretty: true)}")
-            {:cont, {fleet, :next_system}}
+            other ->
+              Logger.warn("[FleetCommander] Cant kill #{inspect({target, other}, pretty: true)}")
+              {:cont, {fleet, :next_system}}
+          end
+        else
+          case Trekmap.Me.fly_to_coords(fleet, target.coords, session) do
+            {:ok, fleet} ->
+              Logger.info(
+                "[FleetCommander] Approaching [#{target.player.alliance.tag}] " <>
+                  "#{target.player.name} " <>
+                  "eta #{to_string(fleet.remaining_travel_time)} " <>
+                  "at #{to_string(target.system.name)}"
+              )
+
+              {:halt, {fleet, :current_system}}
+
+            {:error, :in_warp} ->
+              fleet = get_initial_fleet(session)
+              {:halt, {fleet, :current_system}}
+
+            {:error, :fleet_on_repair} ->
+              fleet = get_initial_fleet(session)
+              {:halt, {fleet, :current_system}}
+
+            {:error, :shield_is_enabled} ->
+              {:halt, {fleet, :recall}}
+
+            other ->
+              Logger.warn(
+                "[FleetCommander] Cant approach #{inspect({target, other}, pretty: true)}"
+              )
+
+              {:cont, {fleet, :current_system}}
+          end
         end
       end)
 
@@ -207,7 +277,7 @@ defmodule Trekmap.Bots.FleetCommander do
             )
           else
             {:error, :in_warp} ->
-              fleet = get_initial_fleet(session)
+              fleet = reload_jelly_fleet(session)
 
               Process.send_after(
                 self(),
@@ -229,7 +299,7 @@ defmodule Trekmap.Bots.FleetCommander do
         Process.send_after(
           self(),
           {:continue_mission, fleet},
-          :timer.seconds(fleet.remaining_travel_time)
+          :timer.seconds(fleet.remaining_travel_time + 3)
         )
 
       :recall ->
@@ -247,6 +317,12 @@ defmodule Trekmap.Bots.FleetCommander do
     {:noreply, state}
   end
 
+  def reload_jelly_fleet(session) do
+    {:ok, {_starbase, _fleets, deployed_fleets}} = Trekmap.Me.fetch_current_state(session)
+    jellyfish = Map.fetch!(deployed_fleets, to_string(Fleet.jellyfish_fleet_id()))
+    Fleet.build(jellyfish)
+  end
+
   def get_initial_fleet(session) do
     {:ok, {_starbase, _fleets, deployed_fleets}} = Trekmap.Me.fetch_current_state(session)
 
@@ -256,6 +332,7 @@ defmodule Trekmap.Bots.FleetCommander do
         fleet = %Fleet{id: Fleet.jellyfish_fleet_id(), system_id: session.home_system_id}
         Logger.info("[FleetCommander] Repairing ships before mission")
         Trekmap.Me.full_repair(session)
+        :timer.sleep(1_000)
         {:ok, fleet} = Trekmap.Me.fly_to_coords(fleet, {0, 0}, session)
         fleet
 
@@ -268,6 +345,7 @@ defmodule Trekmap.Bots.FleetCommander do
         :ok = recall_all_fleet(session, [Fleet.jellyfish_fleet_id()])
         Logger.info("[FleetCommander] Repairing ships before mission")
         Trekmap.Me.full_repair(session)
+        :timer.sleep(1_000)
         fleet = %Fleet{id: Fleet.jellyfish_fleet_id(), system_id: session.home_system_id}
         {:ok, fleet} = Trekmap.Me.fly_to_coords(fleet, {0, 0}, session)
         fleet
@@ -312,7 +390,7 @@ defmodule Trekmap.Bots.FleetCommander do
   defp should_kill?(miner, enemies) do
     enemy? = if miner.player.alliance, do: miner.player.alliance.tag in enemies, else: false
 
-    enemy? or miner.bounty_score > 300
+    enemy? or miner.bounty_score > 4000
   end
 
   defp distance({x1, y1}, {x2, y2}) do

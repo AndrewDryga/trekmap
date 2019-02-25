@@ -4,7 +4,8 @@ defmodule Trekmap.Me.Fleet do
             cargo_bay_size: nil,
             cargo_size: nil,
             strength: nil,
-            health: 100,
+            hull_health: 100,
+            shield_health: 100,
             coords: {0, 0},
             remaining_travel_time: 0,
             shield_regeneration_duration: nil,
@@ -67,11 +68,20 @@ defmodule Trekmap.Me.Fleet do
           0
       end
 
-    total_damage = map_to_num(ship_dmg) + map_to_num(ship_shield_dmg)
-    total_health = map_to_num(ship_shield_hps) + map_to_num(ship_hps)
-    health = if destroyed?, do: 0, else: 100 - Enum.max([0, total_damage]) / (total_health / 100)
+    hull_health = map_to_num(ship_hps)
+    hull_damage = map_to_num(ship_dmg)
 
-    strength = officer_rating + offense_rating + defense_rating + health_rating
+    hull_health =
+      if destroyed?, do: 0, else: 100 - Enum.max([0, hull_damage]) / (hull_health / 100)
+
+    shield_health = map_to_num(ship_shield_hps)
+    shield_damage = map_to_num(ship_shield_dmg)
+
+    shield_health =
+      if destroyed?, do: 0, else: 100 - Enum.max([0, shield_damage]) / (shield_health / 100)
+
+    strength =
+      (officer_rating + offense_rating + defense_rating + health_rating) * (hull_health / 100)
 
     warp_time =
       case NaiveDateTime.from_iso8601(warp_time || "") do
@@ -85,7 +95,8 @@ defmodule Trekmap.Me.Fleet do
       cargo_bay_size: cargo_max,
       cargo_size: map_to_num(resources),
       strength: strength,
-      health: health,
+      hull_health: hull_health,
+      shield_health: shield_health,
       coords: coords,
       shield_regeneration_duration: map_to_num(ship_shield_total_regeneration_durations),
       max_warp_distance: warp_distance,
@@ -101,8 +112,9 @@ defmodule Trekmap.Me.Fleet do
     |> Enum.sum()
   end
 
-  defp state(6), do: :fighting
+  defp state(6), do: :mining
   defp state(5), do: :mining
+  defp state(3), do: :fighting
   defp state(2), do: :warping
   defp state(1), do: :flying
   defp state(0), do: :idle

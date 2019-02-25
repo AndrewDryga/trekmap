@@ -80,7 +80,7 @@ defmodule Trekmap.Job.Speedup do
   end
 
   def boost_job(job_id, {duration, _cost, id} = token, session) do
-    Logger.info("Using custom repair token to boost ship repair #{job_id}, #{inspect(token)}")
+    Logger.debug("Using custom repair token to boost ship repair #{job_id}, #{inspect(token)}")
     additional_headers = Session.session_headers(session)
 
     body =
