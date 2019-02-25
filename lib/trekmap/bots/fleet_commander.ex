@@ -306,7 +306,7 @@ defmodule Trekmap.Bots.FleetCommander do
           :ok = recall_all_fleet(session)
           :timer.sleep(10_000)
 
-          fleet = reload_jelly_fleet(session)
+          fleet = get_initial_fleet(session)
 
           Process.send_after(
             self(),
