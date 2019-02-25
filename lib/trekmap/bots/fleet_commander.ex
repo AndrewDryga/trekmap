@@ -297,6 +297,11 @@ defmodule Trekmap.Bots.FleetCommander do
         else
           Logger.info("[FleetCommander] No more targets in any systems")
 
+          :ok = recall_all_fleet(session)
+          :timer.sleep(10_000)
+
+          fleet = reload_jelly_fleet(session)
+
           Process.send_after(
             self(),
             {:continue_mission, fleet},
