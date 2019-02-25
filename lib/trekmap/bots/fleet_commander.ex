@@ -390,7 +390,7 @@ defmodule Trekmap.Bots.FleetCommander do
   defp should_kill?(miner, enemies) do
     enemy? = if miner.player.alliance, do: miner.player.alliance.tag in enemies, else: false
 
-    enemy? or miner.bounty_score > 4000
+    enemy? or miner.bounty_score > 1800
   end
 
   defp distance({x1, y1}, {x2, y2}) do
