@@ -263,22 +263,28 @@ defmodule Trekmap.Bots.FleetCommander do
 
     case continue do
       :next_system ->
-        nearby_systems_with_targets =
+        nearby_system_with_targets =
           Enum.sort_by(@patrol_systems, fn system_id ->
             path = Trekmap.Galaxy.find_path(session.galaxy, fleet.system_id, system_id)
             Trekmap.Galaxy.get_path_distance(session.galaxy, path)
           end)
-          |> Enum.filter(fn system_id ->
+          |> Enum.reduce_while(nil, fn system_id, acc ->
             system = Trekmap.Me.get_system(system_id, session)
             {:ok, targets} = find_targets_in_system(fleet, system, enemies, allies, session)
-            length(targets) > 5
+
+            if length(targets) > 5 do
+              {:halt, {system, targets}}
+            else
+              {:cont, acc}
+            end
           end)
 
-        if length(nearby_systems_with_targets) > 0 do
-          system_id = List.first(nearby_systems_with_targets)
-          Logger.info("[FleetCommander] Warping to next system #{system_id}")
+        if nearby_system_with_targets do
+          {system, targets} = nearby_system_with_targets
+          target = List.first(targets)
+          Logger.info("[FleetCommander] Warping to next system #{system.name} (#{system.id})")
 
-          with {:ok, fleet} <- Trekmap.Me.warp_to_system(fleet, system_id, session) do
+          with {:ok, fleet} <- Trekmap.Me.warp_to_system(fleet, system.id, target.coords, session) do
             Process.send_after(
               self(),
               {:continue_mission, fleet},

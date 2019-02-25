@@ -38,8 +38,10 @@ defmodule Trekmap.Me do
 
   ## Navigation
 
-  def warp_to_system(%Fleet{} = fleet, system_id, %Session{} = session) do
+  def warp_to_system(%Fleet{} = fleet, system_id, coords \\ {0, 0}, %Session{} = session) do
     path = Galaxy.find_path(session.galaxy, fleet.system_id || session.home_system_id, system_id)
+
+    {x, y} = coords
 
     body =
       Jason.encode!(%{
@@ -48,8 +50,8 @@ defmodule Trekmap.Me do
         "fleet_id" => fleet.id,
         "client_warp_path" => path,
         "target_node" => system_id,
-        "target_x" => 0,
-        "target_y" => 0
+        "target_x" => x,
+        "target_y" => y
       })
 
     additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
