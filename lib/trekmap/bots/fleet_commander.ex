@@ -130,7 +130,7 @@ defmodule Trekmap.Bots.FleetCommander do
         {:continue_mission, %{hull_health: hull_health} = fleet},
         %{session: session} = state
       )
-      when hull_health < 50 do
+      when hull_health < 33 do
     Logger.info("[FleetCommander] Fleet hull is damaged #{hull_health}, recalling")
 
     case Trekmap.Me.recall_fleet(fleet, session) do
