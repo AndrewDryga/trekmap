@@ -306,7 +306,7 @@ defmodule Trekmap.Bots.FleetCommander do
           :ok = recall_all_fleet(session)
           :timer.sleep(10_000)
 
-          fleet = get_initial_fleet(session)
+          fleet = reload_jelly_fleet(session)
 
           Process.send_after(
             self(),
@@ -339,8 +339,13 @@ defmodule Trekmap.Bots.FleetCommander do
 
   def reload_jelly_fleet(session) do
     {:ok, {_starbase, _fleets, deployed_fleets}} = Trekmap.Me.fetch_current_state(session)
-    jellyfish = Map.fetch!(deployed_fleets, to_string(Fleet.jellyfish_fleet_id()))
-    Fleet.build(jellyfish)
+
+    if deployed_fleets == %{} do
+      %Fleet{id: Fleet.jellyfish_fleet_id(), system_id: session.home_system_id}
+    else
+      jellyfish = Map.fetch!(deployed_fleets, to_string(Fleet.jellyfish_fleet_id()))
+      Fleet.build(jellyfish)
+    end
   end
 
   def get_initial_fleet(session) do
