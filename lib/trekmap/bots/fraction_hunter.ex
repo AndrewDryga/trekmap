@@ -310,10 +310,11 @@ defmodule Trekmap.Bots.FractionHunter do
   end
 
   defp recall_fleet(session) do
-    Logger.info("[FractionHunter] Recalling all fleet")
     {:ok, {_starbase, _fleets, deployed_fleets}} = Trekmap.Me.fetch_current_state(session)
 
     if northstar = Map.get(deployed_fleets, to_string(Fleet.northstar_fleet_id())) do
+      Logger.info("[FractionHunter] Recalling  fleet")
+
       Fleet.build(northstar)
       |> Trekmap.Me.recall_fleet(session)
       |> case do

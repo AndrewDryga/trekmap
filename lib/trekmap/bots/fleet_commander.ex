@@ -22,7 +22,6 @@ defmodule Trekmap.Bots.FleetCommander do
     # 3** raw
     830_770_182,
     1_133_522_720,
-    81531,
     2_102_605_227,
     1_747_858_074,
     625_581_925,
@@ -450,10 +449,11 @@ defmodule Trekmap.Bots.FleetCommander do
   end
 
   defp recall_fleet(session) do
-    Logger.info("[FleetCommander] Recalling all fleet")
     {:ok, {_starbase, _fleets, deployed_fleets}} = Trekmap.Me.fetch_current_state(session)
 
     if jellyfish = Map.get(deployed_fleets, to_string(Fleet.jellyfish_fleet_id())) do
+      Logger.info("[FleetCommander] Recalling fleet")
+
       Fleet.build(jellyfish)
       |> Trekmap.Me.recall_fleet(session)
       |> case do
