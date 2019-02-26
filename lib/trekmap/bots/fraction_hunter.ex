@@ -301,7 +301,8 @@ defmodule Trekmap.Bots.FractionHunter do
   end
 
   defp can_kill?(marauder, fleet) do
-    marauder.strength * 0.8 < fleet.strength and marauder.level > 23 and marauder.level < 28
+    marauder.strength * 0.8 < fleet.strength and marauder.level > 23 and marauder.level < 28 and
+      marauder.fraction_id != -1
   end
 
   defp distance({x1, y1}, {x2, y2}) do
