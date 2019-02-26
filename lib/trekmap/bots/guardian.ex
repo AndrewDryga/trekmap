@@ -20,9 +20,17 @@ defmodule Trekmap.Bots.Guardian do
     %{session: session, under_attack?: under_attack?} = state
     {home_fleet, deployed_fleets, defense_stations} = Trekmap.Me.list_ships_and_defences(session)
 
+    ships_on_mission =
+      Trekmap.Bots.FleetCommander.get_ships_on_mission() ++
+        Trekmap.Bots.FractionHunter.get_ships_on_mission()
+
     ships_at_base =
-      Enum.reject(home_fleet, fn ship ->
+      home_fleet
+      |> Enum.reject(fn ship ->
         Map.has_key?(deployed_fleets, Map.fetch!(ship, "fleet_id"))
+      end)
+      |> Enum.reject(fn ship ->
+        Map.fetch!(ship, "fleet_id") in ships_on_mission
       end)
 
     ships_at_base_alive =

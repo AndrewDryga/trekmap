@@ -34,6 +34,22 @@ defmodule Trekmap.Bots.FractionHunter do
     GenServer.cast(__MODULE__, :stop_missions)
   end
 
+  def get_ships_on_mission do
+    try do
+      GenServer.call(__MODULE__, :get_ships_on_mission, 500)
+    catch
+      :exit, _ -> []
+    end
+  end
+
+  def handle_call(:get_ships_on_mission, %{on_mission: true} = state) do
+    {:reply, [Fleet.jellyfish_fleet_id()], state}
+  end
+
+  def handle_call(:get_ships_on_mission, %{on_mission: false} = state) do
+    {:reply, [], state}
+  end
+
   def handle_cast(:stop_missions, state) do
     {:noreply, %{state | on_mission: false}}
   end
