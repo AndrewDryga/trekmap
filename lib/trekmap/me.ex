@@ -128,6 +128,7 @@ defmodule Trekmap.Me do
       {:ok, Fleet.build(fleet_map)}
     else
       true -> {:error, :shield_is_enabled}
+      {:error, %{body: "course", type: 1}} -> {:ok, fleet}
       {:error, %{body: "course", type: 2}} -> {:ok, fleet}
       {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
       {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
