@@ -144,6 +144,7 @@ defmodule Trekmap.Bots.Guardian do
 
   defp continue_klingon_hunting(%{ships_on_mission: ships_on_mission} = state) do
     if @northstar_fleet_id in ships_on_mission do
+      Trekmap.Bots.FractionHunter.continue_missions()
       state
     else
       Trekmap.Bots.FractionHunter.continue_missions()
