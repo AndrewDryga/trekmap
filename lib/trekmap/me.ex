@@ -1,5 +1,5 @@
 defmodule Trekmap.Me do
-  alias Trekmap.{APIClient, Session, Job, Galaxy, Galaxy.Spacecraft}
+  alias Trekmap.{APIClient, Session, Job, Galaxy, Galaxy.Spacecraft, Galaxy.Marauder}
   alias Trekmap.Me.Fleet
   require Logger
 
@@ -100,6 +100,42 @@ defmodule Trekmap.Me do
       {:error, %{body: "fleet", type: 9}} -> {:error, :fleet_on_repair}
       {:error, %{body: "fleet", type: 4}} -> {:error, :fleet_on_repair}
       {:error, %{body: "course", type: 13}} -> {:error, :invalid_course}
+    end
+  end
+
+  def attack_spacecraft(%Fleet{} = fleet, %Marauder{} = marauder, %Session{} = session) do
+    %{coords: {x, y}} = marauder
+    path = [fleet.system_id]
+
+    body =
+      Jason.encode!(%{
+        "target_action" => 2,
+        "target_action_id" => marauder.target_fleet_id,
+        "fleet_id" => fleet.id,
+        "client_warp_path" => path,
+        "target_node" => fleet.system_id,
+        "target_x" => x,
+        "target_y" => y
+      })
+
+    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
+
+    with false <- shield_enabled?(session),
+         {:ok, %{response: response}} <-
+           APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
+      %{"my_deployed_fleets" => deployed_fleets} = response
+      fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
+      {:ok, Fleet.build(fleet_map)}
+    else
+      true -> {:error, :shield_is_enabled}
+      {:error, %{body: "course", type: 2}} -> {:ok, fleet}
+      {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
+      {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
+      {:error, %{body: "deployment", type: 5}} -> {:error, :in_warp}
+      {:error, %{body: "fleet", type: 9}} -> {:error, :fleet_on_repair}
+      {:error, %{body: "fleet", type: 4}} -> {:error, :fleet_on_repair}
+      {:error, %{body: "course", type: 13}} -> {:error, :invalid_course}
+      {:error, %{"code" => 400}} -> {:error, :invalid_target}
     end
   end
 

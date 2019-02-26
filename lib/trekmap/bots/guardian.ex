@@ -30,7 +30,7 @@ defmodule Trekmap.Bots.Guardian do
         Map.fetch!(ship, "damage") == Map.fetch!(ship, "max_hp")
       end)
 
-    base_well_defended? = length(ships_at_base_alive) >= 2
+    base_well_defended? = length(ships_at_base_alive) >= 1
 
     {fleet_total_health, fleet_total_damage} =
       ships_at_base
@@ -53,6 +53,7 @@ defmodule Trekmap.Bots.Guardian do
         Logger.warn("Base broken")
         :ok = Trekmap.Me.activate_shield(session)
         Trekmap.Bots.FleetCommander.stop_missions()
+        Trekmap.Bots.FractionHunter.continue_missions()
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)
         {:noreply, %{state | session: session}}
@@ -60,6 +61,7 @@ defmodule Trekmap.Bots.Guardian do
       under_attack? == true ->
         Logger.warn("Base is under continous attack")
         Trekmap.Bots.FleetCommander.stop_missions()
+        Trekmap.Bots.FractionHunter.stop_missions()
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)
         {:noreply, %{state | session: session}}
@@ -68,6 +70,7 @@ defmodule Trekmap.Bots.Guardian do
         Logger.warn("Base is damaged, switching to under attack mode")
         {:ok, session} = full_repair(session)
         Trekmap.Bots.FleetCommander.stop_missions()
+        Trekmap.Bots.FractionHunter.stop_missions()
         Process.send_after(self(), :timeout, 1)
         Process.send_after(self(), :cancel_attack, :timer.minutes(15))
         {:noreply, %{state | session: session, under_attack?: true}}
@@ -76,6 +79,7 @@ defmodule Trekmap.Bots.Guardian do
         Logger.warn("Base defence is damaged, switching to under attack mode")
         {:ok, session} = full_repair(session)
         Trekmap.Bots.FleetCommander.stop_missions()
+        Trekmap.Bots.FractionHunter.stop_missions()
         Process.send_after(self(), :timeout, 1)
         Process.send_after(self(), :cancel_attack, :timer.minutes(15))
         {:noreply, %{state | session: session, under_attack?: true}}
@@ -83,18 +87,19 @@ defmodule Trekmap.Bots.Guardian do
       not base_well_defended? ->
         Logger.warn("Base is not well defended, do not bait")
         Trekmap.Bots.FleetCommander.stop_missions()
+        Trekmap.Bots.FractionHunter.stop_missions()
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)
         {:noreply, %{state | session: session}}
 
       fleet_damage_ratio > 0 ->
         Logger.info("Baiting, damaged by #{trunc(fleet_damage_ratio)}%")
-        Trekmap.Bots.FleetCommander.continue_missions()
         Process.send_after(self(), :timeout, 1_000)
         {:noreply, state}
 
       true ->
         Trekmap.Bots.FleetCommander.continue_missions()
+        Trekmap.Bots.FractionHunter.continue_missions()
         Process.send_after(self(), :timeout, 1_000)
         {:noreply, state}
     end

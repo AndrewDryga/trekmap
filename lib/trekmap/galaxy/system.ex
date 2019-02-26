@@ -1,7 +1,7 @@
 defmodule Trekmap.Galaxy.System do
   alias Trekmap.{APIClient, Session}
   alias Trekmap.Galaxy
-  alias Trekmap.Galaxy.{Spacecraft, Player, Alliances, Alliances.Alliance}
+  alias Trekmap.Galaxy.{Spacecraft, Player, Alliances, Alliances.Alliance, Marauder}
   alias Trekmap.Galaxy.System.{Planet, Station}
 
   @behaviour Trekmap.AirDB
@@ -64,6 +64,48 @@ defmodule Trekmap.Galaxy.System do
          {:ok, {stations, miners}} <- enrich_with_alliance_info({stations, miners}, session),
          {:ok, stations} <- enrich_with_resources(stations, session) do
       {:ok, {stations, miners}}
+    else
+      {:error, %{body: "deployment", type: 1}} ->
+        {:error, :system_not_visited}
+
+      other ->
+        other
+    end
+  end
+
+  def list_hostiles(%__MODULE__{} = system, %Session{} = session) do
+    body = Jason.encode!(%{system_id: system.id})
+    additional_headers = Session.session_headers(session)
+
+    with {:ok, %{response: response}} <-
+           APIClient.protobuf_request(:post, @system_nodes_endpoint, additional_headers, body) do
+      %{"deployed_fleets" => deployed_fleets, "marauder_quick_scan_data" => marauders} = response
+
+      marauders =
+        Enum.map(marauders, fn marauder ->
+          %{
+            "target_fleet_id" => target_fleet_id,
+            "faction_id" => faction_id,
+            "strength" => strength,
+            "ship_levels" => levels
+          } = marauder
+
+          level = levels |> Enum.to_list() |> List.first() |> elem(1)
+
+          %{"current_coords" => %{"x" => x, "y" => y}} =
+            Map.fetch!(deployed_fleets, to_string(target_fleet_id))
+
+          %Marauder{
+            fraction_id: faction_id,
+            target_fleet_id: target_fleet_id,
+            system: system,
+            coords: {x, y},
+            strength: strength,
+            level: level
+          }
+        end)
+
+      {:ok, marauders}
     else
       {:error, %{body: "deployment", type: 1}} ->
         {:error, :system_not_visited}

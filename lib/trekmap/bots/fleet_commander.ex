@@ -59,7 +59,7 @@ defmodule Trekmap.Bots.FleetCommander do
 
   def handle_cast(:stop_missions, %{session: session} = state) do
     Logger.info("[FleetCommander] Stopping all missions and recalling fleet")
-    :ok = recall_all_fleet(session)
+    :ok = recall_fleet(session)
     {:noreply, %{state | on_mission: false}}
   end
 
@@ -313,7 +313,7 @@ defmodule Trekmap.Bots.FleetCommander do
         else
           Logger.info("[FleetCommander] No more targets in any systems")
 
-          :ok = recall_all_fleet(session)
+          :ok = recall_fleet(session)
           :timer.sleep(10_000)
 
           fleet = reload_jelly_fleet(session)
@@ -335,7 +335,7 @@ defmodule Trekmap.Bots.FleetCommander do
       :recall ->
         Logger.info("[FleetCommander] Shield is active, delaying missions by 1 hour")
 
-        :ok = recall_all_fleet(session)
+        :ok = recall_fleet(session)
 
         Process.send_after(
           self(),
@@ -377,7 +377,7 @@ defmodule Trekmap.Bots.FleetCommander do
 
       true ->
         Logger.info("[FleetCommander] Jellyfish is not deployed, recalling all ships")
-        :ok = recall_all_fleet(session, [Fleet.jellyfish_fleet_id()])
+        :ok = recall_fleet(session)
         Logger.info("[FleetCommander] Repairing ships before mission")
         Trekmap.Me.full_repair(session)
         :timer.sleep(1_000)
@@ -433,14 +433,12 @@ defmodule Trekmap.Bots.FleetCommander do
     x1 - x2 + (y1 - y2)
   end
 
-  defp recall_all_fleet(session, except \\ []) do
+  defp recall_fleet(session) do
     Logger.info("[FleetCommander] Recalling all fleet")
     {:ok, {_starbase, _fleets, deployed_fleets}} = Trekmap.Me.fetch_current_state(session)
 
-    deployed_fleets
-    |> Enum.reject(fn {_id, %{"fleet_id" => fleet_id}} -> fleet_id in except end)
-    |> Enum.each(fn {_id, deployed_fleet} ->
-      Fleet.build(deployed_fleet)
+    if jellyfish = Map.get(deployed_fleets, to_string(Fleet.jellyfish_fleet_id())) do
+      Fleet.build(jellyfish)
       |> Trekmap.Me.recall_fleet(session)
       |> case do
         {:ok, fleet} ->
@@ -452,6 +450,8 @@ defmodule Trekmap.Bots.FleetCommander do
         other ->
           Logger.error("[FleetCommander] Failed to recall fleet, reason: #{inspect(other)}")
       end
-    end)
+    else
+      :ok
+    end
   end
 end

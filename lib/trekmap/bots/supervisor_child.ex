@@ -10,6 +10,7 @@ defmodule Trekmap.Bots.SupervisorChild do
     children = [
       Trekmap.Bots.SessionManager,
       Trekmap.Bots.FleetCommander,
+      Trekmap.Bots.FractionHunter,
       Trekmap.Bots.Guardian,
       Trekmap.Bots.GalaxyScanner
     ]
