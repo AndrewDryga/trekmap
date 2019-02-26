@@ -226,6 +226,8 @@ defmodule Trekmap.Galaxy.System do
       bounty_score =
         if resources = Map.get(spaceships_attributes, "resources") do
           Spacecraft.calculate_bounty_score(resources)
+        else
+          0
         end
 
       strength =

@@ -410,13 +410,14 @@ defmodule Trekmap.Bots.FleetCommander do
 
     ally? = if miner.player.alliance, do: miner.player.alliance.tag in allies, else: false
 
-    not ally? and not is_nil(x) and not is_nil(y) and
-      miner.player.level > 16 and miner.player.level < 23 and not is_nil(miner.mining_node_id)
+    not ally? and
+      miner.player.level > 16 and miner.player.level < 29 and
+      not is_nil(miner.mining_node_id) and not is_nil(x) and not is_nil(y)
   end
 
   defp can_kill?(miner, fleet) do
     if miner.strength do
-      miner.strength * 1.3 < fleet.strength
+      miner.strength * 1.1 < fleet.strength
     else
       false
     end
@@ -425,7 +426,7 @@ defmodule Trekmap.Bots.FleetCommander do
   defp should_kill?(miner, enemies) do
     enemy? = if miner.player.alliance, do: miner.player.alliance.tag in enemies, else: false
 
-    enemy? or miner.bounty_score > 1800
+    enemy? or (not is_nil(miner.bounty_score) and miner.bounty_score > 1800)
   end
 
   defp distance({x1, y1}, {x2, y2}) do
