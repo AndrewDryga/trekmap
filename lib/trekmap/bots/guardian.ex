@@ -35,7 +35,7 @@ defmodule Trekmap.Bots.Guardian do
         Map.has_key?(deployed_fleets, Map.fetch!(ship, "fleet_id"))
       end)
       |> Enum.reject(fn ship ->
-        Map.fetch!(ship, "fleet_id") in ships_on_mission
+        String.to_integer(Map.fetch!(ship, "fleet_id")) in ships_on_mission
       end)
 
     ships_at_base_alive =
@@ -128,8 +128,13 @@ defmodule Trekmap.Bots.Guardian do
   end
 
   defp continue_mining_hunting(%{ships_on_mission: ships_on_mission} = state) do
-    Trekmap.Bots.FleetCommander.continue_missions()
-    %{state | ships_on_mission: [@jellyfish_fleet_id] ++ ships_on_mission}
+    if @jellyfish_fleet_id in ships_on_mission do
+      Trekmap.Bots.FleetCommander.continue_missions()
+      state
+    else
+      Trekmap.Bots.FleetCommander.continue_missions()
+      %{state | ships_on_mission: [@jellyfish_fleet_id] ++ ships_on_mission}
+    end
   end
 
   defp stop_klingon_hunting(%{ships_on_mission: ships_on_mission} = state) do
@@ -138,8 +143,12 @@ defmodule Trekmap.Bots.Guardian do
   end
 
   defp continue_klingon_hunting(%{ships_on_mission: ships_on_mission} = state) do
-    Trekmap.Bots.FractionHunter.continue_missions()
-    %{state | ships_on_mission: [@northstar_fleet_id] ++ ships_on_mission}
+    if @northstar_fleet_id in ships_on_mission do
+      state
+    else
+      Trekmap.Bots.FractionHunter.continue_missions()
+      %{state | ships_on_mission: [@northstar_fleet_id] ++ ships_on_mission}
+    end
   end
 
   defp full_repair(session) do
