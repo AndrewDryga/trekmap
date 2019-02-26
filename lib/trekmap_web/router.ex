@@ -24,6 +24,20 @@ defmodule Trekmap.Router do
           "Would start in #{minutes}:#{seconds}"
       end
 
+    ships_on_mission =
+      Trekmap.Bots.FleetCommander.get_ships_on_mission() ++
+        Trekmap.Bots.FractionHunter.get_ships_on_mission()
+
+    ships_on_mission =
+      Enum.map(fn fleet_id ->
+        cond do
+          fleet_id == Trekmap.Me.Fleet.jellyfish_fleet_id() -> "Jellyfish - hunting miners"
+          fleet_id == Trekmap.Me.Fleet.northstar_fleet_id() -> "Noth Star - hunting Klingons"
+          true -> to_string(fleet_id)
+        end
+      end)
+      |> Enum.join(", ")
+
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, """
@@ -33,6 +47,7 @@ defmodule Trekmap.Router do
       <head/>
       <body>
         Status: #{status}<br/>
+        Ships on mission: #{ships_on_mission} <br/>
         <br/>
         Pause Bot:<br/>
         <a href="/pause?duration=15">for 15 minutes</a><br/>

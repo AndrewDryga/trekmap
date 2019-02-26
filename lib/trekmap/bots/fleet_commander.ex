@@ -65,11 +65,11 @@ defmodule Trekmap.Bots.FleetCommander do
     end
   end
 
-  def handle_call(:get_ships_on_mission, %{on_mission: true} = state) do
+  def handle_call(:get_ships_on_mission, _from, %{on_mission: true} = state) do
     {:reply, [Fleet.jellyfish_fleet_id()], state}
   end
 
-  def handle_call(:get_ships_on_mission, %{on_mission: false} = state) do
+  def handle_call(:get_ships_on_mission, _from, %{on_mission: false} = state) do
     {:reply, [], state}
   end
 
