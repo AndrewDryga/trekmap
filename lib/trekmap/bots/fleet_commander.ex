@@ -57,9 +57,9 @@ defmodule Trekmap.Bots.FleetCommander do
     GenServer.cast(__MODULE__, :stop_missions)
   end
 
-  def get_ships_on_mission do
+  def get_ships_on_mission(timeout \\ 500) do
     try do
-      GenServer.call(__MODULE__, :get_ships_on_mission, 500)
+      GenServer.call(__MODULE__, :get_ships_on_mission, timeout)
     catch
       :exit, _ -> []
     end
