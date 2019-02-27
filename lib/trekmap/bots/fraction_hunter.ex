@@ -96,6 +96,7 @@ defmodule Trekmap.Bots.FractionHunter do
         "remaining_duration: #{inspect(fleet.remaining_travel_time)}"
     )
 
+    # TODO: send_after instead of sleep
     :timer.sleep(:timer.seconds(fleet.remaining_travel_time + 1))
     fleet = reload_ns_fleet(session)
     send(self(), {:continue_mission, fleet})

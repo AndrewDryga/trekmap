@@ -66,7 +66,7 @@ defmodule Trekmap.Bots.Guardian do
         Logger.warn("Base broken")
         :ok = Trekmap.Me.activate_shield(session)
         state = stop_mining_hunting(state)
-        state = continue_klingon_hunting(state)
+        # state = continue_klingon_hunting(state)
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)
         {:noreply, %{state | session: session}}
@@ -74,7 +74,7 @@ defmodule Trekmap.Bots.Guardian do
       under_attack? == true ->
         Logger.warn("Base is under continous attack")
         state = stop_mining_hunting(state)
-        state = stop_klingon_hunting(state)
+        # state = stop_klingon_hunting(state)
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)
         {:noreply, %{state | session: session}}
@@ -83,7 +83,7 @@ defmodule Trekmap.Bots.Guardian do
         Logger.warn("Base is damaged, switching to under attack mode")
         {:ok, session} = full_repair(session)
         state = stop_mining_hunting(state)
-        state = stop_klingon_hunting(state)
+        # state = stop_klingon_hunting(state)
         Process.send_after(self(), :timeout, 1)
         Process.send_after(self(), :cancel_attack, :timer.minutes(15))
         {:noreply, %{state | session: session, under_attack?: true}}
@@ -92,7 +92,7 @@ defmodule Trekmap.Bots.Guardian do
         Logger.warn("Base defence is damaged, switching to under attack mode")
         {:ok, session} = full_repair(session)
         state = stop_mining_hunting(state)
-        state = stop_klingon_hunting(state)
+        # state = stop_klingon_hunting(state)
         Process.send_after(self(), :timeout, 1)
         Process.send_after(self(), :cancel_attack, :timer.minutes(15))
         {:noreply, %{state | session: session, under_attack?: true}}
@@ -100,57 +100,56 @@ defmodule Trekmap.Bots.Guardian do
       not base_well_defended? ->
         Logger.warn("Base is not well defended, do not bait")
         state = continue_mining_hunting(state)
-        state = stop_klingon_hunting(state)
+        # state = stop_klingon_hunting(state)
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)
         {:noreply, %{state | session: session}}
 
       fleet_damage_ratio > 0 ->
-        state = stop_klingon_hunting(state)
+        # state = stop_klingon_hunting(state)
         Logger.info("Baiting, damaged by #{trunc(fleet_damage_ratio)}%")
         Process.send_after(self(), :timeout, 1_000)
         {:noreply, state}
 
       true ->
         state = continue_mining_hunting(state)
-        state = continue_klingon_hunting(state)
+        # state = continue_klingon_hunting(state)
         Process.send_after(self(), :timeout, 1_000)
         {:noreply, state}
     end
   end
 
   @jellyfish_fleet_id Trekmap.Me.Fleet.jellyfish_fleet_id()
-  @northstar_fleet_id Trekmap.Me.Fleet.northstar_fleet_id()
+  # @northstar_fleet_id Trekmap.Me.Fleet.northstar_fleet_id()
+  @kehra_fleet_id Trekmap.Me.Fleet.kehra_fleet_id()
 
   defp stop_mining_hunting(%{ships_on_mission: ships_on_mission} = state) do
     Trekmap.Bots.FleetCommander.stop_missions()
-    %{state | ships_on_mission: ships_on_mission -- [@jellyfish_fleet_id]}
+    Trekmap.Bots.FleetCommander2.stop_missions()
+    %{state | ships_on_mission: ships_on_mission -- [@jellyfish_fleet_id, @kehra_fleet_id]}
   end
 
   defp continue_mining_hunting(%{ships_on_mission: ships_on_mission} = state) do
-    if @jellyfish_fleet_id in ships_on_mission do
-      Trekmap.Bots.FleetCommander.continue_missions()
-      state
-    else
-      Trekmap.Bots.FleetCommander.continue_missions()
-      %{state | ships_on_mission: [@jellyfish_fleet_id] ++ ships_on_mission}
-    end
+    Trekmap.Bots.FleetCommander.continue_missions()
+    Trekmap.Bots.FleetCommander2.continue_missions()
+    ships_on_mission = Enum.uniq([@jellyfish_fleet_id, @kehra_fleet_id] ++ ships_on_mission)
+    %{state | ships_on_mission: ships_on_mission}
   end
 
-  defp stop_klingon_hunting(%{ships_on_mission: ships_on_mission} = state) do
-    Trekmap.Bots.FractionHunter.stop_missions()
-    %{state | ships_on_mission: ships_on_mission -- [@northstar_fleet_id]}
-  end
-
-  defp continue_klingon_hunting(%{ships_on_mission: ships_on_mission} = state) do
-    if @northstar_fleet_id in ships_on_mission do
-      Trekmap.Bots.FractionHunter.continue_missions()
-      state
-    else
-      Trekmap.Bots.FractionHunter.continue_missions()
-      %{state | ships_on_mission: [@northstar_fleet_id] ++ ships_on_mission}
-    end
-  end
+  # defp stop_klingon_hunting(%{ships_on_mission: ships_on_mission} = state) do
+  #   Trekmap.Bots.FractionHunter.stop_missions()
+  #   %{state | ships_on_mission: ships_on_mission -- [@northstar_fleet_id]}
+  # end
+  #
+  # defp continue_klingon_hunting(%{ships_on_mission: ships_on_mission} = state) do
+  #   if @northstar_fleet_id in ships_on_mission do
+  #     Trekmap.Bots.FractionHunter.continue_missions()
+  #     state
+  #   else
+  #     Trekmap.Bots.FractionHunter.continue_missions()
+  #     %{state | ships_on_mission: [@northstar_fleet_id] ++ ships_on_mission}
+  #   end
+  # end
 
   defp full_repair(session) do
     with :ok <- Trekmap.Me.full_repair(session) do

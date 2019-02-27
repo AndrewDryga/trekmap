@@ -122,4 +122,5 @@ defmodule Trekmap.Me.Fleet do
 
   def jellyfish_fleet_id, do: 771_246_931_724_024_704
   def northstar_fleet_id, do: 771_331_774_860_311_262
+  def kehra_fleet_id, do: 791_687_022_921_464_764
 end
