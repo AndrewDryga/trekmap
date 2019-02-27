@@ -297,7 +297,7 @@ defmodule Trekmap.Bots.FleetCommander2 do
             system = Trekmap.Me.get_system(system_id, session)
             {:ok, targets} = find_targets_in_system(fleet, system, enemies, allies, session)
 
-            if length(targets) > 5 do
+            if length(targets) > 2 do
               {:halt, {system, targets}}
             else
               {:cont, acc}
