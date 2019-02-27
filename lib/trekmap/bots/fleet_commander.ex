@@ -379,8 +379,12 @@ defmodule Trekmap.Bots.FleetCommander do
     if deployed_fleets == %{} do
       %Fleet{id: Fleet.jellyfish_fleet_id(), system_id: session.home_system_id}
     else
-      jellyfish = Map.fetch!(deployed_fleets, to_string(Fleet.jellyfish_fleet_id()))
-      Fleet.build(jellyfish)
+      if kehra = Map.get(deployed_fleets, to_string(Fleet.jellyfish_fleet_id())) do
+        Fleet.build(kehra)
+      else
+        Trekmap.Me.full_repair(session)
+        %Fleet{id: Fleet.jellyfish_fleet_id(), system_id: session.home_system_id}
+      end
     end
   end
 
@@ -402,8 +406,6 @@ defmodule Trekmap.Bots.FleetCommander do
         Fleet.build(jellyfish)
 
       true ->
-        Logger.info("[FleetCommander] Jellyfish is not deployed, recalling all ships")
-        :ok = recall_fleet(session)
         Logger.info("[FleetCommander] Repairing ships before mission")
         Trekmap.Me.full_repair(session)
         :timer.sleep(1_000)
