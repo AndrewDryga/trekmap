@@ -256,9 +256,11 @@ defmodule Trekmap.Bots.FleetCommander2 do
         else
           case Trekmap.Me.fly_to_coords(fleet, target.coords, session) do
             {:ok, fleet} ->
+              alliance_tag =
+                if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
+
               Logger.info(
-                "[FleetCommander2] Approaching [#{target.player.alliance.tag}] " <>
-                  "#{target.player.name} " <>
+                "[FleetCommander2] Approaching #{alliance_tag}#{target.player.name} " <>
                   "eta #{to_string(fleet.remaining_travel_time)} " <>
                   "at #{to_string(target.system.name)}"
               )
@@ -297,7 +299,7 @@ defmodule Trekmap.Bots.FleetCommander2 do
             system = Trekmap.Me.get_system(system_id, session)
             {:ok, targets} = find_targets_in_system(fleet, system, enemies, allies, session)
 
-            if length(targets) > 2 do
+            if length(targets) > 1 do
               {:halt, {system, targets}}
             else
               {:cont, acc}
@@ -387,11 +389,11 @@ defmodule Trekmap.Bots.FleetCommander2 do
         fleet
 
       kehra = Map.get(deployed_fleets, to_string(Fleet.kehra_fleet_id())) ->
-        Logger.info("[FleetCommander2] Jellyfish is already deployed")
+        Logger.info("[FleetCommander2] Kehra is already deployed")
         Fleet.build(kehra)
 
       true ->
-        Logger.info("[FleetCommander2] Jellyfish is not deployed, recalling all ships")
+        Logger.info("[FleetCommander2] Kehra is not deployed, recalling all ships")
         :ok = recall_fleet(session)
         Logger.info("[FleetCommander2] Repairing ships before mission")
         Trekmap.Me.full_repair(session)
