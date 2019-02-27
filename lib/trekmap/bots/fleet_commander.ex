@@ -238,9 +238,8 @@ defmodule Trekmap.Bots.FleetCommander do
             if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
 
           Logger.info(
-            "[FleetCommander] Approaching #{alliance_tag}#{target.player.name} " <>
-              "eta #{to_string(fleet.remaining_travel_time)} " <>
-              "at #{to_string(target.system.name)}"
+            "[FleetCommander] Killing #{alliance_tag}#{target.player.name}, " <>
+              "score: #{inspect(target.bounty_score)} at #{to_string(target.system.name)}"
           )
 
           case Trekmap.Me.attack_miner(fleet, target, session) do
@@ -267,9 +266,11 @@ defmodule Trekmap.Bots.FleetCommander do
         else
           case Trekmap.Me.fly_to_coords(fleet, target.coords, session) do
             {:ok, fleet} ->
+              alliance_tag =
+                if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
+
               Logger.info(
-                "[FleetCommander] Approaching [#{target.player.alliance.tag}] " <>
-                  "#{target.player.name} " <>
+                "[FleetCommander] Approaching #{alliance_tag}#{target.player.name} " <>
                   "eta #{to_string(fleet.remaining_travel_time)} " <>
                   "at #{to_string(target.system.name)}"
               )

@@ -234,8 +234,11 @@ defmodule Trekmap.Bots.FleetCommander2 do
       |> Enum.sort_by(&distance(&1.coords, fleet.coords))
       |> Enum.reduce_while({fleet, :next_system}, fn target, {fleet, _next_step} ->
         if distance(target.coords, fleet.coords) < 50 do
+          alliance_tag =
+            if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
+
           Logger.info(
-            "[FleetCommander2] Killing [#{target.player.alliance.tag}] #{target.player.name}, " <>
+            "[FleetCommander2] Killing #{alliance_tag}#{target.player.name}, " <>
               "score: #{inspect(target.bounty_score)} at #{to_string(target.system.name)}"
           )
 
