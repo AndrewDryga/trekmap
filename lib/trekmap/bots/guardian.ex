@@ -14,6 +14,7 @@ defmodule Trekmap.Bots.Guardian do
 
     ships_on_mission =
       Trekmap.Bots.FleetCommander.get_ships_on_mission() ++
+        Trekmap.Bots.FleetCommander2.get_ships_on_mission() ++
         Trekmap.Bots.FractionHunter.get_ships_on_mission()
 
     {:ok, %{session: session, under_attack?: false, ships_on_mission: ships_on_mission}, 0}

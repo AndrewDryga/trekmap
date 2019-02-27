@@ -26,11 +26,12 @@ defmodule Trekmap.Router do
 
     ships_on_mission =
       (Trekmap.Bots.FleetCommander.get_ships_on_mission(5_000) ++
-         Trekmap.Bots.FractionHunter.get_ships_on_mission(5_000))
+         Trekmap.Bots.FleetCommander2.get_ships_on_mission(5_000))
       |> Enum.map(fn fleet_id ->
         cond do
           fleet_id == Trekmap.Me.Fleet.jellyfish_fleet_id() -> "Jellyfish - hunting miners"
           fleet_id == Trekmap.Me.Fleet.northstar_fleet_id() -> "North Star - hunting Klingons"
+          fleet_id == Trekmap.Me.Fleet.kehra_fleet_id() -> "Kehra - hunting miners"
           true -> to_string(fleet_id)
         end
       end)
