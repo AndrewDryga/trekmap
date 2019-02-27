@@ -297,19 +297,19 @@ defmodule Trekmap.Bots.FleetCommander2 do
 
     case continue do
       :next_system ->
-        nearby_system_with_targets =
+        {nearby_system_with_targets, second?} =
           Enum.sort_by(@patrol_systems, fn system_id ->
             path = Trekmap.Galaxy.find_path(session.galaxy, fleet.system_id, system_id)
             Trekmap.Galaxy.get_path_distance(session.galaxy, path)
           end)
-          |> Enum.reduce_while(nil, fn system_id, acc ->
+          |> Enum.reduce_while({nil, false}, fn system_id, {acc, second?} ->
             system = Trekmap.Me.get_system(system_id, session)
             {:ok, targets} = find_targets_in_system(fleet, system, enemies, allies, session)
 
-            if length(targets) > 1 do
-              {:halt, {system, targets}}
-            else
-              {:cont, acc}
+            cond do
+              length(targets) > 2 and second? -> {:halt, {{system, targets}, true}}
+              length(targets) > 2 -> {:cont, {{system, targets}, true}}
+              true -> {:cont, {acc, false}}
             end
           end)
 
