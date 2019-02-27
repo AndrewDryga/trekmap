@@ -10,6 +10,8 @@ defmodule Trekmap.Bots.Guardian do
     Logger.info("[Guardian] I'm on watch")
     {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
 
+    full_repair(session)
+
     ships_on_mission =
       Trekmap.Bots.FleetCommander.get_ships_on_mission() ++
         Trekmap.Bots.FractionHunter.get_ships_on_mission()
