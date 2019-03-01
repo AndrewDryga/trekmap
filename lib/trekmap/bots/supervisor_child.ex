@@ -11,7 +11,7 @@ defmodule Trekmap.Bots.SupervisorChild do
       Trekmap.Bots.SessionManager,
       Trekmap.Bots.FleetCommander,
       Trekmap.Bots.FleetCommander2,
-      # Trekmap.Bots.FractionHunter,
+      Trekmap.Bots.FractionHunter,
       Trekmap.Bots.Guardian,
       Trekmap.Bots.GalaxyScanner
     ]

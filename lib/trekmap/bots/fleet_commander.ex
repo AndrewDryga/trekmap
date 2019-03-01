@@ -80,7 +80,6 @@ defmodule Trekmap.Bots.FleetCommander do
   end
 
   def handle_cast(:stop_missions, %{session: session} = state) do
-    Logger.info("[FleetCommander] Stopping all missions and recalling fleet")
     :ok = recall_fleet(session)
     {:noreply, %{state | on_mission: false}}
   end
@@ -476,6 +475,9 @@ defmodule Trekmap.Bots.FleetCommander do
 
         :ok ->
           Logger.info("[FleetCommander] Fleet recalled, returned to base")
+
+        {:error, :in_warp} ->
+          :ok
 
         other ->
           Logger.error("[FleetCommander] Failed to recall fleet, reason: #{inspect(other)}")

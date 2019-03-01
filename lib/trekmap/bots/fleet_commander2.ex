@@ -80,7 +80,6 @@ defmodule Trekmap.Bots.FleetCommander2 do
   end
 
   def handle_cast(:stop_missions, %{session: session} = state) do
-    Logger.info("[FleetCommander2] Stopping all missions and recalling fleet")
     :ok = recall_fleet(session)
     {:noreply, %{state | on_mission: false}}
   end
@@ -300,7 +299,7 @@ defmodule Trekmap.Bots.FleetCommander2 do
 
     case continue do
       :next_system ->
-        {nearby_system_with_targets, second?} =
+        {nearby_system_with_targets, _second?} =
           Enum.sort_by(@patrol_systems, fn system_id ->
             path = Trekmap.Galaxy.find_path(session.galaxy, fleet.system_id, system_id)
             Trekmap.Galaxy.get_path_distance(session.galaxy, path)
@@ -390,7 +389,7 @@ defmodule Trekmap.Bots.FleetCommander2 do
   end
 
   def get_initial_fleet(session) do
-    {:ok, {_starbase, fleets, deployed_fleets}} = Trekmap.Me.fetch_current_state(session)
+    {:ok, {_starbase, _fleets, deployed_fleets}} = Trekmap.Me.fetch_current_state(session)
 
     cond do
       deployed_fleets == %{} ->
@@ -478,6 +477,9 @@ defmodule Trekmap.Bots.FleetCommander2 do
 
         :ok ->
           Logger.info("[FleetCommander2] Fleet recalled, returned to base")
+
+        {:error, :in_warp} ->
+          :ok
 
         other ->
           Logger.error("[FleetCommander2] Failed to recall fleet, reason: #{inspect(other)}")
