@@ -117,14 +117,16 @@ defmodule Trekmap.Bots.Guardian do
         Logger.warn("Base broken")
         :ok = Trekmap.Me.activate_shield(session)
         state = stop_mining_hunting(state)
-        # state = continue_klingon_hunting(state)
+        state = stop_klingon_hunting(state)
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)
-        {:noreply, %{state | session: session}}
+        Process.send_after(self(), :cancel_attack, :timer.minutes(120))
+        {:noreply, %{state | session: session, under_attack?: true}}
 
       under_attack? == true ->
         Logger.warn("Base is under continous attack")
         state = stop_mining_hunting(state)
+        state = stop_klingon_hunting(state)
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)
         {:noreply, %{state | session: session}}
