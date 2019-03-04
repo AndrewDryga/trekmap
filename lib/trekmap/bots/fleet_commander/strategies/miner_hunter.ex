@@ -119,7 +119,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
         {:ok, targets} = find_targets_in_system(fleet, system, session, config)
 
         cond do
-          length(targets) > min_targets_in_system and should_stop? ->
+          length(targets) >= min_targets_in_system and should_stop? ->
             {:halt, {{system, targets}, true}}
 
           length(targets) > min_targets_in_system ->

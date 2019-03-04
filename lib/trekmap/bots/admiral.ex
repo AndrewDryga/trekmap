@@ -74,10 +74,10 @@ defmodule Trekmap.Bots.Admiral do
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g3_resources(),
-          min_targets_in_system: 3,
+          min_targets_in_system: 1,
           min_target_level: 16,
           max_target_level: 26,
-          min_target_bounty_score: 200_000,
+          min_target_bounty_score: 300_000,
           skip_nearest_system?: false
         ]
       },
@@ -112,10 +112,10 @@ defmodule Trekmap.Bots.Admiral do
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g3_resources(),
-          min_targets_in_system: 1,
+          min_targets_in_system: 2,
           min_target_level: 16,
           max_target_level: 26,
-          min_target_bounty_score: 350_000,
+          min_target_bounty_score: 150_000,
           skip_nearest_system?: false
         ]
       }
