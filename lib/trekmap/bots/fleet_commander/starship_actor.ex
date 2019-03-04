@@ -7,7 +7,6 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
   ### Public API
 
   # TODO: No need to reload fleet if we just fly
-  # Better inspect for ships
   # switching mission plans:
   # 2 ships on miners, 1 at home;
   # 1 ship on heavy miners 2 at home;

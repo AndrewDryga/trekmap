@@ -66,7 +66,7 @@ defmodule Trekmap.Bots.Admiral do
           min_targets_in_system: 5,
           min_target_level: 16,
           max_target_level: 26,
-          min_target_bounty_score: 2000,
+          min_target_bounty_score: 1800,
           skip_nearest_system?: false
         ]
       },
@@ -77,7 +77,7 @@ defmodule Trekmap.Bots.Admiral do
           min_targets_in_system: 3,
           min_target_level: 16,
           max_target_level: 26,
-          min_target_bounty_score: 300_000,
+          min_target_bounty_score: 200_000,
           skip_nearest_system?: false
         ]
       },

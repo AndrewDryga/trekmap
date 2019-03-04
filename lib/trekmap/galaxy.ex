@@ -103,6 +103,18 @@ defmodule Trekmap.Galaxy do
     distance
   end
 
+  def get_path_max_warp_distance(graph, path) do
+    {initial_point, rest_path} = List.pop_at(path, 0)
+
+    {_node, max_warp_distance} =
+      Enum.reduce(rest_path, {initial_point, 0}, fn vertex, {prev_vertex, acc} ->
+        [%{weight: weight}] = Graph.edges(graph, prev_vertex, vertex)
+        {vertex, Enum.max([acc, weight])}
+      end)
+
+    max_warp_distance
+  end
+
   def scan_players(target_ids, %Session{} = session) do
     body =
       Jason.encode!(%{
