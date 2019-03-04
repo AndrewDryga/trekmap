@@ -10,10 +10,9 @@ defmodule Trekmap.Bots.SupervisorChild do
     children = [
       Trekmap.Bots.SessionManager,
       Trekmap.Bots.FleetCommander,
-      Trekmap.Bots.FleetCommander2,
-      Trekmap.Bots.FractionHunter,
-      Trekmap.Bots.Guardian,
-      Trekmap.Bots.GalaxyScanner
+      Trekmap.Bots.Admiral,
+      Trekmap.Bots.Guardian
+      # Trekmap.Bots.GalaxyScanner,
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

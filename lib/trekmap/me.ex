@@ -29,10 +29,12 @@ defmodule Trekmap.Me do
       %{
         "starbase" => starbase,
         "fleets" => fleets,
-        "my_deployed_fleets" => deployed_fleets
+        "my_deployed_fleets" => deployed_fleets,
+        "battle_results" => battle_results,
+        "ships" => ships
       } = response
 
-      {:ok, {starbase, fleets, deployed_fleets}}
+      {:ok, {starbase, fleets, deployed_fleets, ships, battle_results}}
     end
   end
 
@@ -125,7 +127,13 @@ defmodule Trekmap.Me do
            APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
       %{"my_deployed_fleets" => deployed_fleets} = response
       fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
-      {:ok, Fleet.build(fleet_map)}
+
+      fleet = %{
+        Fleet.build(fleet_map)
+        | shield_regeneration_started_at: System.system_time(:microsecond)
+      }
+
+      {:ok, fleet}
     else
       true -> {:error, :shield_is_enabled}
       {:error, %{body: "course", type: 1}} -> {:ok, fleet}
@@ -162,7 +170,13 @@ defmodule Trekmap.Me do
            APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
       %{"my_deployed_fleets" => deployed_fleets} = response
       fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
-      {:ok, Fleet.build(fleet_map)}
+
+      fleet = %{
+        Fleet.build(fleet_map)
+        | shield_regeneration_started_at: System.system_time(:microsecond)
+      }
+
+      {:ok, fleet}
     else
       true -> {:error, :shield_is_enabled}
       {:error, %{body: "course", type: 2}} -> {:ok, fleet}

@@ -12,76 +12,21 @@ defmodule Trekmap.Bots.Guardian do
 
     full_repair(session)
 
-    ships_on_mission =
-      Trekmap.Bots.FleetCommander.get_ships_on_mission() ++
-        Trekmap.Bots.FleetCommander2.get_ships_on_mission() ++
-        Trekmap.Bots.FractionHunter.get_ships_on_mission()
-
-    {:ok, %{session: session, under_attack?: false, ships_on_mission: ships_on_mission}, 0}
-  end
-
-  def get_report do
-    GenServer.call(__MODULE__, :get_report, 10_000)
-  end
-
-  def do_daily do
-    GenServer.call(__MODULE__, :do_daily)
-  end
-
-  def stop_daily do
-    GenServer.call(__MODULE__, :stop_daily)
-  end
-
-  def activate_defence do
-    GenServer.call(__MODULE__, :activate_defence)
-  end
-
-  def disable_defence do
-    GenServer.call(__MODULE__, :disable_defence)
-  end
-
-  def handle_call(:get_report, _from, %{session: session} = state) do
-    report = %{
-      under_attack?: state.under_attack?,
-      ships_on_mission: state.ships_on_mission,
-      shield_enabled?: Trekmap.Me.shield_enabled?(session)
-    }
-
-    {:reply, {:ok, report}, state}
-  end
-
-  def handle_call(:do_daily, _from, state) do
-    {:reply, :ok, continue_klingon_hunting(state)}
-  end
-
-  def handle_call(:stop_daily, _from, state) do
-    {:reply, :ok, stop_klingon_hunting(state)}
-  end
-
-  def handle_call(:activate_defence, _from, state) do
-    state = stop_klingon_hunting(state)
-    state = stop_mining_hunting(state)
-    {:reply, :ok, %{state | under_attack?: true}}
-  end
-
-  def handle_call(:disable_defence, _from, state) do
-    {:reply, :ok, %{state | under_attack?: false}}
+    {:ok, %{session: session, under_attack?: false, under_attack_timer_ref: nil}, 0}
   end
 
   def handle_info(:cancel_attack, state) do
-    {:noreply, %{state | under_attack?: false}}
-  end
-
-  def handle_info({_ref, _ships_on_mission}, state) do
-    {:noreply, state}
+    {:noreply, %{state | under_attack?: false, under_attack_timer_ref: nil}}
   end
 
   def handle_info(:timeout, state) do
-    %{session: session, under_attack?: under_attack?, ships_on_mission: ships_on_mission} = state
-    {home_fleet, deployed_fleets, defense_stations} = Trekmap.Me.list_ships_and_defences(session)
+    %{session: session, under_attack?: under_attack?} = state
+    {fleets, deployed_fleets, defense_stations} = Trekmap.Me.list_ships_and_defences(session)
+
+    ships_on_mission = Trekmap.Bots.FleetCommander.list_fleet_ids_on_active_missions()
 
     ships_at_base =
-      home_fleet
+      fleets
       |> Enum.reject(fn ship ->
         Map.has_key?(deployed_fleets, Map.fetch!(ship, "fleet_id"))
       end)
@@ -112,102 +57,73 @@ defmodule Trekmap.Bots.Guardian do
         Map.fetch!(defense_station, "damage") > 100
       end)
 
-    cond do
-      fleet_damage_ratio > 95 ->
-        Logger.warn("Base broken")
-        :ok = Trekmap.Me.activate_shield(session)
-        state = stop_mining_hunting(state)
-        state = stop_klingon_hunting(state)
-        {:ok, session} = full_repair(session)
-        Process.send_after(self(), :timeout, 1)
-        Process.send_after(self(), :cancel_attack, :timer.minutes(120))
-        {:noreply, %{state | session: session, under_attack?: true}}
+    Trekmap.Bots.Admiral.update_station_report(%{
+      under_attack?: under_attack?,
+      defence_broken?: defence_broken?,
+      fleet_damage_ratio: fleet_damage_ratio
+    })
 
+    cond do
       under_attack? == true ->
         Logger.warn("Base is under continous attack")
-        state = stop_mining_hunting(state)
-        state = stop_klingon_hunting(state)
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)
+        {:noreply, %{state | session: session}}
+
+      fleet_damage_ratio > 95 ->
+        Logger.warn("Fleet at base is very damaged, shielding and switching to under attack mode")
+
+        :ok = Trekmap.Me.activate_shield(session)
+        {:ok, session} = full_repair(session)
+        Process.send_after(self(), :timeout, 1)
+
+        state = under_attack(state)
+
         {:noreply, %{state | session: session}}
 
       fleet_damage_ratio > 50 ->
         Logger.warn("Base is damaged, switching to under attack mode")
+
         {:ok, session} = full_repair(session)
-        state = stop_mining_hunting(state)
-        state = stop_klingon_hunting(state)
         Process.send_after(self(), :timeout, 1)
-        Process.send_after(self(), :cancel_attack, :timer.minutes(15))
-        {:noreply, %{state | session: session, under_attack?: true}}
+
+        state = under_attack(state)
+
+        {:noreply, %{state | session: session}}
 
       defence_broken? == true ->
         Logger.warn("Base defence is damaged, switching to under attack mode")
+
         {:ok, session} = full_repair(session)
-        state = stop_mining_hunting(state)
-        state = stop_klingon_hunting(state)
         Process.send_after(self(), :timeout, 1)
-        Process.send_after(self(), :cancel_attack, :timer.minutes(15))
-        {:noreply, %{state | session: session, under_attack?: true}}
+
+        if not base_well_defended? do
+          Logger.warn("Base defence is damaged and no fleet at home, activating shield")
+          :ok = Trekmap.Me.activate_shield(session)
+        end
+
+        state = under_attack(state)
+
+        {:noreply, %{state | session: session}}
 
       not base_well_defended? ->
         Logger.warn("Base is not well defended, do not bait")
-        state = continue_mining_hunting(state)
-        state = stop_klingon_hunting(state)
+
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)
+
         {:noreply, %{state | session: session}}
 
       fleet_damage_ratio > 0 ->
-        state = stop_klingon_hunting(state)
         Logger.info("Baiting, damaged by #{trunc(fleet_damage_ratio)}%")
         Process.send_after(self(), :timeout, 1_000)
+        Trekmap.Bots.FleetCommander.continue_all_missions()
         {:noreply, state}
 
       true ->
-        state = continue_mining_hunting(state)
-        # state = continue_klingon_hunting(state)
-        Process.send_after(self(), :timeout, 1_000)
+        Trekmap.Bots.FleetCommander.continue_all_missions()
+        Process.send_after(self(), :timeout, 5_000)
         {:noreply, state}
-    end
-  end
-
-  @jellyfish_fleet_id Trekmap.Me.Fleet.jellyfish_fleet_id()
-  @northstar_fleet_id Trekmap.Me.Fleet.northstar_fleet_id()
-  @kehra_fleet_id Trekmap.Me.Fleet.kehra_fleet_id()
-
-  defp stop_mining_hunting(%{ships_on_mission: ships_on_mission} = state) do
-    Trekmap.Bots.FleetCommander.stop_missions()
-    Trekmap.Bots.FleetCommander2.stop_missions()
-    %{state | ships_on_mission: ships_on_mission -- [@jellyfish_fleet_id, @kehra_fleet_id]}
-  end
-
-  defp continue_mining_hunting(%{under_attack?: true} = state) do
-    state
-  end
-
-  defp continue_mining_hunting(%{ships_on_mission: ships_on_mission} = state) do
-    Trekmap.Bots.FleetCommander.continue_missions()
-    Trekmap.Bots.FleetCommander2.continue_missions()
-    ships_on_mission = Enum.uniq([@jellyfish_fleet_id, @kehra_fleet_id] ++ ships_on_mission)
-    %{state | ships_on_mission: ships_on_mission}
-  end
-
-  defp stop_klingon_hunting(%{ships_on_mission: ships_on_mission} = state) do
-    Trekmap.Bots.FractionHunter.stop_missions()
-    %{state | ships_on_mission: ships_on_mission -- [@northstar_fleet_id]}
-  end
-
-  # defp continue_klingon_hunting(%{under_attack?: true} = state) do
-  #   state
-  # end
-
-  defp continue_klingon_hunting(%{ships_on_mission: ships_on_mission} = state) do
-    if @northstar_fleet_id in ships_on_mission do
-      Trekmap.Bots.FractionHunter.continue_missions()
-      state
-    else
-      Trekmap.Bots.FractionHunter.continue_missions()
-      %{state | ships_on_mission: [@northstar_fleet_id] ++ ships_on_mission}
     end
   end
 
@@ -222,5 +138,16 @@ defmodule Trekmap.Bots.Guardian do
       {:error, :timeout} ->
         full_repair(session)
     end
+  end
+
+  defp under_attack(state) do
+    Trekmap.Bots.FleetCommander.pause_all_missions(:timer.minutes(120))
+
+    if state.under_attack_timer_ref do
+      Process.cancel_timer(state.under_attack_timer_ref)
+    end
+
+    under_attack_timer_ref = Process.send_after(self(), :cancel_attack, :timer.minutes(120))
+    %{state | under_attack_timer_ref: under_attack_timer_ref, under_attack?: true}
   end
 end

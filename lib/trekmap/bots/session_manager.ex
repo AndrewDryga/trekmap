@@ -18,7 +18,8 @@ defmodule Trekmap.Bots.SessionManager do
 
     {:ok, galaxy} = Trekmap.Galaxy.build_systems_graph(session)
 
-    {:ok, {starbase, fleets, deployed_fleets}} = Trekmap.Me.fetch_current_state(session)
+    {:ok, {starbase, fleets, deployed_fleets, _ships, _battle_results}} =
+      Trekmap.Me.fetch_current_state(session)
 
     fleet_id =
       (Map.keys(fleets) ++ Map.keys(deployed_fleets))
@@ -27,6 +28,7 @@ defmodule Trekmap.Bots.SessionManager do
 
     home_system_id = starbase["location"]["system"]
 
+    # TODO: add starbase coords
     {:ok,
      %{session: %{session | fleet_id: fleet_id, home_system_id: home_system_id, galaxy: galaxy}}}
   end

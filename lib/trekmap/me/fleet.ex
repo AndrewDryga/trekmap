@@ -3,14 +3,15 @@ defmodule Trekmap.Me.Fleet do
             system_id: nil,
             cargo_bay_size: nil,
             cargo_size: nil,
+            cargo_bay_full?: false,
             strength: nil,
             hull_health: 100,
             shield_health: 100,
             coords: {0, 0},
             remaining_travel_time: 0,
             shield_regeneration_duration: nil,
+            shield_regeneration_started_at: 0,
             max_warp_distance: nil,
-            warp_time: nil,
             state: :at_dock
 
   def build(deployed_fleet) do
@@ -36,7 +37,6 @@ defmodule Trekmap.Me.Fleet do
         "system" => system_id
       },
       "current_coords" => current_coords,
-      "warp_time" => warp_time,
       "state" => state
     } = deployed_fleet
 
@@ -44,7 +44,7 @@ defmodule Trekmap.Me.Fleet do
 
     coords =
       case current_coords do
-        %{"y" => x, "x" => y} -> {x, y}
+        %{"x" => x, "y" => y} -> {x, y}
         nil -> {0, 0}
       end
 
@@ -83,24 +83,21 @@ defmodule Trekmap.Me.Fleet do
     strength =
       (officer_rating + offense_rating + defense_rating + health_rating) * (hull_health / 100)
 
-    warp_time =
-      case NaiveDateTime.from_iso8601(warp_time || "") do
-        %NaiveDateTime{} = dt -> dt
-        _other -> nil
-      end
+    cargo_size = map_to_num(resources)
+    cargo_bay_full? = cargo_max * 0.95 < cargo_size
 
     %__MODULE__{
       id: fleet_id,
       system_id: system_id,
       cargo_bay_size: cargo_max,
-      cargo_size: map_to_num(resources),
+      cargo_size: cargo_size,
+      cargo_bay_full?: cargo_bay_full?,
       strength: strength,
       hull_health: hull_health,
       shield_health: shield_health,
       coords: coords,
       shield_regeneration_duration: map_to_num(ship_shield_total_regeneration_durations),
       max_warp_distance: warp_distance,
-      warp_time: warp_time,
       remaining_travel_time: remaining_travel_time,
       state: state(state)
     }
@@ -120,7 +117,11 @@ defmodule Trekmap.Me.Fleet do
   defp state(0), do: :idle
   defp state(other), do: other
 
-  def jellyfish_fleet_id, do: 771_246_931_724_024_704
-  def northstar_fleet_id, do: 771_331_774_860_311_262
-  def kehra_fleet_id, do: 791_687_022_921_464_764
+  def jellyfish_fleet_id, do: dock1_id()
+  def northstar_fleet_id, do: dock2_id()
+  def kehra_fleet_id, do: dock3_id()
+
+  def dock1_id, do: 771_246_931_724_024_704
+  def dock2_id, do: 771_331_774_860_311_262
+  def dock3_id, do: 791_687_022_921_464_764
 end
