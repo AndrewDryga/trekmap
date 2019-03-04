@@ -18,7 +18,7 @@ defmodule Trekmap.Bots.Admiral do
       session: session
     }
 
-    {:ok, state, 5_000}
+    {:ok, state, 0}
   end
 
   def get_mission_plan do
