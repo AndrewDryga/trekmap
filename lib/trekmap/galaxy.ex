@@ -183,4 +183,18 @@ defmodule Trekmap.Galaxy do
     ]
     |> Enum.uniq()
   end
+
+  def list_system_ids_with_g3_resources do
+    [
+      # 3** raw long warp
+      955_177_926,
+      717_782_925,
+      1_016_428_829,
+      579_218_493,
+      468_245_102,
+      516_359_977,
+      634_286_176
+    ]
+    |> Enum.uniq()
+  end
 end

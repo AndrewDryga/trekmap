@@ -100,6 +100,11 @@ defmodule Trekmap.Router do
         <br/>
         <a href="/pause_missions">Pause All</a><br/>
         <a href="/unpause_missions">Unpause All</a><br/>
+        <br/>
+        <br/>
+        Missions: <br/>
+        - <a href="/set_aggresive_mining_hunting_mission">Agressive Mining Hunting</a><br/>
+        - <a href="/set_passive_mining_hunting_mission">Passive Mining Hunting</a><br/>
       </body>
     </html>
     """)
@@ -133,6 +138,24 @@ defmodule Trekmap.Router do
 
   get "/unpause_missions" do
     :ok = Trekmap.Bots.FleetCommander.unpause_all_missions()
+
+    conn
+    |> put_resp_header("location", "/")
+    |> send_resp(302, "")
+  end
+
+  get "/set_aggresive_mining_hunting_mission" do
+    mission_plan = Trekmap.Bots.Admiral.agressive_mining_hunting_mission_plan()
+    Trekmap.Bots.FleetCommander.apply_mission_plan(mission_plan)
+
+    conn
+    |> put_resp_header("location", "/")
+    |> send_resp(302, "")
+  end
+
+  get "/set_passive_mining_hunting_mission" do
+    mission_plan = Trekmap.Bots.Admiral.passive_mining_hunting_mission_plan()
+    Trekmap.Bots.FleetCommander.apply_mission_plan(mission_plan)
 
     conn
     |> put_resp_header("location", "/")

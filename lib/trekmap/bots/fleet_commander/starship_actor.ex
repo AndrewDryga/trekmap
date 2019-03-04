@@ -219,6 +219,10 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
     continue_and_reload_fleet(1_000)
   end
 
+  def perform_fleet_action(%{state: :at_dock} = fleet, :recall, _state) do
+    continue(fleet, 5_000)
+  end
+
   def perform_fleet_action(fleet, :recall, %{session: session, fleet_id: fleet_id}) do
     Logger.debug("[#{name(fleet_id)}] Recalling fleet")
 
@@ -351,8 +355,8 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
     end
   end
 
-  defp name(771_246_931_724_024_704), do: :"#{__MODULE__}.Fleet_Jellyfish"
-  defp name(771_331_774_860_311_262), do: :"#{__MODULE__}.Fleet_NorthStar"
-  defp name(791_687_022_921_464_764), do: :"#{__MODULE__}.Fleet_Kehra"
-  defp name(fleet_id), do: :"#{__MODULE__}.Fleet_#{to_string(fleet_id)}"
+  def name(771_246_931_724_024_704), do: :"#{__MODULE__}.Fleet_Jellyfish"
+  def name(771_331_774_860_311_262), do: :"#{__MODULE__}.Fleet_NorthStar"
+  def name(791_687_022_921_464_764), do: :"#{__MODULE__}.Fleet_Kehra"
+  def name(fleet_id), do: :"#{__MODULE__}.Fleet_#{to_string(fleet_id)}"
 end

@@ -8,7 +8,7 @@ defmodule Trekmap.Bots.Admiral do
 
   def init([]) do
     Logger.info("[Admiral] Everything is under control")
-    current_mission_plan = mining_hunting_mission_plan()
+    current_mission_plan = agressive_mining_hunting_mission_plan()
     {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
 
     state = %{
@@ -22,7 +22,11 @@ defmodule Trekmap.Bots.Admiral do
   end
 
   def get_mission_plan do
-    GenServer.call(__MODULE__, :get_mission_plan)
+    try do
+      GenServer.call(__MODULE__, :get_mission_plan)
+    catch
+      :exit, _ -> %{}
+    end
   end
 
   def get_fleet_reports do
@@ -49,7 +53,7 @@ defmodule Trekmap.Bots.Admiral do
     end
   end
 
-  defp mining_hunting_mission_plan do
+  def agressive_mining_hunting_mission_plan do
     %{
       Trekmap.Me.Fleet.jellyfish_fleet_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
@@ -62,6 +66,17 @@ defmodule Trekmap.Bots.Admiral do
           skip_nearest_system?: false
         ]
       },
+      Trekmap.Me.Fleet.northstar_fleet_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+        [
+          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g3_resources(),
+          min_targets_in_system: 3,
+          min_target_level: 16,
+          max_target_level: 26,
+          min_target_bounty_score: 300_000,
+          skip_nearest_system?: false
+        ]
+      },
       Trekmap.Me.Fleet.kehra_fleet_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
@@ -71,6 +86,33 @@ defmodule Trekmap.Bots.Admiral do
           max_target_level: 26,
           min_target_bounty_score: 1600,
           skip_nearest_system?: true
+        ]
+      }
+    }
+  end
+
+  def passive_mining_hunting_mission_plan do
+    %{
+      Trekmap.Me.Fleet.kehra_fleet_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+        [
+          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          min_targets_in_system: 3,
+          min_target_level: 16,
+          max_target_level: 26,
+          min_target_bounty_score: 2500,
+          skip_nearest_system?: false
+        ]
+      },
+      Trekmap.Me.Fleet.northstar_fleet_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+        [
+          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g3_resources(),
+          min_targets_in_system: 3,
+          min_target_level: 16,
+          max_target_level: 26,
+          min_target_bounty_score: 100_000,
+          skip_nearest_system?: false
         ]
       }
     }

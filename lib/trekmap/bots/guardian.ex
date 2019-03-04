@@ -30,9 +30,6 @@ defmodule Trekmap.Bots.Guardian do
       |> Enum.reject(fn ship ->
         Map.has_key?(deployed_fleets, Map.fetch!(ship, "fleet_id"))
       end)
-      |> Enum.reject(fn ship ->
-        String.to_integer(Map.fetch!(ship, "fleet_id")) in ships_on_mission
-      end)
 
     ships_at_base_alive =
       Enum.reject(ships_at_base, fn ship ->
@@ -43,6 +40,9 @@ defmodule Trekmap.Bots.Guardian do
 
     {fleet_total_health, fleet_total_damage} =
       ships_at_base
+      |> Enum.reject(fn ship ->
+        String.to_integer(Map.fetch!(ship, "fleet_id")) in ships_on_mission
+      end)
       |> Enum.reduce({0, 0}, fn ship, {fleet_total_health, fleet_total_damage} ->
         damage = Map.fetch!(ship, "damage")
         max_hp = Map.fetch!(ship, "max_hp")
@@ -108,6 +108,7 @@ defmodule Trekmap.Bots.Guardian do
 
       not base_well_defended? ->
         Logger.warn("Base is not well defended, do not bait")
+        Trekmap.Bots.FleetCommander.continue_all_missions()
 
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)

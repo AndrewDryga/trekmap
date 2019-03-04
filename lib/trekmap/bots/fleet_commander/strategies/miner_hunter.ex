@@ -62,7 +62,8 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
         target = List.first(targets)
         {{:fly, system, target.coords}, config}
       else
-        Logger.info("Can't find any targets")
+        name = Trekmap.Bots.FleetCommander.StartshipActor.name(fleet.id)
+        Logger.info("[#{name}] Can't find any targets")
         {:recall, config}
       end
     end
