@@ -14,7 +14,11 @@ defmodule Trekmap.Bots.Admiral do
     state = %{
       current_mission_plan: current_mission_plan,
       fleet_reports: %{},
-      station_report: %{},
+      station_report: %{
+        under_attack?: false,
+        shield_enabled?: false,
+        fleet_damage_ratio: 0
+      },
       session: session
     }
 
