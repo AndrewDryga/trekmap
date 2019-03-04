@@ -68,7 +68,7 @@ defmodule Trekmap.Router do
             end)
             |> Enum.join(",</br> ")
 
-          {"Running#{under_attack}#{shield_enabled} / Damaged #{fleet_damage_ratio}%",
+          {"Running#{under_attack}#{shield_enabled} / Damaged #{trunc(fleet_damage_ratio)}%",
            ships_on_mission}
 
         :starting ->
