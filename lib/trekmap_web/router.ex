@@ -10,7 +10,7 @@ defmodule Trekmap.Router do
   plug(:dispatch)
 
   get "/" do
-    status =
+    {status, ships_on_mission} =
       case Trekmap.Bots.get_status() do
         :running ->
           %{
@@ -22,60 +22,63 @@ defmodule Trekmap.Router do
           under_attack = if under_attack?, do: " / Under Attack", else: ""
           shield_enabled = if shield_enabled?, do: " / Shielded", else: ""
 
-          "Running#{under_attack}#{shield_enabled} / Damaged #{fleet_damage_ratio}%"
+          ships_on_mission =
+            Trekmap.Bots.Admiral.get_fleet_reports()
+            |> Enum.flat_map(fn
+              %{
+                strategy: strategy,
+                fleet_id: fleet_id,
+                mission_paused: mission_paused,
+                clearence_granted: clearence_granted,
+                system: %{name: system_name},
+                fleet: %{
+                  state: state,
+                  hull_health: hull_health,
+                  cargo_size: cargo_size,
+                  remaining_travel_time: remaining_travel_time,
+                  cargo_bay_size: cargo_bay_size
+                }
+              } ->
+                task_name =
+                  case strategy do
+                    Trekmap.Bots.FleetCommander.Strategies.StationDefender -> "Defending Station"
+                    Trekmap.Bots.FleetCommander.Strategies.MinerHunter -> "Hunting Miners"
+                    other -> inspect(other)
+                  end
+
+                ship_name =
+                  cond do
+                    fleet_id == Trekmap.Me.Fleet.jellyfish_fleet_id() -> "Jellyfish"
+                    fleet_id == Trekmap.Me.Fleet.northstar_fleet_id() -> "North Star"
+                    fleet_id == Trekmap.Me.Fleet.kehra_fleet_id() -> "Kehra"
+                    true -> to_string(fleet_id)
+                  end
+
+                mission_paused = if mission_paused, do: "; PAUSED", else: ""
+
+                clearence_granted =
+                  if clearence_granted, do: "", else: "; <b>WAITING FOR CLEARENCE</b>"
+
+                [
+                  " - #{ship_name}: #{task_name} #{inspect(state)} #{remaining_travel_time}s " <>
+                    "at #{system_name} (H:#{trunc(hull_health || 100)}%; " <>
+                    "C:#{trunc(cargo_size || 0)}/#{trunc(cargo_bay_size || 0)}" <>
+                    "#{mission_paused}#{clearence_granted})"
+                ]
+            end)
+            |> Enum.join(",</br> ")
+
+          {"Running#{under_attack}#{shield_enabled} / Damaged #{fleet_damage_ratio}%",
+           ships_on_mission}
 
         :starting ->
-          "Starting"
+          {"Starting", ""}
 
         {:scheduled, timeout} ->
           minutes = trunc(timeout / 60)
           seconds = rem(timeout, 60) |> to_string() |> String.pad_leading(2, "0")
-          "Would start in #{minutes}:#{seconds}"
+          {"Would start in #{minutes}:#{seconds}", ""}
       end
-
-    ships_on_mission =
-      Trekmap.Bots.Admiral.get_fleet_reports()
-      |> Enum.flat_map(fn
-        %{
-          strategy: strategy,
-          fleet_id: fleet_id,
-          mission_paused: mission_paused,
-          clearence_granted: clearence_granted,
-          system: %{name: system_name},
-          fleet: %{
-            state: state,
-            hull_health: hull_health,
-            cargo_size: cargo_size,
-            remaining_travel_time: remaining_travel_time,
-            cargo_bay_size: cargo_bay_size
-          }
-        } ->
-          task_name =
-            case strategy do
-              Trekmap.Bots.FleetCommander.Strategies.StationDefender -> "Defending Station"
-              Trekmap.Bots.FleetCommander.Strategies.MinerHunter -> "Hunting Miners"
-              other -> inspect(other)
-            end
-
-          ship_name =
-            cond do
-              fleet_id == Trekmap.Me.Fleet.jellyfish_fleet_id() -> "Jellyfish"
-              fleet_id == Trekmap.Me.Fleet.northstar_fleet_id() -> "North Star"
-              fleet_id == Trekmap.Me.Fleet.kehra_fleet_id() -> "Kehra"
-              true -> to_string(fleet_id)
-            end
-
-          mission_paused = if mission_paused, do: "; PAUSED", else: ""
-          clearence_granted = if clearence_granted, do: "", else: "; <b>WAITING FOR CLEARENCE</b>"
-
-          [
-            " - #{ship_name}: #{task_name} #{inspect(state)} #{remaining_travel_time}s " <>
-              "at #{system_name} (H:#{trunc(hull_health || 100)}%; " <>
-              "C:#{trunc(cargo_size || 0)}/#{trunc(cargo_bay_size || 0)}" <>
-              "#{mission_paused}#{clearence_granted})"
-          ]
-      end)
-      |> Enum.join(",</br> ")
 
     conn
     |> put_resp_content_type("text/html")
