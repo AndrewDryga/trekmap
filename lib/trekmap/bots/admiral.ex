@@ -8,7 +8,7 @@ defmodule Trekmap.Bots.Admiral do
 
   def init([]) do
     Logger.info("[Admiral] Everything is under control")
-    current_mission_plan = agressive_mining_hunting_mission_plan()
+    current_mission_plan = passive_mining_hunting_mission_plan()
     {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
 
     state = %{
@@ -97,10 +97,10 @@ defmodule Trekmap.Bots.Admiral do
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
-          min_targets_in_system: 3,
+          min_targets_in_system: 2,
           min_target_level: 16,
           max_target_level: 26,
-          min_target_bounty_score: 2500,
+          min_target_bounty_score: 1900,
           skip_nearest_system?: false
         ]
       },
@@ -108,10 +108,10 @@ defmodule Trekmap.Bots.Admiral do
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g3_resources(),
-          min_targets_in_system: 3,
+          min_targets_in_system: 1,
           min_target_level: 16,
           max_target_level: 26,
-          min_target_bounty_score: 100_000,
+          min_target_bounty_score: 350_000,
           skip_nearest_system?: false
         ]
       }
