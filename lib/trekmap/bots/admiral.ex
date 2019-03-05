@@ -64,8 +64,8 @@ defmodule Trekmap.Bots.Admiral do
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
           min_targets_in_system: 3,
-          min_target_level: 16,
-          max_target_level: 26,
+          min_target_level: 17,
+          max_target_level: 33,
           min_target_bounty_score: 1800,
           skip_nearest_system?: false
         ]
@@ -75,8 +75,8 @@ defmodule Trekmap.Bots.Admiral do
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g3_resources(),
           min_targets_in_system: 1,
-          min_target_level: 16,
-          max_target_level: 26,
+          min_target_level: 17,
+          max_target_level: 33,
           min_target_bounty_score: 300_000,
           skip_nearest_system?: false
         ]
@@ -86,8 +86,8 @@ defmodule Trekmap.Bots.Admiral do
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
           min_targets_in_system: 2,
-          min_target_level: 16,
-          max_target_level: 26,
+          min_target_level: 17,
+          max_target_level: 33,
           min_target_bounty_score: 1600,
           skip_nearest_system?: true
         ]
@@ -102,8 +102,8 @@ defmodule Trekmap.Bots.Admiral do
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
           min_targets_in_system: 3,
-          min_target_level: 16,
-          max_target_level: 26,
+          min_target_level: 17,
+          max_target_level: 33,
           min_target_bounty_score: 1800,
           skip_nearest_system?: false
         ]
@@ -135,8 +135,8 @@ defmodule Trekmap.Bots.Admiral do
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
           min_targets_in_system: 2,
-          min_target_level: 16,
-          max_target_level: 26,
+          min_target_level: 17,
+          max_target_level: 33,
           min_target_bounty_score: 1600,
           skip_nearest_system?: true
         ]
@@ -151,8 +151,8 @@ defmodule Trekmap.Bots.Admiral do
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
           min_targets_in_system: 2,
-          min_target_level: 16,
-          max_target_level: 26,
+          min_target_level: 17,
+          max_target_level: 33,
           min_target_bounty_score: 1900,
           skip_nearest_system?: false
         ]
@@ -162,8 +162,8 @@ defmodule Trekmap.Bots.Admiral do
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g3_resources(),
           min_targets_in_system: 2,
-          min_target_level: 16,
-          max_target_level: 26,
+          min_target_level: 17,
+          max_target_level: 33,
           min_target_bounty_score: 150_000,
           skip_nearest_system?: false
         ]
