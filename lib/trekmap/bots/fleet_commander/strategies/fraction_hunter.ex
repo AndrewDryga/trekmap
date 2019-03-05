@@ -34,12 +34,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
         |> Enum.sort_by(&distance(&1.coords, fleet.coords))
         |> List.first()
 
-      if distance(target.coords, fleet.coords) < 7 do
-        {{:attack, target}, config}
-      else
-        system = Trekmap.Me.get_system(fleet.system_id, session)
-        {{:fly, system, target.coords}, config}
-      end
+      {{:attack, target}, config}
     else
       if nearby_system_with_targets = find_targets_in_nearby_system(fleet, session, config) do
         {system, targets} = nearby_system_with_targets
