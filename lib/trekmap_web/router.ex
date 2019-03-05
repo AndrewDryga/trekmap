@@ -43,6 +43,7 @@ defmodule Trekmap.Router do
                   case strategy do
                     Trekmap.Bots.FleetCommander.Strategies.StationDefender -> "Defending Station"
                     Trekmap.Bots.FleetCommander.Strategies.MinerHunter -> "Hunting Miners"
+                    Trekmap.Bots.FleetCommander.Strategies.FractionHunter -> "Hunting Hostiles"
                     other -> inspect(other)
                   end
 
@@ -107,6 +108,7 @@ defmodule Trekmap.Router do
         <br/>
         <br/>
         Missions: <br/>
+        - <a href="/set_agressive_mining_and_fraction_hunting_mission">Agressive Mining and Fraction Hunting</a><br/>
         - <a href="/set_aggresive_mining_hunting_mission">Agressive Mining Hunting</a><br/>
         - <a href="/set_passive_mining_hunting_mission">Passive Mining Hunting</a><br/>
       </body>
@@ -150,6 +152,15 @@ defmodule Trekmap.Router do
 
   get "/set_aggresive_mining_hunting_mission" do
     mission_plan = Trekmap.Bots.Admiral.agressive_mining_hunting_mission_plan()
+    Trekmap.Bots.FleetCommander.apply_mission_plan(mission_plan)
+
+    conn
+    |> put_resp_header("location", "/")
+    |> send_resp(302, "")
+  end
+
+  get "/set_agressive_mining_and_fraction_hunting_mission" do
+    mission_plan = Trekmap.Bots.Admiral.agressive_mining_and_fraction_hunting_mission_plan()
     Trekmap.Bots.FleetCommander.apply_mission_plan(mission_plan)
 
     conn

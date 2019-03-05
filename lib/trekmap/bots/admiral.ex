@@ -63,7 +63,7 @@ defmodule Trekmap.Bots.Admiral do
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
-          min_targets_in_system: 5,
+          min_targets_in_system: 3,
           min_target_level: 16,
           max_target_level: 26,
           min_target_bounty_score: 1800,
@@ -77,6 +77,55 @@ defmodule Trekmap.Bots.Admiral do
           min_targets_in_system: 1,
           min_target_level: 16,
           max_target_level: 26,
+          min_target_bounty_score: 300_000,
+          skip_nearest_system?: false
+        ]
+      },
+      Trekmap.Me.Fleet.kehra_fleet_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+        [
+          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          min_targets_in_system: 2,
+          min_target_level: 16,
+          max_target_level: 26,
+          min_target_bounty_score: 1600,
+          skip_nearest_system?: true
+        ]
+      }
+    }
+  end
+
+  def agressive_mining_and_fraction_hunting_mission_plan do
+    %{
+      Trekmap.Me.Fleet.jellyfish_fleet_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+        [
+          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          min_targets_in_system: 3,
+          min_target_level: 16,
+          max_target_level: 26,
+          min_target_bounty_score: 1800,
+          skip_nearest_system?: false
+        ]
+      },
+      Trekmap.Me.Fleet.northstar_fleet_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
+        [
+          exclude_fraction_ids: [-1],
+          patrol_systems: [
+            1_984_126_753,
+            355_503_878,
+            1_731_519_518,
+            975_691_590,
+            1_691_252_927,
+            1_744_652_289,
+            846_029_245,
+            1_780_286_771,
+            1_358_992_189
+          ],
+          min_targets_in_system: 1,
+          min_target_level: 23,
+          max_target_level: 28,
           min_target_bounty_score: 300_000,
           skip_nearest_system?: false
         ]
