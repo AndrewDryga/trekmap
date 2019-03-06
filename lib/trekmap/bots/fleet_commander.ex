@@ -2,7 +2,7 @@ defmodule Trekmap.Bots.FleetCommander do
   use DynamicSupervisor
 
   @fleet [
-    Trekmap.Me.Fleet.jellyfish_fleet_id(),
+    Trekmap.Me.Fleet.vakhlas_fleet_id(),
     Trekmap.Me.Fleet.northstar_fleet_id(),
     Trekmap.Me.Fleet.kehra_fleet_id()
   ]

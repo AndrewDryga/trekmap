@@ -3,17 +3,27 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
 
   @behaviour Trekmap.Bots.FleetCommander.Strategy
 
-  def init(config, _session) do
+  def init(config, session) do
     {:ok, allies} = Trekmap.Galaxy.Alliances.list_allies()
     {:ok, enemies} = Trekmap.Galaxy.Alliances.list_enemies()
     allies = Enum.map(allies, & &1.tag)
     enemies = Enum.map(enemies, & &1.tag)
 
+    max_warp_distance = Keyword.fetch!(config, :max_warp_distance)
+
+    patrol_systems =
+      Keyword.fetch!(config, :patrol_systems)
+      |> Enum.filter(fn system_id ->
+        path = Trekmap.Galaxy.find_path(session.galaxy, session.home_system_id, system_id)
+        warp_distance = Trekmap.Galaxy.get_path_max_warp_distance(session.galaxy, path)
+        warp_distance <= max_warp_distance
+      end)
+
     {:ok,
      %{
        allies: allies,
        enemies: enemies,
-       patrol_systems: Keyword.fetch!(config, :patrol_systems),
+       patrol_systems: patrol_systems,
        min_targets_in_system: Keyword.fetch!(config, :min_targets_in_system),
        min_target_level: Keyword.fetch!(config, :min_target_level),
        max_target_level: Keyword.fetch!(config, :max_target_level),

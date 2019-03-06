@@ -95,6 +95,9 @@ defmodule Trekmap.Job.Speedup do
       Logger.info("Using paid repair token for #{duration} seconds to boost ship job #{job_id}")
       :ok
     else
+      {:error, %{"code" => 400}} ->
+        :ok
+
       {:error, %{body: "resources", type: 2}} ->
         :ok = buy_resources(id, session)
         boost_job(job_id, token, session)

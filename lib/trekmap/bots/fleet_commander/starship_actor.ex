@@ -354,7 +354,7 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
     end
   end
 
-  def name(771_246_931_724_024_704), do: :"#{__MODULE__}.Fleet_Jellyfish"
+  def name(771_246_931_724_024_704), do: :"#{__MODULE__}.Fleet_Vakhlas"
   def name(771_331_774_860_311_262), do: :"#{__MODULE__}.Fleet_NorthStar"
   def name(791_687_022_921_464_764), do: :"#{__MODULE__}.Fleet_Kehra"
   def name(fleet_id), do: :"#{__MODULE__}.Fleet_#{to_string(fleet_id)}"

@@ -117,7 +117,7 @@ defmodule Trekmap.Me.Fleet do
   defp state(0), do: :idle
   defp state(other), do: other
 
-  def jellyfish_fleet_id, do: dock1_id()
+  def vakhlas_fleet_id, do: dock1_id()
   def northstar_fleet_id, do: dock2_id()
   def kehra_fleet_id, do: dock3_id()
 

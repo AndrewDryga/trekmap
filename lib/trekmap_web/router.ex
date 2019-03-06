@@ -49,7 +49,7 @@ defmodule Trekmap.Router do
 
                 ship_name =
                   cond do
-                    fleet_id == Trekmap.Me.Fleet.jellyfish_fleet_id() -> "Jellyfish"
+                    fleet_id == Trekmap.Me.Fleet.vakhlas_fleet_id() -> "Vakhlas"
                     fleet_id == Trekmap.Me.Fleet.northstar_fleet_id() -> "North Star"
                     fleet_id == Trekmap.Me.Fleet.kehra_fleet_id() -> "Kehra"
                     true -> to_string(fleet_id)
