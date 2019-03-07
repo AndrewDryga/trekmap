@@ -54,7 +54,7 @@ defmodule Trekmap.Bots.Guardian do
 
     defence_broken? =
       Enum.any?(defense_stations, fn {_id, defense_station} ->
-        Map.fetch!(defense_station, "damage") > 100
+        Map.fetch!(defense_station, "damage") > 2000
       end)
 
     Trekmap.Bots.Admiral.update_station_report(%{
