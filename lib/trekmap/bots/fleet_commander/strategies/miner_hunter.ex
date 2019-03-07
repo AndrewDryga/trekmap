@@ -119,12 +119,14 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
       skip_nearest_system?: skip_nearest_system?
     } = config
 
+    stop_on_first_result? = not skip_nearest_system?
+
     {nearby_system_with_targets, _second?} =
       Enum.sort_by(patrol_systems, fn system_id ->
         path = Trekmap.Galaxy.find_path(session.galaxy, fleet.system_id, system_id)
         Trekmap.Galaxy.get_path_distance(session.galaxy, path)
       end)
-      |> Enum.reduce_while({nil, not skip_nearest_system?}, fn system_id, {acc, should_stop?} ->
+      |> Enum.reduce_while({nil, stop_on_first_result?}, fn system_id, {acc, should_stop?} ->
         system = Trekmap.Me.get_system(system_id, session)
         {:ok, targets} = find_targets_in_system(fleet, system, session, config)
 
@@ -132,7 +134,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
           length(targets) >= min_targets_in_system and should_stop? ->
             {:halt, {{system, targets}, true}}
 
-          length(targets) > min_targets_in_system ->
+          length(targets) >= min_targets_in_system ->
             {:cont, {{system, targets}, true}}
 
           true ->
