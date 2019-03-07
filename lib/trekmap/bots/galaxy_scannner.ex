@@ -50,13 +50,13 @@ defmodule Trekmap.Bots.GalaxyScanner do
       |> Enum.shuffle()
       |> Task.async_stream(
         fn system ->
-          with {:ok, {stations, miners}} <-
+          with {:ok, {stations, _miners}} <-
                  Trekmap.Galaxy.System.list_stations_and_miners(system, session),
-               {:ok, stations} <- sync_stations(system, stations),
-               {:ok, miners} <- sync_miners(system, miners) do
+               {:ok, stations} <- sync_stations(system, stations) do
+            # {:ok, miners} <- sync_miners(system, miners) do
             Logger.debug(
-              "[Galaxy Scanner] Scanning #{system.name}: updated #{length(stations)} stations " <>
-                "and #{length(miners)} miners"
+              "[Galaxy Scanner] Scanning #{system.name}: updated #{length(stations)} stations "
+              # <> "and #{length(miners)} miners"
             )
 
             system
@@ -112,24 +112,24 @@ defmodule Trekmap.Bots.GalaxyScanner do
     end)
   end
 
-  defp sync_miners(system, miners) do
-    miners
-    |> Enum.reduce_while({:ok, []}, fn miner, {status, acc} ->
-      if miner.player.level < 15 do
-        {:cont, {status, acc}}
-      else
-        with {:ok, player} <- sync_player(miner.player),
-             miner = %{miner | player: player},
-             {:ok, miner} <- Trekmap.AirDB.create_or_update(miner) do
-          miner = %{miner | player: player, system: system}
-          {:cont, {status, [miner] ++ acc}}
-        else
-          error ->
-            {:halt, error}
-        end
-      end
-    end)
-  end
+  # defp sync_miners(system, miners) do
+  #   miners
+  #   |> Enum.reduce_while({:ok, []}, fn miner, {status, acc} ->
+  #     if miner.player.level < 15 do
+  #       {:cont, {status, acc}}
+  #     else
+  #       with {:ok, player} <- sync_player(miner.player),
+  #            miner = %{miner | player: player},
+  #            {:ok, miner} <- Trekmap.AirDB.create_or_update(miner) do
+  #         miner = %{miner | player: player, system: system}
+  #         {:cont, {status, [miner] ++ acc}}
+  #       else
+  #         error ->
+  #           {:halt, error}
+  #       end
+  #     end
+  #   end)
+  # end
 
   defp sync_player(%{alliance: nil} = player) do
     Trekmap.AirDB.create_or_update(player)
