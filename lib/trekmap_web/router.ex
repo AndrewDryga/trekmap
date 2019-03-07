@@ -152,7 +152,7 @@ defmodule Trekmap.Router do
 
   get "/set_aggresive_mining_hunting_mission" do
     mission_plan = Trekmap.Bots.Admiral.agressive_mining_hunting_mission_plan()
-    Trekmap.Bots.FleetCommander.apply_mission_plan(mission_plan)
+    Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
     |> put_resp_header("location", "/")
@@ -161,7 +161,7 @@ defmodule Trekmap.Router do
 
   get "/set_agressive_mining_and_fraction_hunting_mission" do
     mission_plan = Trekmap.Bots.Admiral.agressive_mining_and_fraction_hunting_mission_plan()
-    Trekmap.Bots.FleetCommander.apply_mission_plan(mission_plan)
+    Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
     |> put_resp_header("location", "/")
@@ -170,7 +170,7 @@ defmodule Trekmap.Router do
 
   get "/set_passive_mining_hunting_mission" do
     mission_plan = Trekmap.Bots.Admiral.passive_mining_hunting_mission_plan()
-    Trekmap.Bots.FleetCommander.apply_mission_plan(mission_plan)
+    Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
     |> put_resp_header("location", "/")

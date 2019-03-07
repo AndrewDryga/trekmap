@@ -157,7 +157,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
   defp can_kill?(miner, fleet) do
     cond do
       is_nil(fleet.strength) -> true
-      not is_nil(miner.strength) -> miner.strength < fleet.strength * 1.2
+      not is_nil(miner.strength) -> miner.strength < fleet.strength
       true -> false
     end
   end

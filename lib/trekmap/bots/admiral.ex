@@ -33,6 +33,10 @@ defmodule Trekmap.Bots.Admiral do
     end
   end
 
+  def set_mission_plan(mission_plan) do
+    GenServer.call(__MODULE__, {:set_mission_plan, mission_plan})
+  end
+
   def get_fleet_reports do
     GenServer.call(__MODULE__, :get_fleet_reports)
   end
@@ -190,6 +194,11 @@ defmodule Trekmap.Bots.Admiral do
   def handle_call(:get_mission_plan, _from, state) do
     %{current_mission_plan: current_mission_plan} = state
     {:reply, current_mission_plan, state}
+  end
+
+  def handle_call({:set_mission_plan, mission_plan}, _from, state) do
+    Trekmap.Bots.FleetCommander.apply_mission_plan(mission_plan)
+    {:reply, :ok, %{state | current_mission_plan: mission_plan}}
   end
 
   def handle_call(:get_fleet_reports, _from, %{session: session} = state) do
