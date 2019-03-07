@@ -117,11 +117,17 @@ defmodule Trekmap.Bots.Admiral do
             1_744_652_289,
             846_029_245,
             1_780_286_771,
-            1_358_992_189
+            1_358_992_189,
+            1_057_703_933,
+            369_364_082,
+            399_469_984,
+            893_618_014,
+            186_798_495,
+            1_090_722_450
           ],
           min_targets_in_system: 1,
-          min_target_level: 23,
-          max_target_level: 28,
+          min_target_level: 26,
+          max_target_level: 30,
           skip_nearest_system?: false,
           max_warp_distance: 23
         ]
