@@ -162,7 +162,7 @@ defmodule Trekmap.Bots.Admiral do
           min_targets_in_system: 2,
           min_target_level: 17,
           max_target_level: 33,
-          min_target_bounty_score: 10_000,
+          min_target_bounty_score: 30_000,
           skip_nearest_system?: false,
           max_warp_distance: 23
         ]
@@ -174,7 +174,7 @@ defmodule Trekmap.Bots.Admiral do
           min_targets_in_system: 2,
           min_target_level: 17,
           max_target_level: 33,
-          min_target_bounty_score: 15_000,
+          min_target_bounty_score: 40_000,
           skip_nearest_system?: false,
           max_warp_distance: 21
         ]
