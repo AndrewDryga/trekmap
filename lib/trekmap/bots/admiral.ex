@@ -34,7 +34,7 @@ defmodule Trekmap.Bots.Admiral do
   end
 
   def set_mission_plan(mission_plan) do
-    GenServer.call(__MODULE__, {:set_mission_plan, mission_plan})
+    GenServer.call(__MODULE__, {:set_mission_plan, mission_plan}, 30_000)
   end
 
   def get_fleet_reports do
