@@ -163,7 +163,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
   end
 
   defp can_attack?(miner, min_target_level, max_target_level) do
-    min_target_level < miner.player.level and miner.player.level < max_target_level
+    min_target_level <= miner.player.level and miner.player.level <= max_target_level
   end
 
   defp should_kill?(miner, min_target_bounty_score, enemies) do

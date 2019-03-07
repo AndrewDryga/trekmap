@@ -113,7 +113,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
   end
 
   defp should_kill?(marauder, min_target_level, max_target_level) do
-    min_target_level < marauder.level and marauder.level < max_target_level
+    min_target_level <= marauder.level and marauder.level <= max_target_level
   end
 
   defp can_kill?(marauder, fleet) do
