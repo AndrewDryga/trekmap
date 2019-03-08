@@ -289,7 +289,7 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
         "score: #{inspect(target.bounty_score)} at #{to_string(target.system.name)}"
     )
 
-    case Trekmap.Me.attack_miner(fleet, target, session) do
+    case Trekmap.Me.attack_spacecraft(fleet, target, session) do
       {:ok, fleet} ->
         if fleet.state == :flying and fleet.remaining_travel_time < 2 do
           continue_and_reload_fleet(5_000)
@@ -335,8 +335,7 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
     end
   end
 
-  def perform_fleet_action(fleet, {:wait, timeout}, %{fleet_id: fleet_id}) do
-    Logger.debug("[#{name(fleet_id)}] Waiting #{timeout}")
+  def perform_fleet_action(fleet, {:wait, timeout}, _state) do
     continue(fleet, timeout)
   end
 

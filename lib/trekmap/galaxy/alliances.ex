@@ -52,4 +52,13 @@ defmodule Trekmap.Galaxy.Alliances do
 
     AirDB.list(Alliance, query_params)
   end
+
+  def list_kos_in_hive do
+    query_params = %{
+      "maxRecords" => 100,
+      "filterByFormula" => "OR({KOS In Hive}, {Relation} = 'Enemy')"
+    }
+
+    AirDB.list(Alliance, query_params)
+  end
 end

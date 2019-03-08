@@ -6,6 +6,7 @@ defmodule Trekmap.Galaxy.Player do
             level: nil,
             name: nil,
             alliance: nil,
+            home_system_id: nil,
             other_known_names: []
 
   def table_name, do: "Players"
@@ -53,8 +54,18 @@ defmodule Trekmap.Galaxy.Player do
       external_id: external_id,
       level: level,
       name: name,
+      home_system_id: Map.get(fields, "System", []) |> List.first(),
       alliance: alliance,
       other_known_names: other_known_names
     }
+  end
+
+  def list_bad_people do
+    query_params = %{
+      "maxRecords" => 100,
+      "filterByFormula" => "OR({Should Suffer})"
+    }
+
+    Trekmap.AirDB.list(__MODULE__, query_params)
   end
 end

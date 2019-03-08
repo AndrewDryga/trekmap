@@ -107,6 +107,7 @@ defmodule Trekmap.Bots.Admiral do
       Trekmap.Me.Fleet.vakhlas_fleet_id() => {
         Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
         [
+          # TODO: fraction_id: 4153667145
           exclude_fraction_ids: [-1],
           patrol_systems:
             [
@@ -192,6 +193,13 @@ defmodule Trekmap.Bots.Admiral do
           min_target_bounty_score: 50_000,
           skip_nearest_system?: false,
           max_warp_distance: 23
+        ]
+      },
+      Trekmap.Me.Fleet.northstar_fleet_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
+        [
+          min_target_level: 17,
+          max_target_level: 33
         ]
       },
       Trekmap.Me.Fleet.kehra_fleet_id() => {

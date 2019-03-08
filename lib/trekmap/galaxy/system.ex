@@ -73,6 +73,30 @@ defmodule Trekmap.Galaxy.System do
     end
   end
 
+  def list_startships(%__MODULE__{} = system, %Session{} = session) do
+    body = Jason.encode!(%{system_id: system.id})
+    additional_headers = Session.session_headers(session)
+
+    with {:ok, %{response: response}} <-
+           APIClient.protobuf_request(:post, @system_nodes_endpoint, additional_headers, body),
+         %{
+           "mining_slots" => mining_slots,
+           "deployed_fleets" => deployed_fleets
+         } = response,
+         stations = [],
+         miners = build_spacecrafts_list(system, mining_slots, deployed_fleets),
+         {:ok, {stations, miners}} <- enrich_with_scan_info({stations, miners}, session),
+         {:ok, {stations, miners}} <- enrich_with_alliance_info({stations, miners}, session) do
+      {:ok, {stations, miners}}
+    else
+      {:error, %{body: "deployment", type: 1}} ->
+        {:error, :system_not_visited}
+
+      other ->
+        other
+    end
+  end
+
   def list_hostiles(%__MODULE__{} = system, %Session{} = session) do
     body = Jason.encode!(%{system_id: system.id})
     additional_headers = Session.session_headers(session)
@@ -182,6 +206,44 @@ defmodule Trekmap.Galaxy.System do
 
         %{"is_occupied" => false} ->
           []
+      end
+    end)
+  end
+
+  defp build_spacecrafts_list(system, mining_slots, deployed_fleets) do
+    Enum.flat_map(deployed_fleets, fn {_fleet_binary_id, deployed_fleet} ->
+      %{
+        "fleet_id" => fleet_id,
+        "current_coords" => %{"x" => x, "y" => y},
+        "uid" => player_id,
+        "type" => type,
+        "is_mining" => is_mining
+      } = deployed_fleet
+
+      if type == 1 do
+        mining_node_id =
+          if is_mining do
+            Enum.find_value(mining_slots, fn {_x_id,
+                                              [%{"fleet_id" => miner_fleet_id, "id" => id} | _]} ->
+              if miner_fleet_id == fleet_id do
+                id
+              else
+                nil
+              end
+            end)
+          end
+
+        [
+          %Spacecraft{
+            player: %Player{id: player_id},
+            system: system,
+            id: fleet_id,
+            mining_node_id: mining_node_id,
+            coords: {x, y}
+          }
+        ]
+      else
+        []
       end
     end)
   end

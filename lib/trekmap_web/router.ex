@@ -42,6 +42,7 @@ defmodule Trekmap.Router do
                 task_name =
                   case strategy do
                     Trekmap.Bots.FleetCommander.Strategies.StationDefender -> "Defending Station"
+                    Trekmap.Bots.FleetCommander.Strategies.HiveDefender -> "Defending Hive"
                     Trekmap.Bots.FleetCommander.Strategies.MinerHunter -> "Hunting Miners"
                     Trekmap.Bots.FleetCommander.Strategies.FractionHunter -> "Hunting Hostiles"
                     other -> inspect(other)
