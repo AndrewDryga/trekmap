@@ -147,7 +147,7 @@ defmodule Trekmap.Bots.Admiral do
             ]
             |> Enum.uniq(),
           min_targets_in_system: 1,
-          min_target_level: 26,
+          min_target_level: 27,
           max_target_level: 30,
           skip_nearest_system?: false,
           max_warp_distance: 23
