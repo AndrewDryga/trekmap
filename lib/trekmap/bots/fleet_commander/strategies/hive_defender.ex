@@ -38,7 +38,14 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
         |> Enum.sort_by(&distance(&1.coords, fleet.coords))
         |> List.first()
 
-      Logger.warn("Found enemy in hive: #{inspect(target)}, approaching")
+      alliance_tag = if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
+      {x, y} = target.coords
+
+      Trekmap.Me.send_to_alliance_chat(
+        "Enemy in our hive: #{alliance_tag}#{target.player.name} " <>
+          "at [S:#{target.system.id} X:#{x} Y:#{y}]. OMW.",
+        session
+      )
 
       system = Trekmap.Me.get_system(fleet.system_id, session)
       {{:fly, system, target.coords}, config}
@@ -109,8 +116,10 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
   end
 
   defp should_kill?(miner, enemies, bad_people_ids) do
+    overcargo? = not is_nil(miner.bounty_score) and miner.bounty_score > 1
+
     enemy? = if miner.player.alliance, do: miner.player.alliance.tag in enemies, else: false
-    should_suffer? = miner.player.id in bad_people_ids
+    should_suffer? = miner.player.id in bad_people_ids and overcargo?
 
     enemy? or should_suffer?
   end

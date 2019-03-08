@@ -59,7 +59,7 @@ defmodule Trekmap.Session do
     end
   end
 
-  defp additional_headers do
+  def additional_headers do
     api_key =
       Application.fetch_env!(:trekmap, __MODULE__)
       |> Keyword.fetch!(:api_key)

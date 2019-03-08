@@ -8,6 +8,7 @@ defmodule Trekmap.Me do
   @shield_endpoint "https://live-193-web.startrek.digitgaming.com/resources/use_shield_token"
   @fleet_recall_endpoint "https://live-193-web.startrek.digitgaming.com/courses/recall_fleet_warp"
   @fleet_course_endpoint "https://live-193-web.startrek.digitgaming.com/courses/set_fleet_warp_course"
+  @alliance_chat_endpoint "https://nv3-live.startrek.digitgaming.com/chat/v1/messages/"
 
   ## Me
 
@@ -477,4 +478,25 @@ defmodule Trekmap.Me do
 
   def binary_to_integer(binary) when is_binary(binary), do: String.to_integer(binary)
   def binary_to_integer(number) when is_number(number), do: number
+
+  def send_to_alliance_chat(message, session) do
+    additional_headers =
+      Session.additional_headers() ++
+        [
+          {"Content-Type", "application/json"},
+          {"X-Suppress-Codes", "1"},
+          {"X-AUTH-SESSION-ID", session.master_session_id}
+        ]
+
+    body =
+      Jason.encode!(%{
+        "chn" => "aie_193_750509434828383138",
+        "txt" => message,
+        "cno" => 5
+      })
+
+    endpoint = "#{@alliance_chat_endpoint}#{session.account_id}/send"
+
+    APIClient.request(:post, endpoint, additional_headers, body)
+  end
 end
