@@ -16,7 +16,7 @@ defmodule Trekmap.Bots do
   end
 
   def start_bots do
-    GenServer.call(__MODULE__, :start, 30_000)
+    GenServer.call(__MODULE__, :start, 60_000)
   end
 
   def get_status do

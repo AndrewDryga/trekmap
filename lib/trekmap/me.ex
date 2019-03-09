@@ -1,5 +1,6 @@
 defmodule Trekmap.Me do
-  alias Trekmap.{APIClient, Session, Job, Galaxy, Galaxy.Spacecraft, Galaxy.Marauder}
+  alias Trekmap.{APIClient, Session, Galaxy, Galaxy.Spacecraft, Galaxy.Marauder}
+  alias Trekmap.Me.Job
   alias Trekmap.Me.Fleet
   require Logger
 

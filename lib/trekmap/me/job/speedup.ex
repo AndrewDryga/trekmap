@@ -1,4 +1,4 @@
-defmodule Trekmap.Job.Speedup do
+defmodule Trekmap.Me.Job.Speedup do
   alias Trekmap.{APIClient, Session}
   require Logger
 
@@ -97,6 +97,10 @@ defmodule Trekmap.Job.Speedup do
     else
       {:error, %{"code" => 400}} ->
         :ok
+
+      {:error, %{body: "resources", type: 1}} ->
+        :ok = buy_resources(id, session)
+        boost_job(job_id, token, session)
 
       {:error, %{body: "resources", type: 2}} ->
         :ok = buy_resources(id, session)

@@ -1,15 +1,282 @@
-# curl -H \
-# 'Host: nv3-live.startrek.digitgaming.com' -H \
-# 'X-Unity-Version: 5.6.4p3' -H \
-# 'Accept: application/x-protobuf' -H \
-# 'X-PRIME-VERSION: 0.543.8939' -H \
-# 'X-Suppress-Codes: 1' -H \
-# 'X-PRIME-SYNC: 0' -H \
-# 'If-None-Match: W/"8fa7b48d6022bc1c771884513fb0d14f45a0c910"' -H \
-# 'X-Api-Key: FCX2QsbxHjSP52B' -H \
-# 'Accept-Language: ru' -H \
-# 'Content-Type: application/x-protobuf' -H \
-# 'X-TRANSACTION-ID: 36fca27c-5cfd-46cc-afe5-b2d46d004a44' -H \
-# 'User-Agent: startrek/0.543.8939 CFNetwork/976 Darwin/18.2.0'
-# --compressed
-# 'https://nv3-live.startrek.digitgaming.com/payments/v1/accounts/e4a655634c674cc9aff1b6b7c6c0521a/bundles/store?master_session_id=fea58dc0dbad456082e1c0455fc6bde3&bundle_type=virtual&category=chests'
+defmodule Trekmap.Me.Chests do
+  alias Trekmap.{APIClient, Session}
+
+  @account_payments_endpoint "https://nv3-live.startrek.digitgaming.com/payments/v1/accounts"
+
+  @purchase_from_alliance_store [
+    # Relocation token
+    1_088_385_569
+  ]
+  @purchase_from_resources_store [
+    # Daily Reward Pack
+    1_045_295_611,
+    # Daily Choice Reward Pack
+    1_511_808_981,
+    # Daily Elite Reward Pack
+    648_529_260
+  ]
+
+  def open_all_chests(%Session{} = session) do
+    {:ok, refinery_chests} = list_available_refinery_chests(session)
+    {:ok, bonus_chests} = list_available_bonus_chests(session)
+    {:ok, first_time_alliance_chests} = list_available_first_time_alliance_chests(session)
+    {:ok, alliance_chests_to_purchase} = list_alliance_chests_to_purchase(session)
+    {:ok, available_officer_chests} = list_available_officer_chests(session)
+    {:ok, resource_chests_to_purchase} = list_resource_chests_to_purchase(session)
+
+    (refinery_chests ++
+       bonus_chests ++
+       first_time_alliance_chests ++
+       alliance_chests_to_purchase ++
+       available_officer_chests ++
+       resource_chests_to_purchase)
+    |> Enum.map(fn chest ->
+      %{"bundle_id" => bundle_id, "cost" => cost_options} = chest
+
+      %{"quantity" => quantity} =
+        Enum.max_by(cost_options, fn %{"quantity" => quantity} -> quantity end)
+
+      {bundle_id, quantity}
+    end)
+    |> Enum.each(fn {bundle_id, quantity} -> :ok = open_chest(bundle_id, quantity, session) end)
+  end
+
+  def list_available_refinery_chests(%Session{} = session) do
+    additional_headers =
+      Session.additional_headers() ++
+        [
+          {"X-AUTH-SESSION-ID", session.master_session_id}
+        ]
+
+    endpoint =
+      "#{@account_payments_endpoint}/#{session.account_id}/bundles/store" <>
+        "?master_session_id=#{session.master_session_id}&bundle_type=virtual&category=refining"
+
+    with {:ok, response} <-
+           APIClient.request(
+             :get,
+             endpoint,
+             additional_headers,
+             ""
+           ) do
+      %{"bundles" => bundles} = Jason.decode!(response)
+
+      bundles =
+        Enum.flat_map(bundles, fn bundle ->
+          %{"offer_details" => %{"valid_count" => valid_count}} = bundle
+
+          if valid_count > 0 do
+            [bundle]
+          else
+            []
+          end
+        end)
+
+      {:ok, bundles}
+    end
+  end
+
+  def list_available_officer_chests(%Session{} = session) do
+    additional_headers =
+      Session.additional_headers() ++
+        [
+          {"X-AUTH-SESSION-ID", session.master_session_id}
+        ]
+
+    endpoint =
+      "#{@account_payments_endpoint}/#{session.account_id}/bundles/store" <>
+        "?master_session_id=#{session.master_session_id}&bundle_type=virtual&category=gacha"
+
+    with {:ok, response} <-
+           APIClient.request(
+             :get,
+             endpoint,
+             additional_headers,
+             ""
+           ) do
+      %{"bundles" => bundles} = Jason.decode!(response)
+
+      bundles =
+        Enum.flat_map(bundles, fn bundle ->
+          %{"bundle_id" => bundle_id, "offer_details" => offer_details} = bundle
+
+          valid_count = Map.get(offer_details, "valid_count", 0)
+
+          if valid_count > 0 and bundle_id in @purchase_from_alliance_store do
+            [bundle]
+          else
+            []
+          end
+        end)
+
+      {:ok, bundles}
+    end
+  end
+
+  def list_available_bonus_chests(%Session{} = session) do
+    additional_headers =
+      Session.additional_headers() ++
+        [
+          {"X-AUTH-SESSION-ID", session.master_session_id}
+        ]
+
+    endpoint =
+      "#{@account_payments_endpoint}/#{session.account_id}/bundles/store" <>
+        "?master_session_id=#{session.master_session_id}&bundle_type=virtual&category=chests"
+
+    with {:ok, response} <-
+           APIClient.request(
+             :get,
+             endpoint,
+             additional_headers,
+             ""
+           ) do
+      %{"bundles" => bundles} = Jason.decode!(response)
+
+      bundles =
+        Enum.flat_map(bundles, fn bundle ->
+          %{"offer_details" => %{"valid_count" => valid_count}} = bundle
+
+          if valid_count > 0 do
+            [bundle]
+          else
+            []
+          end
+        end)
+
+      {:ok, bundles}
+    end
+  end
+
+  def list_available_first_time_alliance_chests(%Session{} = session) do
+    additional_headers =
+      Session.additional_headers() ++
+        [
+          {"X-AUTH-SESSION-ID", session.master_session_id}
+        ]
+
+    endpoint =
+      "#{@account_payments_endpoint}/#{session.account_id}/bundles/store" <>
+        "?master_session_id=#{session.master_session_id}&bundle_type=virtual&category=first_time_alliance"
+
+    with {:ok, response} <-
+           APIClient.request(
+             :get,
+             endpoint,
+             additional_headers,
+             ""
+           ) do
+      %{"bundles" => bundles} = Jason.decode!(response)
+
+      bundles =
+        Enum.flat_map(bundles, fn bundle ->
+          %{"offer_details" => %{"valid_count" => valid_count}} = bundle
+
+          if valid_count > 0 do
+            [bundle]
+          else
+            []
+          end
+        end)
+
+      {:ok, bundles}
+    end
+  end
+
+  def list_alliance_chests_to_purchase(%Session{} = session) do
+    additional_headers =
+      Session.additional_headers() ++
+        [
+          {"X-AUTH-SESSION-ID", session.master_session_id}
+        ]
+
+    endpoint =
+      "#{@account_payments_endpoint}/#{session.account_id}/bundles/store" <>
+        "?master_session_id=#{session.master_session_id}&bundle_type=virtual&category=alliances"
+
+    with {:ok, response} <-
+           APIClient.request(
+             :get,
+             endpoint,
+             additional_headers,
+             ""
+           ) do
+      %{"bundles" => bundles} = Jason.decode!(response)
+
+      bundles =
+        Enum.flat_map(bundles, fn bundle ->
+          %{"bundle_id" => bundle_id, "offer_details" => offer_details} = bundle
+
+          valid_count = Map.get(offer_details, "valid_count", 0)
+
+          if valid_count > 0 and bundle_id in @purchase_from_alliance_store do
+            [bundle]
+          else
+            []
+          end
+        end)
+
+      {:ok, bundles}
+    end
+  end
+
+  def list_resource_chests_to_purchase(%Session{} = session) do
+    additional_headers =
+      Session.additional_headers() ++
+        [
+          {"X-AUTH-SESSION-ID", session.master_session_id}
+        ]
+
+    endpoint =
+      "#{@account_payments_endpoint}/#{session.account_id}/bundles/store" <>
+        "?master_session_id=#{session.master_session_id}&bundle_type=virtual&category=resources"
+
+    with {:ok, response} <-
+           APIClient.request(
+             :get,
+             endpoint,
+             additional_headers,
+             ""
+           ) do
+      %{"bundles" => bundles} = Jason.decode!(response)
+
+      bundles =
+        Enum.flat_map(bundles, fn bundle ->
+          %{"bundle_id" => bundle_id, "offer_details" => offer_details} = bundle
+
+          valid_count = Map.get(offer_details, "valid_count", 0)
+
+          if valid_count > 0 and bundle_id in @purchase_from_resources_store do
+            [bundle]
+          else
+            []
+          end
+        end)
+
+      {:ok, bundles}
+    end
+  end
+
+  def open_chest(chest_id, quantity, %Session{} = session) do
+    additional_headers =
+      Session.additional_headers() ++
+        [
+          {"X-AUTH-SESSION-ID", session.master_session_id}
+        ]
+
+    endpoint = "#{@account_payments_endpoint}/#{session.account_id}/chests/orders"
+
+    payload =
+      {:form,
+       [
+         {"master_session_id", session.master_session_id},
+         {"chest_id", chest_id},
+         {"quantity", quantity},
+         {"options", ""}
+       ]}
+
+    with {:ok, response} <- APIClient.request(:post, endpoint, additional_headers, payload) do
+      :ok
+    end
+  end
+end

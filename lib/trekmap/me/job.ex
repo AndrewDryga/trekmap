@@ -1,4 +1,43 @@
-defmodule Trekmap.Job do
+defmodule Trekmap.Me.Job do
+  alias Trekmap.{APIClient, Session}
+
+  @alliance_help_jobs_list_endpoint "https://live-193-web.startrek.digitgaming.com/alliance/get_job_help_info"
+  @alliance_help_jobs_endpoint "https://live-193-web.startrek.digitgaming.com/alliance/help_with_user_jobs"
+
+  def help_all(%Session{} = session) do
+    additional_headers = Session.session_headers(session)
+
+    with {:ok, %{response: %{"alliance_job_help_info" => help_info}}} <-
+           APIClient.protobuf_request(
+             :post,
+             @alliance_help_jobs_list_endpoint,
+             additional_headers,
+             "{}"
+           ) do
+      help_info =
+        Enum.flat_map(help_info, fn
+          {job_id, %{"helping_user_ids" => helping_user_ids, "user_id" => user_id}} ->
+            if session.account_id not in helping_user_ids and session.account_id != user_id do
+              [job_id]
+            else
+              []
+            end
+        end)
+
+      payload = Jason.encode!(%{"alliance_id" => 0, "job_ids" => help_info})
+
+      {:ok, _response} =
+        APIClient.protobuf_request(
+          :post,
+          @alliance_help_jobs_endpoint,
+          additional_headers,
+          payload
+        )
+
+      :ok
+    end
+  end
+
   def fetch_ship_repair_job(%{active_jobs: %{list: %{items: jobs}}, current_timestamp: cur_ts}) do
     case Enum.filter(jobs, fn item -> Map.fetch!(item, :kind) == 5 end) do
       [job | _jobs] ->
