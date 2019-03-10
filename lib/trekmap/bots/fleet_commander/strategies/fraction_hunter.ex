@@ -6,7 +6,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
   def init(config, _session) do
     {:ok,
      %{
-       exclude_fraction_ids: Keyword.fetch!(config, :exclude_fraction_ids),
+       fraction_ids: Keyword.fetch!(config, :fraction_ids),
        patrol_systems: Keyword.fetch!(config, :patrol_systems),
        min_targets_in_system: Keyword.fetch!(config, :min_targets_in_system),
        min_target_level: Keyword.fetch!(config, :min_target_level),
@@ -55,7 +55,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
 
   defp find_targets_in_system(fleet, system, session, config) do
     %{
-      exclude_fraction_ids: exclude_fraction_ids,
+      fraction_ids: fraction_ids,
       min_target_level: min_target_level,
       max_target_level: max_target_level
     } = config
@@ -63,7 +63,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
     with {:ok, %{hostiles: hostiles}} <- Trekmap.Galaxy.System.scan_system(system, session) do
       targets =
         hostiles
-        |> Enum.filter(&enemy_fraction?(&1, exclude_fraction_ids))
+        |> Enum.filter(&enemy_fraction?(&1, fraction_ids))
         |> Enum.filter(&should_kill?(&1, min_target_level, max_target_level))
         |> Enum.filter(&can_kill?(&1, fleet))
 
@@ -107,8 +107,8 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
     nearby_system_with_targets
   end
 
-  defp enemy_fraction?(marauder, exclude_fraction_ids) do
-    marauder.fraction_id not in exclude_fraction_ids
+  defp enemy_fraction?(marauder, fraction_ids) do
+    marauder.fraction_id in fraction_ids
   end
 
   defp should_kill?(marauder, min_target_level, max_target_level) do

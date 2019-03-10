@@ -1,14 +1,6 @@
 defmodule Trekmap.Bots.FleetCommander do
   use DynamicSupervisor
 
-  @fleet [
-    Trekmap.Me.Fleet.vakhlas_fleet_id(),
-    Trekmap.Me.Fleet.northstar_fleet_id(),
-    Trekmap.Me.Fleet.kehra_fleet_id()
-  ]
-
-  @default_assignment {Trekmap.Bots.FleetCommander.Strategies.StationDefender, []}
-
   def start_link(arg) do
     DynamicSupervisor.start_link(__MODULE__, arg, name: __MODULE__)
   end
@@ -21,9 +13,14 @@ defmodule Trekmap.Bots.FleetCommander do
   def apply_mission_plan(mission_plan) do
     :ok = stop_all_missions()
 
-    Enum.each(@fleet, fn fleet_id ->
-      {strategy, strategy_config} = Map.get(mission_plan, fleet_id, @default_assignment)
-      child = {Trekmap.Bots.FleetCommander.StartshipActor, {fleet_id, strategy, strategy_config}}
+    Trekmap.Me.Fleet.drydocs()
+    |> Enum.each(fn fleet_id ->
+      {strategy, fleet_config, strategy_config} = Map.fetch!(mission_plan, fleet_id)
+
+      child =
+        {Trekmap.Bots.FleetCommander.StartshipActor,
+         {fleet_id, strategy, fleet_config, strategy_config}}
+
       DynamicSupervisor.start_child(__MODULE__, child)
     end)
   end

@@ -27,12 +27,12 @@ defmodule Trekmap.Router do
             |> Enum.flat_map(fn
               %{
                 strategy: strategy,
-                fleet_id: fleet_id,
                 mission_paused: mission_paused,
                 clearence_granted: clearence_granted,
                 system: %{name: system_name},
                 fleet: %{
                   state: state,
+                  ship_id: ship_id,
                   hull_health: hull_health,
                   cargo_size: cargo_size,
                   remaining_travel_time: remaining_travel_time,
@@ -48,13 +48,7 @@ defmodule Trekmap.Router do
                     other -> inspect(other)
                   end
 
-                ship_name =
-                  cond do
-                    fleet_id == Trekmap.Me.Fleet.vakhlas_fleet_id() -> "Vakhlas"
-                    fleet_id == Trekmap.Me.Fleet.northstar_fleet_id() -> "North Star"
-                    fleet_id == Trekmap.Me.Fleet.kehra_fleet_id() -> "Kehra"
-                    true -> to_string(fleet_id)
-                  end
+                ship_name = Trekmap.Me.Fleet.ship_name(ship_id)
 
                 mission_paused = if mission_paused, do: "; PAUSED", else: ""
 
@@ -112,6 +106,7 @@ defmodule Trekmap.Router do
         - <a href="/set_agressive_mining_and_fraction_hunting_mission">Agressive Mining and Fraction Hunting</a><br/>
         - <a href="/set_aggresive_mining_hunting_mission">Agressive Mining Hunting</a><br/>
         - <a href="/set_passive_mining_hunting_mission">Passive Mining Hunting</a><br/>
+        - <a href="/set_raid_mission">Raid Mission</a><br/>
       </body>
     </html>
     """)
@@ -171,6 +166,15 @@ defmodule Trekmap.Router do
 
   get "/set_passive_mining_hunting_mission" do
     mission_plan = Trekmap.Bots.Admiral.passive_mining_hunting_mission_plan()
+    Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
+
+    conn
+    |> put_resp_header("location", "/")
+    |> send_resp(302, "")
+  end
+
+  get "/set_raid_mission" do
+    mission_plan = Trekmap.Bots.Admiral.raid_mission_plan(:foo)
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn

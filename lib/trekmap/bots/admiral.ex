@@ -2,6 +2,60 @@ defmodule Trekmap.Bots.Admiral do
   use GenServer
   require Logger
 
+  @fraction_klingon 4_153_667_145
+
+  @other_time_officers [
+    1_622_062_016,
+    1_525_867_544,
+    194_631_754,
+    1_853_520_303,
+    4_066_988_596,
+    4_150_311_506,
+    668_528_267,
+    2_865_735_742,
+    -1,
+    -1
+  ]
+
+  @enterprise_crew_officers [
+    3_394_864_658,
+    2_517_597_941,
+    680_147_223,
+    339_936_167,
+    98_548_875,
+    2_235_857_051,
+    2_601_201_375,
+    176_044_746,
+    -1,
+    -1
+  ]
+
+  @glory_in_kill_officers [
+    2_520_801_863,
+    282_462_507,
+    766_809_588,
+    3_155_244_352,
+    3_923_643_019,
+    2_765_885_322,
+    250_991_574,
+    -1,
+    -1,
+    -1
+  ]
+
+  @raid_transport_officers [
+    755_079_845,
+    3_816_036_121,
+    3_156_736_320,
+    339_936_167,
+    98_548_875,
+    2_235_857_051,
+    2_601_201_375,
+    176_044_746,
+    -1,
+    -1
+  ]
+
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
@@ -63,38 +117,50 @@ defmodule Trekmap.Bots.Admiral do
 
   def agressive_mining_hunting_mission_plan do
     %{
-      Trekmap.Me.Fleet.vakhlas_fleet_id() => {
+      Trekmap.Me.Fleet.drydock1_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+        [
+          ship: "Vahklas",
+          crew: @other_time_officers
+        ],
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
           min_targets_in_system: 1,
-          min_target_level: 17,
+          min_target_level: 18,
           max_target_level: 33,
-          min_target_bounty_score: 70_000,
+          min_target_bounty_score: 50_000,
           skip_nearest_system?: false,
           max_warp_distance: 23
         ]
       },
-      Trekmap.Me.Fleet.northstar_fleet_id() => {
+      Trekmap.Me.Fleet.drydock2_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+        [
+          ship: "North Star",
+          crew: @enterprise_crew_officers
+        ],
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
           min_targets_in_system: 1,
-          min_target_level: 17,
+          min_target_level: 18,
           max_target_level: 33,
-          min_target_bounty_score: 200_000,
+          min_target_bounty_score: 100_000,
           skip_nearest_system?: false,
           max_warp_distance: 29
         ]
       },
-      Trekmap.Me.Fleet.kehra_fleet_id() => {
+      Trekmap.Me.Fleet.drydock3_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+        [
+          ship: "Kehra",
+          crew: @glory_in_kill_officers
+        ],
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
           min_targets_in_system: 1,
-          min_target_level: 17,
+          min_target_level: 18,
           max_target_level: 33,
-          min_target_bounty_score: 70_000,
+          min_target_bounty_score: 50_000,
           skip_nearest_system?: true,
           max_warp_distance: 21
         ]
@@ -104,11 +170,14 @@ defmodule Trekmap.Bots.Admiral do
 
   def agressive_mining_and_fraction_hunting_mission_plan do
     %{
-      Trekmap.Me.Fleet.vakhlas_fleet_id() => {
+      Trekmap.Me.Fleet.drydock1_id() => {
         Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
         [
-          # TODO: fraction_id: 4153667145
-          exclude_fraction_ids: [-1],
+          ship: "Vahklas",
+          crew: @other_time_officers
+        ],
+        [
+          fraction_ids: [@fraction_klingon],
           patrol_systems:
             [
               1_984_126_753,
@@ -154,24 +223,32 @@ defmodule Trekmap.Bots.Admiral do
           max_warp_distance: 23
         ]
       },
-      Trekmap.Me.Fleet.northstar_fleet_id() => {
+      Trekmap.Me.Fleet.drydock2_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+        [
+          ship: "North Star",
+          crew: @enterprise_crew_officers
+        ],
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
           min_targets_in_system: 1,
-          min_target_level: 17,
+          min_target_level: 18,
           max_target_level: 33,
           min_target_bounty_score: 200_000,
           skip_nearest_system?: false,
           max_warp_distance: 29
         ]
       },
-      Trekmap.Me.Fleet.kehra_fleet_id() => {
+      Trekmap.Me.Fleet.drydock3_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+        [
+          ship: "Kehra",
+          crew: @glory_in_kill_officers
+        ],
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
           min_targets_in_system: 1,
-          min_target_level: 17,
+          min_target_level: 18,
           max_target_level: 33,
           min_target_bounty_score: 70_000,
           skip_nearest_system?: true,
@@ -183,35 +260,85 @@ defmodule Trekmap.Bots.Admiral do
 
   def passive_mining_hunting_mission_plan do
     %{
-      Trekmap.Me.Fleet.vakhlas_fleet_id() => {
+      Trekmap.Me.Fleet.drydock1_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+        [
+          ship: "Vahklas",
+          crew: @other_time_officers
+        ],
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
           min_targets_in_system: 1,
-          min_target_level: 17,
+          min_target_level: 18,
           max_target_level: 33,
           min_target_bounty_score: 50_000,
           skip_nearest_system?: false,
           max_warp_distance: 23
         ]
       },
-      Trekmap.Me.Fleet.northstar_fleet_id() => {
+      Trekmap.Me.Fleet.drydock2_id() => {
         Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
         [
-          min_target_level: 17,
+          ship: "North Star",
+          crew: @enterprise_crew_officers
+        ],
+        [
+          min_target_level: 18,
           max_target_level: 33
         ]
       },
-      Trekmap.Me.Fleet.kehra_fleet_id() => {
+      Trekmap.Me.Fleet.drydock3_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+        [
+          ship: "Kehra",
+          crew: @glory_in_kill_officers
+        ],
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
           min_targets_in_system: 1,
-          min_target_level: 17,
+          min_target_level: 18,
           max_target_level: 33,
           min_target_bounty_score: 70_000,
           skip_nearest_system?: false,
           max_warp_distance: 21
+        ]
+      }
+    }
+  end
+
+  def raid_mission_plan(_target_user_id) do
+    %{
+      Trekmap.Me.Fleet.drydock1_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
+        [
+          ship: "Envoy 1",
+          crew: @other_time_officers
+        ],
+        [
+          min_target_level: 18,
+          max_target_level: 33
+        ]
+      },
+      Trekmap.Me.Fleet.drydock2_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
+        [
+          ship: "North Star",
+          crew: @enterprise_crew_officers
+        ],
+        [
+          min_target_level: 18,
+          max_target_level: 33
+        ]
+      },
+      Trekmap.Me.Fleet.drydock3_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
+        [
+          ship: "Envoy 2",
+          crew: @raid_transport_officers
+        ],
+        [
+          min_target_level: 18,
+          max_target_level: 33
         ]
       }
     }

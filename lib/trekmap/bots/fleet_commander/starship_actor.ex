@@ -24,8 +24,10 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
 
   ### Bot Server
 
-  def start_link({fleet_id, strategy, strategy_config}) do
-    GenServer.start_link(__MODULE__, {fleet_id, strategy, strategy_config}, name: name(fleet_id))
+  def start_link({fleet_id, strategy, fleet_config, strategy_config}) do
+    GenServer.start_link(__MODULE__, {fleet_id, strategy, fleet_config, strategy_config},
+      name: name(fleet_id)
+    )
   end
 
   def child_spec(fleet_id) do
@@ -39,13 +41,17 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
   end
 
   @impl true
-  def init({fleet_id, strategy, strategy_config}) do
+  def init({fleet_id, strategy, fleet_config, strategy_config}) do
     Logger.info("[#{name(fleet_id)}] On mission #{inspect(strategy)}")
     {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
     {:ok, strategy_state} = strategy.init(strategy_config, session)
+    ship_id = Keyword.fetch!(fleet_config, :ship) |> Trekmap.Me.Fleet.ship_id()
+    ship_crew = Keyword.fetch!(fleet_config, :crew)
 
     state = %{
       session: session,
+      ship_id: ship_id,
+      ship_crew: ship_crew,
       fleet_id: fleet_id,
       fleet: nil,
       strategy: strategy,
@@ -115,9 +121,31 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
   end
 
   @impl true
-  def handle_info({:continue, nil}, %{session: session, fleet_id: fleet_id} = state) do
+  def handle_info({:continue, nil}, state) do
+    %{session: session, fleet_id: fleet_id, ship_id: ship_id, ship_crew: ship_crew} = state
+
     fleet = fetch_fleet(fleet_id, session)
-    continue(fleet)
+
+    fleet =
+      if Trekmap.Me.Fleet.fleet_setup_equals?(fleet, ship_id, ship_crew) do
+        continue(fleet)
+
+        fleet
+      else
+        if fleet.state == :at_dock do
+          :ok = Trekmap.Me.full_repair(session)
+          :ok = Trekmap.Me.Fleet.assign_ship(fleet_id, ship_id, session)
+          :ok = Trekmap.Me.Fleet.assign_officers(fleet_id, ship_crew, session)
+
+          continue(fleet)
+
+          fetch_fleet(fleet_id, session)
+        else
+          perform_fleet_action(fleet, :recall, state)
+
+          fleet
+        end
+      end
 
     Trekmap.Bots.Admiral.update_fleet_report(%{
       clearence_granted: state.clearence_granted,
@@ -346,15 +374,29 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
     if deployed_fleet = Map.get(deployed_fleets, to_string(fleet_id)) do
       Fleet.build(deployed_fleet)
     else
-      %{"ship_ids" => [ship_id]} = Map.fetch!(fleets, to_string(fleet_id))
+      %{"ship_ids" => [ship_id], "officers" => officers} = Map.fetch!(fleets, to_string(fleet_id))
+
+      ship_crew =
+        Enum.map(officers, fn
+          nil -> -1
+          officer -> officer
+        end)
+
       %{"max_hp" => max_hp, "damage" => damage} = Map.fetch!(ships, to_string(ship_id))
       hull_health = 100 - Enum.max([0, damage]) / (max_hp / 100)
-      %Fleet{id: fleet_id, system_id: session.home_system_id, hull_health: hull_health}
+
+      %Fleet{
+        id: fleet_id,
+        ship_id: ship_id,
+        system_id: session.home_system_id,
+        hull_health: hull_health,
+        ship_crew: ship_crew
+      }
     end
   end
 
-  def name(771_246_931_724_024_704), do: :"#{__MODULE__}.Fleet_Vakhlas"
-  def name(771_331_774_860_311_262), do: :"#{__MODULE__}.Fleet_NorthStar"
-  def name(791_687_022_921_464_764), do: :"#{__MODULE__}.Fleet_Kehra"
+  def name(771_246_931_724_024_704), do: :"#{__MODULE__}.Drydock1"
+  def name(771_331_774_860_311_262), do: :"#{__MODULE__}.Drydock2"
+  def name(791_687_022_921_464_764), do: :"#{__MODULE__}.Drydock3"
   def name(fleet_id), do: :"#{__MODULE__}.Fleet_#{to_string(fleet_id)}"
 end

@@ -33,6 +33,20 @@ defmodule Trekmap.Galaxy.Alliances do
   def list_allies do
     query_params = %{
       "maxRecords" => 100,
+      "filterByFormula" => "OR({Relation} = 'Ally')"
+    }
+
+    with {:ok, [struct]} <- AirDB.list(Alliance, query_params) do
+      {:ok, struct}
+    else
+      {:ok, []} -> {:error, :not_found}
+      other -> other
+    end
+  end
+
+  def list_nap do
+    query_params = %{
+      "maxRecords" => 100,
       "filterByFormula" => "OR({Relation} = 'Ally', {Relation} = 'NAP')"
     }
 

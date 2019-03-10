@@ -4,7 +4,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
   @behaviour Trekmap.Bots.FleetCommander.Strategy
 
   def init(config, session) do
-    {:ok, allies} = Trekmap.Galaxy.Alliances.list_allies()
+    {:ok, allies} = Trekmap.Galaxy.Alliances.list_nap()
     {:ok, enemies} = Trekmap.Galaxy.Alliances.list_kos_in_hive()
     {:ok, bad_people} = Trekmap.Galaxy.Player.list_bad_people()
     home_system = Trekmap.Me.get_system(session.hive_system_id, session)
