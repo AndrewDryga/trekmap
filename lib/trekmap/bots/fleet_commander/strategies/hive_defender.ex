@@ -46,8 +46,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
       {x, y} = target.coords
 
       Trekmap.Discord.send_message(
-        "Enemy in our hive I'm going to kill: #{alliance_tag}#{target.player.name} " <>
-          "at [S:#{target.system.id} X:#{x} Y:#{y}]."
+        "Killing: #{alliance_tag}#{target.player.name} at [S:#{target.system.id} X:#{x} Y:#{y}]."
       )
 
       system = Trekmap.Me.get_system(fleet.system_id, session)
