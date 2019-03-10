@@ -123,7 +123,7 @@ defmodule Trekmap.Galaxy.System do
   end
 
   defp build_marauders_list(marauders, deployed_fleets, system) do
-    Enum.map(marauders, fn marauder ->
+    Enum.flat_map(marauders, fn marauder ->
       %{
         "target_fleet_id" => target_fleet_id,
         "faction_id" => faction_id,
@@ -133,17 +133,22 @@ defmodule Trekmap.Galaxy.System do
 
       level = levels |> Enum.to_list() |> List.first() |> elem(1)
 
-      %{"current_coords" => %{"x" => x, "y" => y}} =
-        Map.fetch!(deployed_fleets, to_string(target_fleet_id))
+      if marauder_fleet = Map.get(deployed_fleets, to_string(target_fleet_id)) do
+        %{"current_coords" => %{"x" => x, "y" => y}} = marauder_fleet
 
-      %Marauder{
-        fraction_id: faction_id,
-        target_fleet_id: target_fleet_id,
-        system: system,
-        coords: {x, y},
-        strength: strength,
-        level: level
-      }
+        [
+          %Marauder{
+            fraction_id: faction_id,
+            target_fleet_id: target_fleet_id,
+            system: system,
+            coords: {x, y},
+            strength: strength,
+            level: level
+          }
+        ]
+      else
+        []
+      end
     end)
   end
 
