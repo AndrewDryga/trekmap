@@ -50,8 +50,14 @@ defmodule Trekmap.Bots.GalaxyScanner do
       |> Enum.shuffle()
       |> Task.async_stream(
         fn system ->
-          with {:ok, {stations, _miners}} <-
-                 Trekmap.Galaxy.System.list_stations_and_miners(system, session),
+          with {:ok, scan} <- Trekmap.Galaxy.System.scan_system(system, session),
+               {:ok, scan} <-
+                 Trekmap.Galaxy.System.enrich_stations_and_spacecrafts(scan, session),
+               {:ok, scan} <-
+                 Trekmap.Galaxy.System.enrich_stations_with_station_resources(scan, session),
+               {:ok, scan} <-
+                 Trekmap.Galaxy.System.enrich_stations_with_planet_names(scan, session),
+               stations = scan.stations,
                {:ok, stations} <- sync_stations(system, stations) do
             # {:ok, miners} <- sync_miners(system, miners) do
             Logger.debug(

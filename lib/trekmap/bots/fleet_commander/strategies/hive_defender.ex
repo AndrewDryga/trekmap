@@ -7,7 +7,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
     {:ok, allies} = Trekmap.Galaxy.Alliances.list_allies()
     {:ok, enemies} = Trekmap.Galaxy.Alliances.list_kos_in_hive()
     {:ok, bad_people} = Trekmap.Galaxy.Player.list_bad_people()
-    home_system = Trekmap.Me.get_system(session.home_system_id, session)
+    home_system = Trekmap.Me.get_system(session.hive_system_id, session)
+
+    if session.hive_system_id != session.home_system_id do
+      Logger.error("HiveDefender is not in hive!")
+    end
 
     allies = Enum.map(allies, & &1.tag)
     enemies = Enum.map(enemies, & &1.tag)
@@ -38,14 +42,13 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
         |> Enum.sort_by(&distance(&1.coords, fleet.coords))
         |> List.first()
 
-      # alliance_tag = if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
-      # {x, y} = target.coords
-      #
-      # Trekmap.Me.send_to_alliance_chat(
-      #   "Enemy in our hive: #{alliance_tag}#{target.player.name} " <>
-      #     "at [S:#{target.system.id} X:#{x} Y:#{y}]. OMW.",
-      #   session
-      # )
+      alliance_tag = if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
+      {x, y} = target.coords
+
+      Trekmap.Discord.send_message(
+        "Enemy in our hive I'm going to kill: #{alliance_tag}#{target.player.name} " <>
+          "at [S:#{target.system.id} X:#{x} Y:#{y}]."
+      )
 
       system = Trekmap.Me.get_system(fleet.system_id, session)
       {{:fly, system, target.coords}, config}
@@ -81,10 +84,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
       max_target_level: max_target_level
     } = config
 
-    with {:ok, {_stations, startships}} <-
-           Trekmap.Galaxy.System.list_startships(system, session) do
+    with {:ok, scan} <- Trekmap.Galaxy.System.scan_system(system, session),
+         {:ok, %{spacecrafts: spacecrafts}} <-
+           Trekmap.Galaxy.System.enrich_stations_and_spacecrafts(scan, session) do
       targets =
-        startships
+        spacecrafts
         |> Enum.reject(&ally?(&1, allies))
         |> Enum.filter(&can_kill?(&1, fleet))
         |> Enum.filter(&can_attack?(&1, min_target_level, max_target_level))

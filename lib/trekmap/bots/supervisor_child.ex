@@ -14,7 +14,8 @@ defmodule Trekmap.Bots.SupervisorChild do
       Trekmap.Bots.Guardian,
       Trekmap.Bots.GalaxyScanner,
       Trekmap.Bots.Helper,
-      Trekmap.Bots.ChestCollector
+      Trekmap.Bots.ChestCollector,
+      Trekmap.Bots.HiveScanner
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

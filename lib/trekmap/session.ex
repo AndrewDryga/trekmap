@@ -10,6 +10,7 @@ defmodule Trekmap.Session do
             session_instance_id: nil,
             fleet_id: nil,
             home_system_id: nil,
+            hive_system_id: 604_074_052,
             galaxy: Graph.new()
 
   def start_session do

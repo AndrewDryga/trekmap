@@ -1,5 +1,6 @@
 defmodule Trekmap.Me.Chests do
   alias Trekmap.{APIClient, Session}
+  require Logger
 
   @account_payments_endpoint "https://nv3-live.startrek.digitgaming.com/payments/v1/accounts"
 
@@ -276,6 +277,7 @@ defmodule Trekmap.Me.Chests do
        ]}
 
     with {:ok, response} <- APIClient.request(:post, endpoint, additional_headers, payload) do
+      Logger.debug("Open chest, resp: #{inspect(response)}")
       :ok
     end
   end

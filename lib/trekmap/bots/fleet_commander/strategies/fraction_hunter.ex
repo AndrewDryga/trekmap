@@ -60,8 +60,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
       max_target_level: max_target_level
     } = config
 
-    with {:ok, hostiles} <-
-           Trekmap.Galaxy.System.list_hostiles(system, session) do
+    with {:ok, %{hostiles: hostiles}} <- Trekmap.Galaxy.System.scan_system(system, session) do
       targets =
         hostiles
         |> Enum.filter(&enemy_fraction?(&1, exclude_fraction_ids))

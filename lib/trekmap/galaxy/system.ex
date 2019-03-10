@@ -4,6 +4,14 @@ defmodule Trekmap.Galaxy.System do
   alias Trekmap.Galaxy.{Spacecraft, Player, Alliances, Alliances.Alliance, Marauder}
   alias Trekmap.Galaxy.System.{Planet, Station}
 
+  defmodule Scan do
+    defstruct system: nil,
+              raw_result: %{},
+              spacecrafts: [],
+              stations: [],
+              hostiles: []
+  end
+
   @behaviour Trekmap.AirDB
 
   @system_nodes_endpoint "https://live-193-web.startrek.digitgaming.com/game_world/system/dynamic_nodes"
@@ -47,89 +55,31 @@ defmodule Trekmap.Galaxy.System do
   defp put_if_not_nil(map, _key, nil), do: map
   defp put_if_not_nil(map, key, value), do: Map.put(map, key, value)
 
-  def list_miners(%__MODULE__{} = system, %Session{} = session) do
-    body = Jason.encode!(%{system_id: system.id})
-    additional_headers = Session.session_headers(session)
-
-    with {:ok, %{response: response}} <-
-           APIClient.protobuf_request(:post, @system_nodes_endpoint, additional_headers, body),
-         %{
-           "mining_slots" => mining_slots,
-           "deployed_fleets" => deployed_fleets
-         } = response,
-         stations = [],
-         miners = build_miners_list(system, mining_slots, deployed_fleets),
-         {:ok, stations} <- enrich_stations_with_planet_names(stations),
-         {:ok, {stations, miners}} <- enrich_with_scan_info({stations, miners}, session),
-         {:ok, {stations, miners}} <- enrich_with_alliance_info({stations, miners}, session),
-         {:ok, stations} <- enrich_with_resources(stations, session) do
-      {:ok, {stations, miners}}
-    else
-      {:error, %{body: "deployment", type: 1}} ->
-        {:error, :system_not_visited}
-
-      other ->
-        other
-    end
-  end
-
-  def list_startships(%__MODULE__{} = system, %Session{} = session) do
-    body = Jason.encode!(%{system_id: system.id})
-    additional_headers = Session.session_headers(session)
-
-    with {:ok, %{response: response}} <-
-           APIClient.protobuf_request(:post, @system_nodes_endpoint, additional_headers, body),
-         %{
-           "mining_slots" => mining_slots,
-           "deployed_fleets" => deployed_fleets
-         } = response,
-         stations = [],
-         miners = build_spacecrafts_list(system, mining_slots, deployed_fleets),
-         {:ok, {stations, miners}} <- enrich_with_scan_info({stations, miners}, session),
-         {:ok, {stations, miners}} <- enrich_with_alliance_info({stations, miners}, session) do
-      {:ok, {stations, miners}}
-    else
-      {:error, %{body: "deployment", type: 1}} ->
-        {:error, :system_not_visited}
-
-      other ->
-        other
-    end
-  end
-
-  def list_hostiles(%__MODULE__{} = system, %Session{} = session) do
+  def scan_system(%__MODULE__{} = system, %Session{} = session) do
     body = Jason.encode!(%{system_id: system.id})
     additional_headers = Session.session_headers(session)
 
     with {:ok, %{response: response}} <-
            APIClient.protobuf_request(:post, @system_nodes_endpoint, additional_headers, body) do
-      %{"deployed_fleets" => deployed_fleets, "marauder_quick_scan_data" => marauders} = response
+      %{
+        "player_container" => player_container,
+        "mining_slots" => mining_slots,
+        "deployed_fleets" => deployed_fleets,
+        "marauder_quick_scan_data" => marauders
+      } = response
 
-      marauders =
-        Enum.map(marauders, fn marauder ->
-          %{
-            "target_fleet_id" => target_fleet_id,
-            "faction_id" => faction_id,
-            "strength" => strength,
-            "ship_levels" => levels
-          } = marauder
+      stations = build_stations_list(system, player_container)
+      spacecrafts = build_spacecrafts_list(system, mining_slots, deployed_fleets)
+      marauders = build_marauders_list(marauders, deployed_fleets, system)
 
-          level = levels |> Enum.to_list() |> List.first() |> elem(1)
-
-          %{"current_coords" => %{"x" => x, "y" => y}} =
-            Map.fetch!(deployed_fleets, to_string(target_fleet_id))
-
-          %Marauder{
-            fraction_id: faction_id,
-            target_fleet_id: target_fleet_id,
-            system: system,
-            coords: {x, y},
-            strength: strength,
-            level: level
-          }
-        end)
-
-      {:ok, marauders}
+      {:ok,
+       %Scan{
+         system: system,
+         raw_result: response,
+         stations: stations,
+         spacecrafts: spacecrafts,
+         hostiles: marauders
+       }}
     else
       {:error, %{body: "deployment", type: 1}} ->
         {:error, :system_not_visited}
@@ -139,31 +89,62 @@ defmodule Trekmap.Galaxy.System do
     end
   end
 
-  def list_stations_and_miners(%__MODULE__{} = system, %Session{} = session) do
-    body = Jason.encode!(%{system_id: system.id})
-    additional_headers = Session.session_headers(session)
+  def scan_system_by_id(system_id, %Session{} = session) do
+    system_id
+    |> Trekmap.Me.get_system(session)
+    |> scan_system(session)
+  end
 
-    with {:ok, %{response: response}} <-
-           APIClient.protobuf_request(:post, @system_nodes_endpoint, additional_headers, body),
-         %{
-           "player_container" => player_container,
-           "mining_slots" => mining_slots,
-           "deployed_fleets" => deployed_fleets
-         } = response,
-         stations = build_stations_list(system, player_container),
-         miners = build_miners_list(system, mining_slots, deployed_fleets),
-         {:ok, stations} <- enrich_stations_with_planet_names(stations),
-         {:ok, {stations, miners}} <- enrich_with_scan_info({stations, miners}, session),
-         {:ok, {stations, miners}} <- enrich_with_alliance_info({stations, miners}, session),
-         {:ok, stations} <- enrich_with_resources(stations, session) do
-      {:ok, {stations, miners}}
-    else
-      {:error, %{body: "deployment", type: 1}} ->
-        {:error, :system_not_visited}
+  def enrich_stations_and_spacecrafts(%Scan{} = scan, %Session{} = session) do
+    %{stations: stations, spacecrafts: spacecrafts} = scan
 
-      other ->
-        other
+    with {:ok, {stations, spacecrafts}} <-
+           enrich_with_scan_info({stations, spacecrafts}, session),
+         {:ok, {stations, spacecrafts}} <-
+           enrich_with_alliance_info({stations, spacecrafts}, session) do
+      {:ok, %{scan | stations: stations, spacecrafts: spacecrafts}}
     end
+  end
+
+  def enrich_stations_with_station_resources(%Scan{} = scan, %Session{} = session) do
+    %{stations: stations} = scan
+
+    with {:ok, stations} <- enrich_stations_with_resources(stations, session) do
+      {:ok, %{scan | stations: stations}}
+    end
+  end
+
+  def enrich_stations_with_planet_names(%Scan{} = scan, %Session{} = _session) do
+    %{stations: stations} = scan
+
+    with {:ok, stations} <- enrich_stations_with_planet_names(stations) do
+      {:ok, %{scan | stations: stations}}
+    end
+  end
+
+  defp build_marauders_list(marauders, deployed_fleets, system) do
+    Enum.map(marauders, fn marauder ->
+      %{
+        "target_fleet_id" => target_fleet_id,
+        "faction_id" => faction_id,
+        "strength" => strength,
+        "ship_levels" => levels
+      } = marauder
+
+      level = levels |> Enum.to_list() |> List.first() |> elem(1)
+
+      %{"current_coords" => %{"x" => x, "y" => y}} =
+        Map.fetch!(deployed_fleets, to_string(target_fleet_id))
+
+      %Marauder{
+        fraction_id: faction_id,
+        target_fleet_id: target_fleet_id,
+        system: system,
+        coords: {x, y},
+        strength: strength,
+        level: level
+      }
+    end)
   end
 
   defp build_stations_list(system, player_container) do
@@ -181,35 +162,6 @@ defmodule Trekmap.Galaxy.System do
     end)
   end
 
-  defp build_miners_list(system, mining_slots, deployed_fleets) do
-    Enum.flat_map(mining_slots, fn {_mining_slot_id, mining_nodes} ->
-      case List.first(mining_nodes) do
-        %{"is_occupied" => true, "user_id" => player_id, "fleet_id" => fleet_id} = mining_node ->
-          {mining_node_id, coords} =
-            if deployed_fleet = Map.get(deployed_fleets, to_string(fleet_id)) do
-              mining_node_id = Map.fetch!(mining_node, "id")
-              %{"x" => x, "y" => y} = Map.fetch!(deployed_fleet, "current_coords")
-              {mining_node_id, {x, y}}
-            else
-              {nil, {0, 0}}
-            end
-
-          [
-            %Spacecraft{
-              player: %Player{id: player_id},
-              system: system,
-              id: fleet_id,
-              mining_node_id: mining_node_id,
-              coords: coords
-            }
-          ]
-
-        %{"is_occupied" => false} ->
-          []
-      end
-    end)
-  end
-
   defp build_spacecrafts_list(system, mining_slots, deployed_fleets) do
     Enum.flat_map(deployed_fleets, fn {_fleet_binary_id, deployed_fleet} ->
       %{
@@ -223,13 +175,13 @@ defmodule Trekmap.Galaxy.System do
       if type == 1 do
         mining_node_id =
           if is_mining do
-            Enum.find_value(mining_slots, fn {_x_id,
-                                              [%{"fleet_id" => miner_fleet_id, "id" => id} | _]} ->
-              if miner_fleet_id == fleet_id do
-                id
-              else
-                nil
-              end
+            Enum.find_value(mining_slots, fn
+              {_x_id, [%{"fleet_id" => miner_fleet_id, "id" => id} | _]} ->
+                if miner_fleet_id == fleet_id do
+                  id
+                else
+                  nil
+                end
             end)
           end
 
@@ -248,18 +200,21 @@ defmodule Trekmap.Galaxy.System do
     end)
   end
 
-  defp enrich_with_scan_info({stations, miners}, session) do
+  defp enrich_with_scan_info({stations, spacecrafts}, session) do
     station_ids = stations |> Enum.map(& &1.id)
-    miner_user_ids = miners |> Enum.map(& &1.player.id)
+    miner_user_ids = spacecrafts |> Enum.map(& &1.player.id)
     target_ids = Enum.uniq(station_ids ++ miner_user_ids)
 
-    miner_ids = miners |> Enum.map(& &1.id) |> Enum.uniq()
+    miner_ids = spacecrafts |> Enum.map(& &1.id) |> Enum.uniq()
 
     with {:ok, user_scan_results} <- Galaxy.scan_players(target_ids, session),
          {:ok, spaceships_scan_results} <- Galaxy.scan_spaceships(miner_ids, session) do
       stations = apply_scan_info_to_stations(stations, user_scan_results)
-      miners = apply_scan_info_to_miners(miners, user_scan_results, spaceships_scan_results)
-      {:ok, {stations, miners}}
+
+      spacecrafts =
+        apply_scan_info_to_spacecrafts(spacecrafts, user_scan_results, spaceships_scan_results)
+
+      {:ok, {stations, spacecrafts}}
     end
   end
 
@@ -309,8 +264,8 @@ defmodule Trekmap.Galaxy.System do
     end)
   end
 
-  defp apply_scan_info_to_miners(miners, scan_results, spaceships_scan_results) do
-    Enum.map(miners, fn miner ->
+  defp apply_scan_info_to_spacecrafts(spacecrafts, scan_results, spaceships_scan_results) do
+    Enum.map(spacecrafts, fn miner ->
       %{
         "attributes" => %{
           "owner_alliance_id" => alliance_id,
@@ -381,22 +336,22 @@ defmodule Trekmap.Galaxy.System do
     end
   end
 
-  def enrich_with_alliance_info({stations, miners}, session) do
+  def enrich_with_alliance_info({stations, spacecrafts}, session) do
     alliance_ids =
-      (stations ++ miners)
+      (stations ++ spacecrafts)
       |> Enum.reject(&is_nil(&1.player.alliance))
       |> Enum.map(& &1.player.alliance.id)
       |> Enum.uniq()
 
     with {:ok, alliances} <- Alliances.list_alliances_by_ids(alliance_ids, session) do
       stations = apply_alliance_info(stations, alliances)
-      miners = apply_alliance_info(miners, alliances)
-      {:ok, {stations, miners}}
+      spacecrafts = apply_alliance_info(spacecrafts, alliances)
+      {:ok, {stations, spacecrafts}}
     end
   end
 
-  defp apply_alliance_info(stations_or_miners, alliances) do
-    Enum.map(stations_or_miners, fn station_or_miner ->
+  defp apply_alliance_info(stations_or_spacecrafts, alliances) do
+    Enum.map(stations_or_spacecrafts, fn station_or_miner ->
       if alliance = station_or_miner.player.alliance do
         alliance = Map.get(alliances, alliance.id, alliance)
         %{station_or_miner | player: %{station_or_miner.player | alliance: alliance}}
@@ -406,7 +361,7 @@ defmodule Trekmap.Galaxy.System do
     end)
   end
 
-  def enrich_with_resources(stations, session) do
+  def enrich_stations_with_resources(stations, session) do
     Enum.reduce_while(stations, {:ok, []}, fn station, {status, acc} ->
       case Station.get_station_resources(station, session) do
         {:ok, resources} ->

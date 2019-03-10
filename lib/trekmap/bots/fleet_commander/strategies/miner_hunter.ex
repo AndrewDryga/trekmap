@@ -98,8 +98,9 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
       min_target_bounty_score: min_target_bounty_score
     } = config
 
-    with {:ok, {_stations, miners}} <-
-           Trekmap.Galaxy.System.list_miners(system, session) do
+    with {:ok, scan} <- Trekmap.Galaxy.System.scan_system(system, session),
+         {:ok, %{spacecrafts: miners}} <-
+           Trekmap.Galaxy.System.enrich_stations_and_spacecrafts(scan, session) do
       targets =
         miners
         |> Enum.reject(&ally?(&1, allies))
