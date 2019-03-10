@@ -56,7 +56,8 @@ defmodule Trekmap.Galaxy.System.Station do
     %{
       "ID" => id,
       "Player" => [player_external_id],
-      "Planet" => [planet_external_id]
+      "Planet" => [planet_external_id],
+      "System" => [system_id]
     } = fields
 
     %__MODULE__{
@@ -73,7 +74,7 @@ defmodule Trekmap.Galaxy.System.Station do
       station_strength: Map.get(fields, "Station Strength"),
       hull_health: Map.get(fields, "Station Health"),
       defense_platform_hull_health: Map.get(fields, "Defence Health"),
-      system: :unfetched,
+      system: {:unfetched, Trekmap.Galaxy.System, system_id},
       shield_triggered_at: Map.get(fields, "Shield Enabled At"),
       shield_expires_at: Map.get(fields, "Shield Ends At")
     }
@@ -184,5 +185,19 @@ defmodule Trekmap.Galaxy.System.Station do
     map
     |> Enum.map(&elem(&1, 1))
     |> Enum.sum()
+  end
+
+  def list_raid_targets do
+    formula =
+      "AND({Relation} != 'Ally', {Relation} != 'NAP', {Relation} != 'NSA', 17 <= {Level}, {Level} <= 19, {Shield Enabled Ago} >= 21600, {Shield Ends In} <= '600', {Last Updated} <= '10800')"
+
+    query_params = %{
+      "maxRecords" => 7,
+      "filterByFormula" => formula,
+      "sort[0][field]" => "Profitability",
+      "sort[0][direction]" => "desc"
+    }
+
+    Trekmap.AirDB.list(__MODULE__, query_params)
   end
 end
