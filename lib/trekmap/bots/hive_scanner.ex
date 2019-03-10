@@ -63,18 +63,17 @@ defmodule Trekmap.Bots.HiveScanner do
               :ok
 
             enemy?(spacecraft, enemies) ->
-              ("**Enemy** #{player_name(spacecraft)} #{startship_action(action)} " <>
-                 "at #{location(spacecraft)}. @everyone")
+              ("**Enemy #{player_name(spacecraft)} #{startship_action(action, spacecraft)}**. " <>
+                 "@everyone")
               |> Trekmap.Discord.send_message()
 
             kos?(spacecraft, kos) ->
-              ("**KOS** #{player_name(spacecraft)} #{startship_action(action)} " <>
-                 "at #{location(spacecraft)}. @everyone")
+              ("**KOS #{player_name(spacecraft)} #{startship_action(action, spacecraft)}**. " <>
+                 "@everyone")
               |> Trekmap.Discord.send_message()
 
             true ->
-              ("Neutral #{player_name(spacecraft)} #{startship_action(action)} " <>
-                 "at #{location(spacecraft)}")
+              "Neutral #{player_name(spacecraft)} #{startship_action(action, spacecraft)}"
               |> Trekmap.Discord.send_message()
           end
         end)
@@ -83,21 +82,19 @@ defmodule Trekmap.Bots.HiveScanner do
         |> Enum.map(fn {action, station} ->
           cond do
             ally?(station, allies) ->
-              "Ally #{player_name(station)} #{station_action(action)} at #{location(station)}"
+              "Ally #{player_name(station)} #{station_action(action, station)}"
               |> Trekmap.Discord.send_message()
 
             enemy?(station, enemies) ->
-              ("**Enemy** #{player_name(station)} #{station_action(action)} " <>
-                 "at #{location(station)}. @everyone")
+              "**Enemy #{player_name(station)} #{station_action(action, station)}**. @everyone"
               |> Trekmap.Discord.send_message()
 
             kos?(station, kos) ->
-              ("**KOS** #{player_name(station)} #{station_action(action)} " <>
-                 "at #{location(station)}. @everyone")
+              "**KOS #{player_name(station)} #{station_action(action, station)}**. @everyone"
               |> Trekmap.Discord.send_message()
 
             true ->
-              "Neutral #{player_name(station)} #{station_action(action)} at #{location(station)}"
+              "Neutral #{player_name(station)} #{station_action(action, station)}."
               |> Trekmap.Discord.send_message()
           end
         end)
@@ -112,11 +109,11 @@ defmodule Trekmap.Bots.HiveScanner do
     {:noreply, %{state | last_scan: scan}}
   end
 
-  defp station_action(:add), do: "moved station to hive"
-  defp station_action(:remove), do: "moved station out of hive"
+  defp station_action(:add, station), do: "moved station to hive at #{location(station)}"
+  defp station_action(:remove, station), do: "moved station out of hive at #{location(station)}"
 
-  defp startship_action(:add), do: "entered system"
-  defp startship_action(:remove), do: "is not in the hive system any more"
+  defp startship_action(:add, startship), do: "entered system at #{location(startship)}"
+  defp startship_action(:remove, _startship), do: "is not in the hive system any more"
 
   defp player_name(%{player: player}) do
     alliance_tag = if player.alliance, do: "[#{player.alliance.tag}] ", else: ""
@@ -124,11 +121,11 @@ defmodule Trekmap.Bots.HiveScanner do
   end
 
   defp location(%{system: system, coords: {x, y}}) do
-    "[S:#{system.id} X:#{x} Y:#{y}]"
+    "`[S:#{system.id} X:#{x} Y:#{y}]`"
   end
 
   defp location(%{system: system, planet: planet}) do
-    "[S:#{system.id}] Planet #{planet.name}"
+    "`[S:#{system.id}]` planet #{planet.name}"
   end
 
   defp enemy?(station_or_spacecraft, enemies) do
