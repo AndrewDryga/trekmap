@@ -106,10 +106,10 @@ defmodule Trekmap.Bots.HiveScanner do
   end
 
   defp station_action(:add), do: "moved station in hive"
-  defp station_action(:removed), do: "moved station out of hive"
+  defp station_action(:remove), do: "moved station out of hive"
 
   defp startship_action(:add), do: "entered system"
-  defp startship_action(:removed), do: "not in system any more"
+  defp startship_action(:remove), do: "not in system any more"
 
   defp player_name(%{player: player}) do
     alliance_tag = if player.alliance, do: "[#{player.alliance.tag}] ", else: ""
