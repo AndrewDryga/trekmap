@@ -38,14 +38,14 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
         |> Enum.sort_by(&distance(&1.coords, fleet.coords))
         |> List.first()
 
-      alliance_tag = if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
-      {x, y} = target.coords
-
-      Trekmap.Me.send_to_alliance_chat(
-        "Enemy in our hive: #{alliance_tag}#{target.player.name} " <>
-          "at [S:#{target.system.id} X:#{x} Y:#{y}]. OMW.",
-        session
-      )
+      # alliance_tag = if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
+      # {x, y} = target.coords
+      #
+      # Trekmap.Me.send_to_alliance_chat(
+      #   "Enemy in our hive: #{alliance_tag}#{target.player.name} " <>
+      #     "at [S:#{target.system.id} X:#{x} Y:#{y}]. OMW.",
+      #   session
+      # )
 
       system = Trekmap.Me.get_system(fleet.system_id, session)
       {{:fly, system, target.coords}, config}
