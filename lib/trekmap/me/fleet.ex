@@ -3,7 +3,6 @@ defmodule Trekmap.Me.Fleet do
             system_id: nil,
             cargo_bay_size: nil,
             cargo_size: nil,
-            cargo_bay_full?: false,
             strength: nil,
             hull_health: 100,
             shield_health: 100,
@@ -84,14 +83,12 @@ defmodule Trekmap.Me.Fleet do
       (officer_rating + offense_rating + defense_rating + health_rating) * (hull_health / 100)
 
     cargo_size = map_to_num(resources)
-    cargo_bay_full? = cargo_max * 0.95 < cargo_size
 
     %__MODULE__{
       id: fleet_id,
       system_id: system_id,
       cargo_bay_size: cargo_max,
       cargo_size: cargo_size,
-      cargo_bay_full?: cargo_bay_full?,
       strength: strength,
       hull_health: hull_health,
       shield_health: shield_health,
