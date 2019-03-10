@@ -26,6 +26,53 @@ defmodule Trekmap.APIClient do
     end
   end
 
+  def json_request(method, endpoint, additional_headers, body) do
+    headers =
+      [
+        {"Accept", "application/json"},
+        {"Content-Type", "application/json"}
+      ] ++
+        additional_headers
+
+    with {:ok, body} when body != "" <- request(method, endpoint, headers, body),
+         {:ok, response} <- Jason.decode(body) do
+      {:ok, response}
+    else
+      {:error, %Jason.DecodeError{data: data}} ->
+        decode_protobuf_response(data, @decoder)
+        |> maybe_decode_json()
+        |> case do
+          {:ok, %{response: %{} = response}} -> {:error, response}
+          {:ok, map} -> {:error, map}
+          :ok -> :error
+          {:error, reason} -> {:error, reason}
+        end
+
+      {:ok, ""} ->
+        :ok
+
+      {:ok, 500, _headers, "{" <> _ = body} ->
+        Jason.decode(body)
+        |> case do
+          {:ok, response} -> {:error, response}
+          {:error, reason} -> {:error, reason}
+        end
+
+      {:ok, 500, _headers, body} ->
+        decode_protobuf_response(body, @decoder)
+        |> maybe_decode_json()
+        |> case do
+          {:ok, %{response: %{} = response}} -> {:error, response}
+          {:ok, map} -> {:error, map}
+          :ok -> :error
+          {:error, reason} -> {:error, reason}
+        end
+
+      other ->
+        other
+    end
+  end
+
   def protobuf_request(method, endpoint, additional_headers, body, decode_struct \\ @decoder) do
     headers =
       [

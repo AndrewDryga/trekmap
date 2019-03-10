@@ -8,8 +8,8 @@ defmodule Trekmap.Galaxy do
   def list_active_systems(%Session{} = session) do
     additional_headers = Session.session_headers(session)
 
-    with {:ok, %{response: %{"galaxy" => galaxy}}} <-
-           APIClient.protobuf_request(:get, @galaxy_nodes_endpoint, additional_headers, "") do
+    with {:ok, %{"galaxy" => galaxy}} <-
+           APIClient.json_request(:get, @galaxy_nodes_endpoint, additional_headers, "") do
       systems =
         Enum.flat_map(galaxy, fn {_system_bid, system} ->
           %{
@@ -34,8 +34,8 @@ defmodule Trekmap.Galaxy do
   def build_systems_graph(session) do
     additional_headers = Session.session_headers(session)
 
-    with {:ok, %{response: %{"galaxy" => galaxy}}} <-
-           APIClient.protobuf_request(:get, @galaxy_nodes_endpoint, additional_headers, "") do
+    with {:ok, %{"galaxy" => galaxy}} <-
+           APIClient.json_request(:get, @galaxy_nodes_endpoint, additional_headers, "") do
       graph =
         Enum.reduce(galaxy, Graph.new(), fn {_system_bid, system}, graph ->
           %{
@@ -126,8 +126,8 @@ defmodule Trekmap.Galaxy do
 
     additional_headers = Session.session_headers(session)
 
-    with {:ok, %{response: %{"quick_scan_results" => scan_results}}} <-
-           APIClient.protobuf_request(:post, @scanning_endpoint, additional_headers, body) do
+    with {:ok, %{"quick_scan_results" => scan_results}} <-
+           APIClient.json_request(:post, @scanning_endpoint, additional_headers, body) do
       {:ok, scan_results}
     end
   end
@@ -147,8 +147,8 @@ defmodule Trekmap.Galaxy do
 
     additional_headers = Session.session_headers(session)
 
-    with {:ok, %{response: %{"quick_scan_results" => scan_results}}} <-
-           APIClient.protobuf_request(:post, @scanning_endpoint, additional_headers, body) do
+    with {:ok, %{"quick_scan_results" => scan_results}} <-
+           APIClient.json_request(:post, @scanning_endpoint, additional_headers, body) do
       {:ok, scan_results}
     else
       {:error, %{body: "scan", type: 2}} -> {:ok, %{"attributes" => %{}}}

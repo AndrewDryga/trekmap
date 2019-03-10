@@ -26,8 +26,8 @@ defmodule Trekmap.Me do
   def fetch_current_state(%Session{} = session) do
     additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
 
-    with {:ok, %{response: response}} <-
-           APIClient.protobuf_request(:post, @sync_endpoint, additional_headers, "") do
+    with {:ok, response} <-
+           APIClient.json_request(:post, @sync_endpoint, additional_headers, "") do
       %{
         "starbase" => starbase,
         "fleets" => fleets,
@@ -328,11 +328,11 @@ defmodule Trekmap.Me do
 
   def fetch_repair_jobs(session) do
     additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "1"}]
-    decoder = APIClient.JsonResponsePrimeSync1
 
-    with {:ok, result} <-
-           APIClient.protobuf_request(:post, @sync_endpoint, additional_headers, "", decoder) do
-      {Job.fetch_ship_repair_job(result), Job.fetch_station_repair_job(result)}
+    with {:ok, %{"user_jobs" => user_jobs, "server_time" => server_time}} <-
+           APIClient.json_request(:post, @sync_endpoint, additional_headers, "") do
+      {Job.fetch_ship_repair_job(user_jobs, server_time),
+       Job.fetch_station_repair_job(user_jobs, server_time)}
     else
       {:ok, 413, _headers, _body} ->
         {:error, :not_found}
@@ -344,11 +344,10 @@ defmodule Trekmap.Me do
 
   def fetch_station_repair_job(session) do
     additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "1"}]
-    decoder = APIClient.JsonResponsePrimeSync1
 
-    with {:ok, result} <-
-           APIClient.protobuf_request(:post, @sync_endpoint, additional_headers, "", decoder) do
-      Job.fetch_station_repair_job(result)
+    with {:ok, %{"user_jobs" => user_jobs, "server_time" => server_time}} <-
+           APIClient.json_request(:post, @sync_endpoint, additional_headers, "") do
+      Job.fetch_station_repair_job(user_jobs, server_time)
     end
   end
 
@@ -370,11 +369,10 @@ defmodule Trekmap.Me do
 
   def fetch_ship_repair_job(session) do
     additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "1"}]
-    decoder = APIClient.JsonResponsePrimeSync1
 
-    with {:ok, result} <-
-           APIClient.protobuf_request(:post, @sync_endpoint, additional_headers, "", decoder) do
-      Job.fetch_ship_repair_job(result)
+    with {:ok, %{"user_jobs" => user_jobs, "server_time" => server_time}} <-
+           APIClient.json_request(:post, @sync_endpoint, additional_headers, "") do
+      Job.fetch_ship_repair_job(user_jobs, server_time)
     else
       {:ok, 413, _headers, _body} ->
         {:error, :not_found}
@@ -387,15 +385,13 @@ defmodule Trekmap.Me do
   def list_ships_and_defences(session) do
     additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
 
-    {:ok, result} = APIClient.protobuf_request(:post, @sync_endpoint, additional_headers, "")
+    {:ok, result} = APIClient.json_request(:post, @sync_endpoint, additional_headers, "")
 
     %{
-      response: %{
-        "fleets" => fleets,
-        "ships" => ships,
-        "defenses" => defenses,
-        "my_deployed_fleets" => deployed_fleets
-      }
+      "fleets" => fleets,
+      "ships" => ships,
+      "defenses" => defenses,
+      "my_deployed_fleets" => deployed_fleets
     } = result
 
     home_fleet =

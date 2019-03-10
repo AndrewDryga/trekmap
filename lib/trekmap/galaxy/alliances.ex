@@ -13,8 +13,8 @@ defmodule Trekmap.Galaxy.Alliances do
 
     additional_headers = Session.session_headers(session)
 
-    with {:ok, %{response: %{"alliances_info" => alliances_info}}} <-
-           APIClient.protobuf_request(:post, @alliances_endpoint, additional_headers, body) do
+    with {:ok, %{"alliances_info" => alliances_info}} <-
+           APIClient.json_request(:post, @alliances_endpoint, additional_headers, body) do
       alliances =
         for alliance_id <- alliance_ids, into: %{} do
           case Map.fetch!(alliances_info, to_string(alliance_id)) do

@@ -61,7 +61,10 @@ defmodule Trekmap.Me.Job.Speedup do
         "expected_cost" => [%{"Key" => @free_station_repair_token_id, "Value" => amount}]
       })
 
-    APIClient.protobuf_request(:post, @free_speedup_job_endpoint, additional_headers, body)
+    with {:ok, _resp} <-
+           APIClient.json_request(:post, @free_speedup_job_endpoint, additional_headers, body) do
+      :ok
+    end
   end
 
   def boost_job(job_id, @free_ship_repair_token, session) do
@@ -75,8 +78,10 @@ defmodule Trekmap.Me.Job.Speedup do
         "expected_cost" => [%{"Key" => @free_ship_repair_token_id, "Value" => 0}]
       })
 
-    APIClient.protobuf_request(:post, @free_speedup_job_endpoint, additional_headers, body)
-    # {:error, %{response: "async_action"}} -> {:error, :can_not_repair_for_free}
+    with {:ok, _resp} <-
+           APIClient.json_request(:post, @free_speedup_job_endpoint, additional_headers, body) do
+      :ok
+    end
   end
 
   def boost_job(job_id, {duration, _cost, id} = token, session) do
@@ -90,8 +95,8 @@ defmodule Trekmap.Me.Job.Speedup do
         "time_reduction" => duration
       })
 
-    with :ok <-
-           APIClient.protobuf_request(:post, @paid_speedup_job_endpoint, additional_headers, body) do
+    with {:ok, _resp} <-
+           APIClient.json_request(:post, @paid_speedup_job_endpoint, additional_headers, body) do
       Logger.info("Using paid repair token for #{duration} seconds to boost ship job #{job_id}")
       :ok
     else
@@ -118,6 +123,6 @@ defmodule Trekmap.Me.Job.Speedup do
         "resource_dicts" => [%{"resource_id" => resource_id, "amount" => 1}]
       })
 
-    APIClient.protobuf_request(:post, @buy_resources_endpoint, additional_headers, body)
+    APIClient.json_request(:post, @buy_resources_endpoint, additional_headers, body)
   end
 end

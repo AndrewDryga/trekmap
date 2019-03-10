@@ -1,14 +1,16 @@
 defmodule Trekmap.Me.Job do
   alias Trekmap.{APIClient, Session}
 
+  defstruct [:id, :job_type, :duration, :remaining_duration]
+
   @alliance_help_jobs_list_endpoint "https://live-193-web.startrek.digitgaming.com/alliance/get_job_help_info"
   @alliance_help_jobs_endpoint "https://live-193-web.startrek.digitgaming.com/alliance/help_with_user_jobs"
 
   def help_all(%Session{} = session) do
     additional_headers = Session.session_headers(session)
 
-    with {:ok, %{response: %{"alliance_job_help_info" => help_info}}} <-
-           APIClient.protobuf_request(
+    with {:ok, %{"alliance_job_help_info" => help_info}} <-
+           APIClient.json_request(
              :post,
              @alliance_help_jobs_list_endpoint,
              additional_headers,
@@ -27,7 +29,7 @@ defmodule Trekmap.Me.Job do
       payload = Jason.encode!(%{"alliance_id" => 0, "job_ids" => help_info})
 
       {:ok, _response} =
-        APIClient.protobuf_request(
+        APIClient.json_request(
           :post,
           @alliance_help_jobs_endpoint,
           additional_headers,
@@ -38,13 +40,14 @@ defmodule Trekmap.Me.Job do
     end
   end
 
-  def fetch_ship_repair_job(%{active_jobs: %{list: %{items: jobs}}, current_timestamp: cur_ts}) do
-    case Enum.filter(jobs, fn item -> Map.fetch!(item, :kind) == 5 end) do
+  def fetch_ship_repair_job(jobs, server_time) do
+    case Enum.filter(jobs, fn job -> Map.fetch!(job, "job_type") == 5 end) do
       [job | _jobs] ->
-        remaining_duration = remaining_duration(job, cur_ts)
+        %{"duration" => duration, "UUID" => id} = job
+        remaining_duration = remaining_duration(job, server_time)
 
         if remaining_duration > 0 do
-          {:ok, %{job | remaining_duration: remaining_duration}}
+          {:ok, %__MODULE__{id: id, duration: duration, remaining_duration: remaining_duration}}
         else
           {:error, :not_found}
         end
@@ -54,13 +57,14 @@ defmodule Trekmap.Me.Job do
     end
   end
 
-  def fetch_station_repair_job(%{active_jobs: %{list: %{items: jobs}}, current_timestamp: cur_ts}) do
-    case Enum.filter(jobs, fn item -> Map.fetch!(item, :kind) == 7 end) do
+  def fetch_station_repair_job(jobs, server_time) do
+    case Enum.filter(jobs, fn job -> Map.fetch!(job, "job_type") == 7 end) do
       [job | _jobs] ->
-        remaining_duration = remaining_duration(job, cur_ts)
+        %{"duration" => duration, "UUID" => id} = job
+        remaining_duration = remaining_duration(job, server_time)
 
         if remaining_duration > 0 do
-          {:ok, %{job | remaining_duration: remaining_duration}}
+          {:ok, %__MODULE__{id: id, duration: duration, remaining_duration: remaining_duration}}
         else
           {:error, :not_found}
         end
@@ -70,14 +74,13 @@ defmodule Trekmap.Me.Job do
     end
   end
 
-  defp remaining_duration(%{duration: 0}, _cur_ts) do
+  defp remaining_duration(%{"duration" => 0}, _server_time) do
     0
   end
 
-  defp remaining_duration(
-         %{duration: duration, start_timestamp: %{value: start_timestamp_value}},
-         %{value: cur_ts_value}
-       ) do
-    duration - (cur_ts_value - start_timestamp_value)
+  defp remaining_duration(%{"duration" => duration, "start_time" => start_time}, server_time) do
+    start_time = NaiveDateTime.from_iso8601!(start_time)
+    server_time = NaiveDateTime.from_iso8601!(server_time)
+    duration - NaiveDateTime.diff(server_time, start_time)
   end
 end

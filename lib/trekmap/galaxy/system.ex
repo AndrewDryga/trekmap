@@ -59,8 +59,8 @@ defmodule Trekmap.Galaxy.System do
     body = Jason.encode!(%{system_id: system.id})
     additional_headers = Session.session_headers(session)
 
-    with {:ok, %{response: response}} <-
-           APIClient.protobuf_request(:post, @system_nodes_endpoint, additional_headers, body) do
+    with {:ok, response} <-
+           APIClient.json_request(:post, @system_nodes_endpoint, additional_headers, body) do
       %{
         "player_container" => player_container,
         "mining_slots" => mining_slots,
@@ -106,7 +106,7 @@ defmodule Trekmap.Galaxy.System do
     end
   end
 
-  def enrich_stations_with_station_resources(%Scan{} = scan, %Session{} = session) do
+  def enrich_stations_with_detailed_scan(%Scan{} = scan, %Session{} = session) do
     %{stations: stations} = scan
 
     with {:ok, stations} <- enrich_stations_with_resources(stations, session) do
@@ -368,9 +368,9 @@ defmodule Trekmap.Galaxy.System do
 
   def enrich_stations_with_resources(stations, session) do
     Enum.reduce_while(stations, {:ok, []}, fn station, {status, acc} ->
-      case Station.get_station_resources(station, session) do
-        {:ok, resources} ->
-          {:cont, {status, [%{station | resources: resources}] ++ acc}}
+      case Station.scan_station(station, session) do
+        {:ok, station} ->
+          {:cont, {status, [station] ++ acc}}
 
         error ->
           {:halt, error}

@@ -54,7 +54,7 @@ defmodule Trekmap.Bots.GalaxyScanner do
                {:ok, scan} <-
                  Trekmap.Galaxy.System.enrich_stations_and_spacecrafts(scan, session),
                {:ok, scan} <-
-                 Trekmap.Galaxy.System.enrich_stations_with_station_resources(scan, session),
+                 Trekmap.Galaxy.System.enrich_stations_with_detailed_scan(scan, session),
                {:ok, scan} <-
                  Trekmap.Galaxy.System.enrich_stations_with_planet_names(scan, session),
                stations = scan.stations,

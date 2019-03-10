@@ -45,7 +45,7 @@ defmodule Trekmap.Session do
         %{"instance_session_id" => instance_session_id} ->
           {:ok, %{session | session_instance_id: instance_session_id}}
 
-        %{"code" => 42, "http_code" => 400, "msg" => "Instance is in maintenance"} ->
+        %{"code" => 42, "http_code" => 400, "msg" => "Instance is under maintenance"} ->
           {:error, :retry_later}
       end
     end
@@ -54,8 +54,8 @@ defmodule Trekmap.Session do
   def session_instance_valid?(%__MODULE__{} = session) do
     additional_headers = session_headers(session)
 
-    case APIClient.protobuf_request(:post, @check_account_endpoint, additional_headers, "") do
-      {:ok, %{response: %{"consistency_state" => %{}}}} -> true
+    case APIClient.json_request(:post, @check_account_endpoint, additional_headers, "") do
+      {:ok, %{"consistency_state" => %{}}} -> true
       _other -> false
     end
   end

@@ -55,7 +55,9 @@ defmodule Trekmap.Bots.HiveScanner do
 
     scan =
       with {:ok, scan} <- Trekmap.Galaxy.System.scan_system(hive_system, session),
-           {:ok, scan} <- Trekmap.Galaxy.System.enrich_stations_and_spacecrafts(scan, session) do
+           {:ok, scan} <- Trekmap.Galaxy.System.enrich_stations_and_spacecrafts(scan, session),
+           {:ok, scan} <-
+             Trekmap.Galaxy.System.enrich_stations_with_detailed_scan(scan, session) do
         build_delta(scan.spacecrafts, last_scan.spacecrafts)
         |> Enum.map(fn {action, spacecraft} ->
           cond do
@@ -75,6 +77,15 @@ defmodule Trekmap.Bots.HiveScanner do
             true ->
               "Neutral #{player_name(spacecraft)} #{startship_action(action, spacecraft)}"
               |> Trekmap.Discord.send_message()
+          end
+        end)
+
+        scan.stations
+        |> Enum.map(fn station ->
+          if ally?(station, allies) and station.hull_health < 80 do
+            ("**Ally station IS UNDER ATTACK #{player_name(station)} at #{location(station)}**. " <>
+               "@everyone")
+            |> Trekmap.Discord.send_message()
           end
         end)
 

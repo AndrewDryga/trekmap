@@ -45,6 +45,6 @@ defmodule Trekmap.Products do
         "resource_dicts" => [%{"resource_id" => resource_id, "amount" => 1}]
       })
 
-    APIClient.protobuf_request(:post, @buy_resources_endpoint, additional_headers, body)
+    APIClient.json_request(:post, @buy_resources_endpoint, additional_headers, body)
   end
 end
