@@ -19,6 +19,10 @@ defmodule Trekmap.Bots.Guardian do
     {:noreply, %{state | under_attack?: false, under_attack_timer_ref: nil}}
   end
 
+  def handle_info({_ref, _msg}, state) do
+    {:noreply, state}
+  end
+
   def handle_info(:timeout, state) do
     %{session: session, under_attack?: under_attack?} = state
     {fleets, deployed_fleets, defense_stations} = Trekmap.Me.list_ships_and_defences(session)
