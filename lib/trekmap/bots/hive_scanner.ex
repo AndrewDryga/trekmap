@@ -59,18 +59,23 @@ defmodule Trekmap.Bots.HiveScanner do
         build_delta(scan.spacecrafts, last_scan.spacecrafts)
         |> Enum.map(fn {action, spacecraft} ->
           cond do
+            ally?(spacecraft, allies) ->
+              :ok
+
             enemy?(spacecraft, enemies) ->
-              ("Enemy #{player_name(spacecraft)} #{startship_action(action)} " <>
-                 "at #{location(spacecraft)}")
+              ("**Enemy** #{player_name(spacecraft)} #{startship_action(action)} " <>
+                 "at #{location(spacecraft)}. @everyone")
               |> Trekmap.Discord.send_message()
 
             kos?(spacecraft, kos) ->
-              ("KOS #{player_name(spacecraft)} #{startship_action(action)} " <>
-                 "at #{location(spacecraft)}")
+              ("**KOS** #{player_name(spacecraft)} #{startship_action(action)} " <>
+                 "at #{location(spacecraft)}. @everyone")
               |> Trekmap.Discord.send_message()
 
             true ->
-              :ok
+              ("Neutral #{player_name(spacecraft)} #{startship_action(action)} " <>
+                 "at #{location(spacecraft)}")
+              |> Trekmap.Discord.send_message()
           end
         end)
 
@@ -82,11 +87,13 @@ defmodule Trekmap.Bots.HiveScanner do
               |> Trekmap.Discord.send_message()
 
             enemy?(station, enemies) ->
-              "Enemy #{player_name(station)} #{station_action(action)} at #{location(station)}"
+              ("**Enemy** #{player_name(station)} #{station_action(action)} " <>
+                 "at #{location(station)}. @everyone")
               |> Trekmap.Discord.send_message()
 
             kos?(station, kos) ->
-              "KOS #{player_name(station)} #{station_action(action)} at #{location(station)}"
+              ("**KOS** #{player_name(station)} #{station_action(action)} " <>
+                 "at #{location(station)}. @everyone")
               |> Trekmap.Discord.send_message()
 
             true ->
@@ -105,11 +112,11 @@ defmodule Trekmap.Bots.HiveScanner do
     {:noreply, %{state | last_scan: scan}}
   end
 
-  defp station_action(:add), do: "moved station in hive"
+  defp station_action(:add), do: "moved station to hive"
   defp station_action(:remove), do: "moved station out of hive"
 
   defp startship_action(:add), do: "entered system"
-  defp startship_action(:remove), do: "not in system any more"
+  defp startship_action(:remove), do: "is not in the hive system any more"
 
   defp player_name(%{player: player}) do
     alliance_tag = if player.alliance, do: "[#{player.alliance.tag}] ", else: ""
