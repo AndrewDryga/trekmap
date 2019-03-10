@@ -104,7 +104,6 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
       targets =
         miners
         |> Enum.reject(&ally?(&1, allies))
-        |> Enum.filter(&mining?/1)
         |> Enum.filter(&can_kill?(&1, fleet))
         |> Enum.filter(&can_attack?(&1, min_target_level, max_target_level))
         |> Enum.filter(&should_kill?(&1, min_target_bounty_score, enemies, bad_people_ids))
@@ -153,11 +152,6 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
 
   def ally?(miner, allies) do
     if miner.player.alliance, do: miner.player.alliance.tag in allies, else: false
-  end
-
-  def mining?(miner) do
-    {x, y} = miner.coords
-    not is_nil(miner.mining_node_id) and not is_nil(x) and not is_nil(y)
   end
 
   defp can_kill?(miner, fleet) do
