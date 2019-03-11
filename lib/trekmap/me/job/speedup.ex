@@ -126,6 +126,9 @@ defmodule Trekmap.Me.Job.Speedup do
     with {:ok, _resp} <-
            APIClient.json_request(:post, @buy_resources_endpoint, additional_headers, body) do
       :ok
+    else
+      {:error, %{body: "resources", type: 1}} ->
+        :ok
     end
   end
 end
