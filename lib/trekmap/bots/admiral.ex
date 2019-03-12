@@ -62,7 +62,7 @@ defmodule Trekmap.Bots.Admiral do
 
   def init([]) do
     Logger.info("[Admiral] Everything is under control")
-    current_mission_plan = raid_mission_plan()
+    current_mission_plan = g2_g3_miner_hunting_and_hive_defence_mission_plan()
     {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
 
     state = %{
