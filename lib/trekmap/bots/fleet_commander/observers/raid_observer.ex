@@ -21,11 +21,21 @@ defmodule Trekmap.Bots.FleetCommander.Observers.RaidObserver do
   def handle_info(:timeout, %{target_station: nil} = state) do
     Logger.info("[#{inspect(__MODULE__)}] Looking for a raid target")
     {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
-    find_and_raid_next(state, session)
+
+    with {:noreply, state} <- find_and_raid_next(state, session) do
+      Process.send_after(self(), :timeout, 60_000)
+      {:noreply, state}
+    else
+      other ->
+        Process.send_after(self(), :timeout, 60_000)
+        Logger.warn("[#{inspect(__MODULE__)}] Can't find new raid targets. #{inspect(other)}")
+        {:noreply, state}
+    end
   end
 
   @impl true
   def handle_info(:timeout, state) do
+    Process.send_after(self(), :timeout, 60_000)
     {:noreply, state}
   end
 
