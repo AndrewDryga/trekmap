@@ -168,29 +168,32 @@ defmodule Trekmap.Galaxy.System do
     Enum.flat_map(player_container, fn {planet_id, station_ids} ->
       {stations, _index} =
         station_ids
-        |> Enum.reject(&(&1 == "None"))
-        |> Enum.reduce({[], 0}, fn station_id, {stations, index} ->
-          string_id = to_string(planet_id)
+        |> Enum.reduce({[], 0}, fn
+          "None", {stations, index} ->
+            {stations, index + 1}
 
-          %{
-            ^string_id => %{
-              "tree_node" => %{
-                "attributes" => %{"name" => name},
-                "coords" => %{"x" => x, "y" => y}
+          station_id, {stations, index} ->
+            string_id = to_string(planet_id)
+
+            %{
+              ^string_id => %{
+                "tree_node" => %{
+                  "attributes" => %{"name" => name},
+                  "coords" => %{"x" => x, "y" => y}
+                }
               }
+            } = system_static_children
+
+            station = %Station{
+              id: station_id,
+              player: nil,
+              system: system,
+              planet_slot_index: index,
+              coords: station_coords(index, {x, y}),
+              planet: %Planet{id: planet_id, name: name, coords: {x, y}}
             }
-          } = system_static_children
 
-          station = %Station{
-            id: station_id,
-            player: nil,
-            system: system,
-            planet_slot_index: index,
-            coords: station_coords(index, {x, y}),
-            planet: %Planet{id: planet_id, name: name, coords: {x, y}}
-          }
-
-          {stations ++ [station], index + 1}
+            {stations ++ [station], index + 1}
         end)
 
       stations
