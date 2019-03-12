@@ -103,10 +103,10 @@ defmodule Trekmap.Router do
         <br/>
         <br/>
         Missions: <br/>
-        - <a href="/set_agressive_mining_and_fraction_hunting_mission">Agressive Mining and Fraction Hunting</a><br/>
-        - <a href="/set_aggresive_mining_hunting_mission">Agressive Mining Hunting</a><br/>
-        - <a href="/set_passive_mining_hunting_mission">Passive Mining Hunting</a><br/>
-        - <a href="/set_raid_mission">Raid Mission</a><br/>
+        - <a href="/set_g2_miner_hunting_mission">Hunt G2 miners (agressive)</a><br/>
+        - <a href="/set_g3_mining_hunting_mission">Hunt G3 miners</a><br/>
+        - <a href="/set_g2_miners_and_klingon_hunting">Hunt G2 miners (agressive) and Klingons</a><br/>
+        - <a href="/set_g2_g3_miner_hunting_and_hive_defence_mission">Defend Hive and hunt G2/G3 miners (default)</a><br/>
       </body>
     </html>
     """)
@@ -146,8 +146,8 @@ defmodule Trekmap.Router do
     |> send_resp(302, "")
   end
 
-  get "/set_aggresive_mining_hunting_mission" do
-    mission_plan = Trekmap.Bots.Admiral.agressive_mining_hunting_mission_plan()
+  get "/set_g2_miner_hunting_mission" do
+    mission_plan = Trekmap.Bots.Admiral.g2_miner_hunting_mission_plan()
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
@@ -155,8 +155,8 @@ defmodule Trekmap.Router do
     |> send_resp(302, "")
   end
 
-  get "/set_agressive_mining_and_fraction_hunting_mission" do
-    mission_plan = Trekmap.Bots.Admiral.agressive_mining_and_fraction_hunting_mission_plan()
+  get "/set_g3_mining_hunting_mission" do
+    mission_plan = Trekmap.Bots.Admiral.g3_mining_hunting_mission_plan()
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
@@ -164,8 +164,17 @@ defmodule Trekmap.Router do
     |> send_resp(302, "")
   end
 
-  get "/set_passive_mining_hunting_mission" do
-    mission_plan = Trekmap.Bots.Admiral.passive_mining_hunting_mission_plan()
+  get "/set_g2_miners_and_klingon_hunting" do
+    mission_plan = Trekmap.Bots.Admiral.g2_miners_and_klingon_hunting_mission_plan()
+    Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
+
+    conn
+    |> put_resp_header("location", "/")
+    |> send_resp(302, "")
+  end
+
+  get "/set_g2_g3_miner_hunting_and_hive_defence_mission" do
+    mission_plan = Trekmap.Bots.Admiral.g2_g3_miner_hunting_and_hive_defence_mission_plan()
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
