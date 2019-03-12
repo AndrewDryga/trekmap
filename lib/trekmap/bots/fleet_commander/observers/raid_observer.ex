@@ -37,7 +37,13 @@ defmodule Trekmap.Bots.FleetCommander.Observers.RaidObserver do
 
     Logger.info("[#{inspect(__MODULE__)}] Scanning raided system")
     station = Trekmap.AirDB.preload(station, [:system, :player, :planet])
-    station = %{station | player: Trekmap.AirDB.preload(station.player, :alliance)}
+
+    station = %{
+      station
+      | player: Trekmap.AirDB.preload(station.player, :alliance),
+        shield_expires_at: nil
+    }
+
     Trekmap.Bots.GalaxyScanner.sync_station(station.system, station)
 
     find_and_raid_next(state, session)
