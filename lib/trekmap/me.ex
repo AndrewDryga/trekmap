@@ -512,10 +512,10 @@ defmodule Trekmap.Me do
       :ok
     else
       :error ->
-        :timer.sleep(500)
-
         with {:ok, job} <- fetch_ship_repair_job(session) do
           finish_fleet_repair(job, session)
+        else
+          {:error, :not_found} -> :ok
         end
 
       {:ok, repair_job} ->

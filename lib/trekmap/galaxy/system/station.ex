@@ -204,6 +204,7 @@ defmodule Trekmap.Galaxy.System.Station do
         "18 <= {Level}, " <>
         "{Level} <= 19, " <>
         "{Shield Enabled Ago} >= 21600, " <>
+        "{Strength} <= 200000, " <>
         "{Shield Ends In} <= '600', " <>
         "{Last Updated} <= '10800', " <>
         "{Total Weighted} >= '3000000')"
