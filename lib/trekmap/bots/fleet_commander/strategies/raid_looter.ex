@@ -15,6 +15,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLooter do
     {:instant_repair, config}
   end
 
+  def handle_continue(%{hull_health: hull_health}, _session, config)
+      when hull_health < 100 do
+    {:recall, config}
+  end
+
   def handle_continue(%{cargo_size: 0} = fleet, session, config) do
     %{target_station: target_station, last_total_resources: last_total_resources} = config
 
