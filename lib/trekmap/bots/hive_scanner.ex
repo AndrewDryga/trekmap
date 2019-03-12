@@ -24,7 +24,8 @@ defmodule Trekmap.Bots.HiveScanner do
        allies: allies,
        enemies: enemies,
        kos: kos,
-       last_scan: nil
+       last_scan: nil,
+       under_attack: []
      }, 0}
   end
 
@@ -50,10 +51,11 @@ defmodule Trekmap.Bots.HiveScanner do
       allies: allies,
       enemies: enemies,
       kos: kos,
-      last_scan: last_scan
+      last_scan: last_scan,
+      under_attack: under_attack
     } = state
 
-    scan =
+    {scan, under_attack} =
       with {:ok, scan} <- Trekmap.Galaxy.System.scan_system(hive_system, session),
            {:ok, scan} <- Trekmap.Galaxy.System.enrich_stations_and_spacecrafts(scan, session),
            {:ok, scan} <-
@@ -80,14 +82,24 @@ defmodule Trekmap.Bots.HiveScanner do
           end
         end)
 
-        scan.stations
-        |> Enum.map(fn station ->
-          if ally?(station, allies) and station.hull_health < 80 do
-            ("**Ally station IS UNDER ATTACK #{player_name(station)} at #{location(station)}**. " <>
-               "@everyone")
-            |> Trekmap.Discord.send_message()
-          end
-        end)
+        under_attack =
+          scan.stations
+          |> Enum.flat_map(fn station ->
+            cond do
+              ally?(station, allies) and station.id in under_attack ->
+                [station.id]
+
+              ally?(station, allies) and station.hull_health < 80 ->
+                ("**Ally station IS UNDER ATTACK #{player_name(station)} at #{location(station)}**. " <>
+                   "@everyone")
+                |> Trekmap.Discord.send_message()
+
+                [station.id]
+
+              true ->
+                []
+            end
+          end)
 
         build_delta(scan.stations, last_scan.stations)
         |> Enum.map(fn {action, station} ->
@@ -110,14 +122,14 @@ defmodule Trekmap.Bots.HiveScanner do
           end
         end)
 
-        scan
+        {scan, under_attack}
       else
         _other ->
-          state.last_scan
+          {state.last_scan, under_attack}
       end
 
     Process.send_after(self(), :timeout, 5_000)
-    {:noreply, %{state | last_scan: scan}}
+    {:noreply, %{state | last_scan: scan, under_attack: under_attack}}
   end
 
   defp station_action(:add, station), do: "moved station to hive at #{location(station)}"

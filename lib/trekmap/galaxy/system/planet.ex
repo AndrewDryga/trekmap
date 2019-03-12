@@ -1,7 +1,7 @@
 defmodule Trekmap.Galaxy.System.Planet do
   @behaviour Trekmap.AirDB
 
-  defstruct id: nil, external_id: nil, system_external_id: nil, name: nil
+  defstruct id: nil, external_id: nil, system_external_id: nil, name: nil, coords: nil
 
   def table_name, do: "Planets"
 

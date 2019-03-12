@@ -62,7 +62,7 @@ defmodule Trekmap.Bots.Admiral do
 
   def init([]) do
     Logger.info("[Admiral] Everything is under control")
-    current_mission_plan = g2_g3_miner_hunting_and_hive_defence_mission_plan()
+    current_mission_plan = raid_mission_plan()
     {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
 
     state = %{
@@ -359,42 +359,51 @@ defmodule Trekmap.Bots.Admiral do
     }
   end
 
-  def raid_mission_plan(_target_user_id) do
-    %{
-      Trekmap.Me.Fleet.drydock1_id() => {
-        Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
-        [
-          ship: "Envoy 1",
-          crew: @other_time_officers
-        ],
-        [
-          min_target_level: 18,
-          max_target_level: 33
-        ]
-      },
-      Trekmap.Me.Fleet.drydock2_id() => {
-        Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
-        [
-          ship: "North Star",
-          crew: @enterprise_crew_officers
-        ],
-        [
-          min_target_level: 18,
-          max_target_level: 33
-        ]
-      },
-      Trekmap.Me.Fleet.drydock3_id() => {
-        Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
-        [
-          ship: "Envoy 2",
-          crew: @raid_transport_officers
-        ],
-        [
-          min_target_level: 18,
-          max_target_level: 33
-        ]
+  def raid_mission_plan(target_user_id) do
+    with {:ok, target_station} = Trekmap.Galaxy.System.Station.find_station(target_user_id) do
+      %{
+        Trekmap.Me.Fleet.drydock1_id() => {
+          Trekmap.Bots.FleetCommander.Strategies.RaidLooter,
+          [
+            ship: "Envoy 1",
+            crew: @other_time_officers
+          ],
+          [
+            target_station: target_station
+          ]
+        },
+        Trekmap.Me.Fleet.drydock2_id() => {
+          Trekmap.Bots.FleetCommander.Strategies.RaidLeader,
+          [
+            ship: "North Star",
+            crew: @enterprise_crew_officers
+          ],
+          [
+            target_station: target_station
+          ]
+        },
+        Trekmap.Me.Fleet.drydock3_id() => {
+          Trekmap.Bots.FleetCommander.Strategies.RaidLooter,
+          [
+            ship: "Envoy 2",
+            crew: @raid_transport_officers
+          ],
+          [
+            target_station: target_station
+          ]
+        },
+        "mission_observer" =>
+          {Trekmap.Bots.FleetCommander.Observers.RaidObserver,
+           [
+             target_station: target_station
+           ]}
       }
-    }
+    end
+  end
+
+  def raid_mission_plan do
+    g2_g3_miner_hunting_and_hive_defence_mission_plan()
+    |> Map.put("mission_observer", {Trekmap.Bots.FleetCommander.Observers.RaidObserver, []})
   end
 
   def handle_cast({:update_fleet_report, report}, %{fleet_reports: fleet_reports} = state) do

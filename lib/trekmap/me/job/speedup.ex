@@ -64,6 +64,9 @@ defmodule Trekmap.Me.Job.Speedup do
     with {:ok, _resp} <-
            APIClient.json_request(:post, @free_speedup_job_endpoint, additional_headers, body) do
       :ok
+    else
+      {:error, %{"code" => 400}} ->
+        :error
     end
   end
 
@@ -81,6 +84,9 @@ defmodule Trekmap.Me.Job.Speedup do
     with {:ok, _resp} <-
            APIClient.json_request(:post, @free_speedup_job_endpoint, additional_headers, body) do
       :ok
+    else
+      {:error, %{"code" => 400}} ->
+        :error
     end
   end
 
@@ -101,15 +107,12 @@ defmodule Trekmap.Me.Job.Speedup do
       :ok
     else
       {:error, %{"code" => 400}} ->
-        :ok
-
-      {:error, %{body: "resources", type: 1}} ->
-        :ok = buy_resources(id, session)
-        boost_job(job_id, token, session)
+        :error
 
       {:error, %{body: "resources", type: 2}} ->
-        :ok = buy_resources(id, session)
-        boost_job(job_id, token, session)
+        with :ok <- buy_resources(id, session) do
+          boost_job(job_id, token, session)
+        end
     end
   end
 
@@ -128,7 +131,10 @@ defmodule Trekmap.Me.Job.Speedup do
       :ok
     else
       {:error, %{body: "resources", type: 1}} ->
-        :ok
+        :error
+
+      {:error, %{"code" => 400}} ->
+        :error
     end
   end
 end

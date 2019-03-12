@@ -17,6 +17,8 @@ defmodule Trekmap.Galaxy.System.Station do
             defense_platform_hull_health: 100,
             strength: nil,
             station_strength: nil,
+            coords: {0, 0},
+            planet_slot_index: nil,
             resources: %Resources{}
 
   def table_name, do: "Stations"
@@ -187,17 +189,73 @@ defmodule Trekmap.Galaxy.System.Station do
     |> Enum.sum()
   end
 
-  def list_raid_targets do
+  def find_station(user_id) do
+    with {:ok, station} <- Trekmap.AirDB.fetch_by_id(__MODULE__, user_id) do
+      station = Trekmap.AirDB.preload(station, [:system, :player])
+      {:ok, station}
+    end
+  end
+
+  def fetch_raid_target(session) do
     formula =
-      "AND({Relation} != 'Ally', {Relation} != 'NAP', {Relation} != 'NSA', 17 <= {Level}, {Level} <= 19, {Shield Enabled Ago} >= 21600, {Shield Ends In} <= '600', {Last Updated} <= '10800')"
+      "AND({Relation} != 'Ally', " <>
+        "{Relation} != 'NAP', " <>
+        "{Relation} != 'NSA', " <>
+        "18 <= {Level}, " <>
+        "{Level} <= 19, " <>
+        "{Shield Enabled Ago} >= 21600, " <>
+        "{Shield Ends In} <= '600', " <>
+        "{Last Updated} <= '10800', " <>
+        "{Total Weighted} >= '3000000')"
 
     query_params = %{
-      "maxRecords" => 7,
+      "maxRecords" => 10,
       "filterByFormula" => formula,
       "sort[0][field]" => "Profitability",
       "sort[0][direction]" => "desc"
     }
 
-    Trekmap.AirDB.list(__MODULE__, query_params)
+    with {:ok, targets} when targets != [] <- Trekmap.AirDB.list(__MODULE__, query_params) do
+      target =
+        targets
+        |> Enum.map(&Trekmap.AirDB.preload(&1, :system))
+        |> Enum.sort_by(fn station ->
+          path =
+            Trekmap.Galaxy.find_path(session.galaxy, session.home_system_id, station.system.id)
+
+          Trekmap.Galaxy.get_path_distance(session.galaxy, path)
+        end)
+        |> List.first()
+        |> Trekmap.AirDB.preload(:player)
+
+      {:ok, target}
+    else
+      {:ok, []} -> {:error, :not_found}
+    end
+  end
+
+  def temporary_shield_enabled?(%__MODULE__{shield_expires_at: nil}) do
+    false
+  end
+
+  def temporary_shield_enabled?(%__MODULE__{} = station) do
+    diff =
+      NaiveDateTime.diff(
+        NaiveDateTime.from_iso8601!(station.shield_expires_at),
+        NaiveDateTime.utc_now()
+      )
+
+    0 <= diff and diff <= 300
+  end
+
+  def shield_enabled?(%__MODULE__{shield_expires_at: nil}) do
+    false
+  end
+
+  def shield_enabled?(%__MODULE__{} = station) do
+    NaiveDateTime.compare(
+      NaiveDateTime.from_iso8601!(station.shield_expires_at),
+      NaiveDateTime.utc_now()
+    ) != :lt
   end
 end

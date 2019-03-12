@@ -92,3 +92,52 @@ curl -H 'Host: live-193-web.startrek.digitgaming.com' -H 'X-Unity-Version: 5.6.4
 
 curl -H 'Host: live-193-web.startrek.digitgaming.com' -H 'X-Unity-Version: 5.6.4p3' -H 'Accept: application/x-protobuf' -H 'X-PRIME-VERSION: 0.543.8939' -H 'X-PRIME-SYNC: 2' -H 'Accept-Language: ru' -H 'Content-Type: application/x-protobuf' -H 'X-TRANSACTION-ID: 64d169d1-cb67-4297-8c93-8d37d8a4f5e8' -H 'X-AUTH-SESSION-ID: 977df6e08805e45f202cd3720aa7c20f' -H 'User-Agent: startrek/0.543.8939 CFNetwork/976 Darwin/18.2.0' --data-binary "" --compressed 'https://live-193-web.startrek.digitgaming.com/sync'
 ```
+
+Planet coords:
+```
+([
+  ["Tuoue", 0, "LordIronman", {327, -356}, {370, -391}],
+  ["Tuoue", 1, "AuroraNavis", {327, -356}, {382, -361}],
+  ["Tuoue", 2, "Pippy", {327, -356}, {284, -321}],
+  ["Tuoue", 3, "dcamel", {327, -356}, {272, -351}],
+  ["Tuoue", 4, "d3athLorD3", {327, -356}, {362, -313}],
+  ["Tuoue", 5, "SalmonSensay", {327, -356}, {332, -301}],
+  ["Tuoue", 6, "CapinNeemo", {327, -356}, {292, -399}],
+  ["Tuoue", 7, "WhiteGhost", {327, -356}, {322, -411}],
+  ["Tuoue", 8, "zzzed36", {327, -356}, {397, -413}],
+  ["Tuoue", 9, "Fr3ak", {327, -356}, {417, -364}],
+  ["Tuoue", 10, "SweatyYetiNZ", {327, -356}, {257, -299}],
+  ["Tuoue", 11, "Matt1983", {327, -356}, {237, -348}],
+  ["Tuoue", 12, "Gargantuan", {327, -356}, {384, -286}],
+  ["Tuoue", 13, "YelilWerdna", {327, -356}, {335, -266}],
+  ["Tuoue", 14, "CapitanBigdeckNZ", {327, -356}, {270, -426}],
+  ["Tuoue", 15, "Shilo", {327, -356}, {319, -446}]
+]
+|> Enum.map(fn l ->
+  [{x1, y1} = station_coords, {x2, y2} = planet_coords, _name, index, _] = Enum.reverse(l)
+  [index, station_coords, planet_coords, {x1 - x2, y1 - y2}]
+end))
+
+([
+  ["Witafan", 0, "Kpbek", {-489, 177}, {-446, 142}],
+  ["Witafan", 1, "Sundog", {-489, 177}, {-434, 172}],
+  ["Witafan", 2, "AngryKnight", {-489, 177}, {-532, 212}],
+  ["Witafan", 3, "Runefaust", {-489, 177}, {-544, 182}],
+  ["Witafan", 4, "Pash931", {-489, 177}, {-454, 220}],
+  ["Witafan", 5, "Mallytime", {-489, 177}, {-484, 232}],
+  ["Witafan", 6, "Aseop64", {-489, 177}, {-524, 134}],
+  ["Witafan", 7, "Grondok", {-489, 177}, {-494, 122}],
+  ["Witafan", 8, "strawberrye1", {-489, 177}, {-419, 120}],
+  ["Witafan", 9, "JDBuzzman", {-489, 177}, {-399, 169}],
+  ["Witafan", 10, "MadScavenger", {-489, 177}, {-559, 234}],
+  ["Witafan", 11, "Hossen27", {-489, 177}, {-579, 185}],
+  ["Witafan", 12, "EggWaffle", {-489, 177}, {-432, 247}],
+  ["Witafan", 13, "HansHammersmith", {-489, 177}, {-481, 267}],
+  ["Witafan", 14, "GalacticDrift", {-489, 177}, {-546, 107}],
+  ["Witafan", 15, "ozscience", {-489, 177}, {-497, 87}]
+]
+|> Enum.map(fn l ->
+  [{x1, y1} = station_coords, {x2, y2} = planet_coords, _name, index, _] = Enum.reverse(l)
+  [index, station_coords, planet_coords, {x1 - x2, y1 - y2}]
+end))
+```

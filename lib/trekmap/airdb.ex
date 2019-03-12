@@ -85,6 +85,21 @@ defmodule Trekmap.AirDB do
     end
   end
 
+  def preload(struct, field_or_fields) do
+    field_or_fields
+    |> List.wrap()
+    |> Enum.reduce(struct, fn field, struct ->
+      case Map.fetch!(struct, field) do
+        {:unfetched, schema, external_id} ->
+          {:ok, value} = fetch_by_external_id(schema, external_id)
+          Map.put(struct, field, value)
+
+        _value ->
+          struct
+      end
+    end)
+  end
+
   defp get(table, query_params \\ %{}) do
     config = config()
     endpoint = Keyword.fetch!(config, :endpoint)

@@ -1,7 +1,7 @@
 defmodule Trekmap.Bots.FleetCommander.StartshipActor do
   use GenServer
   alias Trekmap.Me.Fleet
-  alias Trekmap.Galaxy.{Spacecraft, Marauder}
+  alias Trekmap.Galaxy.{Spacecraft, Marauder, System.Station}
   require Logger
 
   ### Public API
@@ -168,6 +168,15 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
   @impl true
   def handle_info({:continue, fleet}, %{clearence_granted: false} = state) do
     Logger.debug("[#{name(state.fleet_id)}] Awaiting clearence")
+
+    Trekmap.Bots.Admiral.update_fleet_report(%{
+      clearence_granted: state.clearence_granted,
+      mission_paused: state.mission_paused,
+      strategy: state.strategy,
+      fleet_id: state.fleet_id,
+      fleet: fleet
+    })
+
     continue(fleet, 5_000)
     {:noreply, state}
   end
@@ -180,6 +189,14 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
 
   @impl true
   def handle_info({:continue, %{state: :at_dock} = fleet}, %{mission_paused: true} = state) do
+    Trekmap.Bots.Admiral.update_fleet_report(%{
+      clearence_granted: state.clearence_granted,
+      mission_paused: state.mission_paused,
+      strategy: state.strategy,
+      fleet_id: state.fleet_id,
+      fleet: fleet
+    })
+
     continue(fleet, 5_000)
     {:noreply, state}
   end
@@ -359,6 +376,42 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
 
       other ->
         Logger.warn("Cant kill #{inspect({target, other}, pretty: true)}")
+        continue_and_reload_fleet(0)
+    end
+  end
+
+  def perform_fleet_action(
+        fleet,
+        {:attack, %Station{} = target},
+        %{session: session, fleet_id: fleet_id} = state
+      ) do
+    alliance_tag = if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
+
+    Logger.info(
+      "[#{name(fleet_id)}] Raiding #{alliance_tag}#{target.player.name} " <>
+        "at #{to_string(target.system.name)} / #{to_string(target.planet.name)}"
+    )
+
+    case Trekmap.Me.attack_station(fleet, target, session) do
+      {:ok, fleet} ->
+        if fleet.state == :flying and fleet.remaining_travel_time < 2 do
+          continue_and_reload_fleet(5_000)
+        else
+          continue(fleet)
+        end
+
+      {:error, :in_warp} ->
+        continue_and_reload_fleet(0)
+
+      {:error, :fleet_on_repair} ->
+        continue_and_reload_fleet(0)
+
+      {:error, :shield_is_enabled} ->
+        Logger.warn("Can not attack station because shield is enabled")
+        perform_fleet_action(fleet, :recall, state)
+
+      other ->
+        Logger.warn("Cant raid #{inspect({target, other}, pretty: true)}")
         continue_and_reload_fleet(0)
     end
   end

@@ -48,40 +48,7 @@ defmodule Trekmap.Bots.GalaxyScanner do
     systems =
       systems
       |> Enum.shuffle()
-      |> Task.async_stream(
-        fn system ->
-          with {:ok, scan} <- Trekmap.Galaxy.System.scan_system(system, session),
-               {:ok, scan} <-
-                 Trekmap.Galaxy.System.enrich_stations_and_spacecrafts(scan, session),
-               {:ok, scan} <-
-                 Trekmap.Galaxy.System.enrich_stations_with_detailed_scan(scan, session),
-               {:ok, scan} <-
-                 Trekmap.Galaxy.System.enrich_stations_with_planet_names(scan, session),
-               stations = scan.stations,
-               {:ok, stations} <- sync_stations(system, stations) do
-            # {:ok, miners} <- sync_miners(system, miners) do
-            Logger.debug(
-              "[Galaxy Scanner] Scanning #{system.name}: updated #{length(stations)} stations "
-              # <> "and #{length(miners)} miners"
-            )
-
-            system
-          else
-            {:error, :system_not_visited} ->
-              nil
-
-            {:error, %{body: "user_authentication", type: 102}} ->
-              raise "Session expired"
-
-            other ->
-              Logger.error(
-                "[Galaxy Scanner] Error scanning the System #{system.name}, " <>
-                  "reason: #{inspect(other, pretty: true)}"
-              )
-
-              system
-          end
-        end,
+      |> Task.async_stream(&scan_and_sync_system(&1, session),
         max_concurrency: 20,
         timeout: :infinity
       )
@@ -97,18 +64,45 @@ defmodule Trekmap.Bots.GalaxyScanner do
     {:ok, systems}
   end
 
+  def scan_and_sync_system(system, session) do
+    with {:ok, scan} <- Trekmap.Galaxy.System.scan_system(system, session),
+         {:ok, scan} <-
+           Trekmap.Galaxy.System.enrich_stations_and_spacecrafts(scan, session),
+         {:ok, scan} <-
+           Trekmap.Galaxy.System.enrich_stations_with_detailed_scan(scan, session),
+         stations = scan.stations,
+         {:ok, stations} <- sync_stations(system, stations) do
+      # {:ok, miners} <- sync_miners(system, miners) do
+      Logger.debug(
+        "[Galaxy Scanner] Scanning #{system.name}: updated #{length(stations)} stations "
+        # <> "and #{length(miners)} miners"
+      )
+
+      system
+    else
+      {:error, :system_not_visited} ->
+        nil
+
+      {:error, %{body: "user_authentication", type: 102}} ->
+        raise "Session expired"
+
+      other ->
+        Logger.error(
+          "[Galaxy Scanner] Error scanning the System #{system.name}, " <>
+            "reason: #{inspect(other, pretty: true)}"
+        )
+
+        system
+    end
+  end
+
   defp sync_stations(system, stations) do
     stations
     |> Enum.reduce_while({:ok, []}, fn station, {status, acc} ->
       if station.player.level < 15 do
         {:cont, {status, acc}}
       else
-        with {:ok, player} <- sync_player(station.player),
-             planet = %{station.planet | system_external_id: system.external_id},
-             {:ok, planet} <- Trekmap.AirDB.create_or_update(planet),
-             station = %{station | player: player, planet: planet},
-             {:ok, station} <- Trekmap.AirDB.create_or_update(station) do
-          station = %{station | player: player, planet: planet, system: system}
+        with {:ok, station} <- sync_station(system, station) do
           {:cont, {status, [station] ++ acc}}
         else
           error ->
@@ -116,6 +110,16 @@ defmodule Trekmap.Bots.GalaxyScanner do
         end
       end
     end)
+  end
+
+  def sync_station(system, station) do
+    with {:ok, player} <- sync_player(station.player),
+         planet = %{station.planet | system_external_id: system.external_id},
+         {:ok, planet} <- Trekmap.AirDB.create_or_update(planet),
+         station = %{station | player: player, planet: planet},
+         {:ok, station} <- Trekmap.AirDB.create_or_update(station) do
+      {:ok, %{station | player: player, planet: planet, system: system}}
+    end
   end
 
   # defp sync_miners(system, miners) do

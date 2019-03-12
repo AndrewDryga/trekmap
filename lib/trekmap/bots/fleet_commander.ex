@@ -13,6 +13,10 @@ defmodule Trekmap.Bots.FleetCommander do
   def apply_mission_plan(mission_plan) do
     :ok = stop_all_missions()
 
+    if mission_observer = Map.get(mission_plan, "mission_observer") do
+      DynamicSupervisor.start_child(__MODULE__, mission_observer)
+    end
+
     Trekmap.Me.Fleet.drydocs()
     |> Enum.each(fn fleet_id ->
       {strategy, fleet_config, strategy_config} = Map.fetch!(mission_plan, fleet_id)

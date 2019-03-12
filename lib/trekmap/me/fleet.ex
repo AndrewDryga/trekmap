@@ -8,7 +8,7 @@ defmodule Trekmap.Me.Fleet do
             name: nil,
             system_id: nil,
             cargo_bay_size: nil,
-            cargo_size: nil,
+            cargo_size: 0,
             strength: nil,
             hull_health: 100,
             shield_health: 100,

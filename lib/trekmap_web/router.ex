@@ -45,6 +45,8 @@ defmodule Trekmap.Router do
                     Trekmap.Bots.FleetCommander.Strategies.HiveDefender -> "Defending Hive"
                     Trekmap.Bots.FleetCommander.Strategies.MinerHunter -> "Hunting Miners"
                     Trekmap.Bots.FleetCommander.Strategies.FractionHunter -> "Hunting Hostiles"
+                    Trekmap.Bots.FleetCommander.Strategies.RaidLooter -> "Looting Station"
+                    Trekmap.Bots.FleetCommander.Strategies.RaidLeader -> "Opening Station"
                     other -> inspect(other)
                   end
 
@@ -107,6 +109,13 @@ defmodule Trekmap.Router do
         - <a href="/set_g3_mining_hunting_mission">Hunt G3 miners</a><br/>
         - <a href="/set_g2_miners_and_klingon_hunting">Hunt G2 miners (agressive) and Klingons</a><br/>
         - <a href="/set_g2_g3_miner_hunting_and_hive_defence_mission">Defend Hive and hunt G2/G3 miners (default)</a><br/>
+        - <a href="/set_raid_mission">Raiding</a><br/>
+        <br/><br/>
+        Raid: <br/>
+        <form action="/set_raid_mission">
+          <input type="text" name="target_user_id">
+          <input type="submit" value="Loot">
+        </form>
       </body>
     </html>
     """)
@@ -183,7 +192,15 @@ defmodule Trekmap.Router do
   end
 
   get "/set_raid_mission" do
-    mission_plan = Trekmap.Bots.Admiral.raid_mission_plan(:foo)
+    mission_plan =
+      case conn.query_params do
+        %{"target_user_id" => target_user_id} ->
+          Trekmap.Bots.Admiral.raid_mission_plan(target_user_id)
+
+        _other ->
+          Trekmap.Bots.Admiral.raid_mission_plan()
+      end
+
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn

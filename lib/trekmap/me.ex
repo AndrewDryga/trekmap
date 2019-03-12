@@ -1,5 +1,6 @@
 defmodule Trekmap.Me do
-  alias Trekmap.{APIClient, Session, Galaxy, Galaxy.Spacecraft, Galaxy.Marauder}
+  alias Trekmap.{APIClient, Session, Galaxy}
+  alias Trekmap.Galaxy.{Spacecraft, Marauder, System.Station}
   alias Trekmap.Me.Job
   alias Trekmap.Me.Fleet
   require Logger
@@ -205,6 +206,48 @@ defmodule Trekmap.Me do
       Jason.encode!(%{
         "target_action" => 4,
         "target_action_id" => spacecraft.mining_node_id,
+        "fleet_id" => fleet.id,
+        "client_warp_path" => path,
+        "target_node" => fleet.system_id,
+        "target_x" => x,
+        "target_y" => y
+      })
+
+    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
+
+    with false <- shield_enabled?(session),
+         {:ok, %{response: response}} <-
+           APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
+      %{"my_deployed_fleets" => deployed_fleets} = response
+      fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
+
+      fleet = %{
+        Fleet.build(fleet_map)
+        | shield_regeneration_started_at: System.system_time(:microsecond)
+      }
+
+      {:ok, fleet}
+    else
+      true -> {:error, :shield_is_enabled}
+      {:error, %{body: "course", type: 2}} -> {:ok, fleet}
+      {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
+      {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
+      {:error, %{body: "deployment", type: 5}} -> {:error, :in_warp}
+      {:error, %{body: "fleet", type: 9}} -> {:error, :fleet_on_repair}
+      {:error, %{body: "fleet", type: 4}} -> {:error, :fleet_on_repair}
+      {:error, %{body: "course", type: 13}} -> {:error, :invalid_course}
+      {:error, %{"code" => 400}} -> {:error, :invalid_target}
+    end
+  end
+
+  def attack_station(%Fleet{} = fleet, %Station{} = station, %Session{} = session) do
+    %{coords: {x, y}} = station
+    path = [fleet.system_id]
+
+    body =
+      Jason.encode!(%{
+        "target_action" => 6,
+        "target_action_id" => station.id,
         "fleet_id" => fleet.id,
         "client_warp_path" => path,
         "target_node" => fleet.system_id,
@@ -468,6 +511,13 @@ defmodule Trekmap.Me do
          {:error, :not_found} <- fetch_ship_repair_job(session) do
       :ok
     else
+      :error ->
+        :timer.sleep(500)
+
+        with {:ok, job} <- fetch_ship_repair_job(session) do
+          finish_fleet_repair(job, session)
+        end
+
       {:ok, repair_job} ->
         finish_fleet_repair(repair_job, session)
     end
