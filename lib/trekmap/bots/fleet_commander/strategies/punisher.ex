@@ -167,7 +167,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.Punisher do
             {:cont, {{system, targets}, true}}
 
           true ->
-            {:cont, {acc, false}}
+            {:cont, {acc, should_stop?}}
         end
       end)
 

@@ -100,7 +100,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
             {:cont, {{system, targets}, true}}
 
           true ->
-            {:cont, {acc, false}}
+            {:cont, {acc, should_stop?}}
         end
       end)
 

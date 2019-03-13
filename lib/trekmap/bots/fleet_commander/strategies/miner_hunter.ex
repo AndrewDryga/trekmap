@@ -150,7 +150,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
             {:cont, {{system, targets}, true}}
 
           true ->
-            {:cont, {acc, false}}
+            {:cont, {acc, should_stop?}}
         end
       end)
 
