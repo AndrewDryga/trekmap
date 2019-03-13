@@ -7,7 +7,7 @@ defmodule Trekmap.Bots.Supervisor do
 
   @impl true
   def init(_arg) do
-    DynamicSupervisor.init(strategy: :one_for_one)
+    DynamicSupervisor.init(strategy: :one_for_one, max_restarts: 100_000, max_seconds: 1)
   end
 
   def start_bots do
