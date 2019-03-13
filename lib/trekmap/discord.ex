@@ -7,7 +7,7 @@ defmodule Trekmap.Discord do
   def send_message(body, endpoint \\ @webhook_endpoint) do
     additional_headers = [{"content-type", "application/json"}]
     body = Jason.encode!(%{"content" => body})
-    APIClient.request(:post, @webhook_endpoint, additional_headers, body)
+    APIClient.request(:post, endpoint, additional_headers, body)
   end
 
   def log_kill(body) do

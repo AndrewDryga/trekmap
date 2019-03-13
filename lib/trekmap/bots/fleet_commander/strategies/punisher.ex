@@ -14,10 +14,20 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.Punisher do
     bad_alliances = Enum.map(bad_alliances, & &1.tag)
     bad_people_ids = Enum.map(bad_people, & &1.id)
 
+    bad_people_home_system_ids =
+      Enum.flat_map(bad_people_ids, fn id ->
+        with {:ok, station} <- Trekmap.Galaxy.System.Station.find_station(id) do
+          [station.system.id]
+        else
+          _ -> []
+        end
+      end)
+
     max_warp_distance = Keyword.fetch!(config, :max_warp_distance)
 
     patrol_systems =
-      (Keyword.fetch!(config, :patrol_systems) ++ [session.hive_system_id])
+      (Keyword.fetch!(config, :patrol_systems) ++
+         [session.hive_system_id] ++ bad_people_home_system_ids)
       |> Enum.filter(fn system_id ->
         path = Trekmap.Galaxy.find_path(session.galaxy, session.home_system_id, system_id)
         warp_distance = Trekmap.Galaxy.get_path_max_warp_distance(session.galaxy, path)
