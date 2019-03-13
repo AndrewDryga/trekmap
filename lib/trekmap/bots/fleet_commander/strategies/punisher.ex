@@ -181,7 +181,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.Punisher do
   defp can_kill?(miner, fleet) do
     cond do
       is_nil(fleet.strength) -> miner.strength < 80_000
-      not is_nil(miner.strength) -> miner.strength < fleet.strength
+      not is_nil(miner.strength) -> miner.strength * 1.2 < fleet.strength
       true -> false
     end
   end
@@ -197,11 +197,10 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.Punisher do
       if miner.player.alliance, do: miner.player.alliance.tag in bad_alliances, else: false
 
     bad_person? = miner.player.id in bad_people_ids
-    should_suffer? = (bad_person? or bad_alliance?) and overcargo?
 
     enemy? = if miner.player.alliance, do: miner.player.alliance.tag in enemies, else: false
 
-    enemy? or should_suffer?
+    enemy? or ((bad_person? or bad_alliance?) and overcargo?)
   end
 
   defp distance({x1, y1}, {x2, y2}) do
