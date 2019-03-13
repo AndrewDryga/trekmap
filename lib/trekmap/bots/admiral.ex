@@ -4,6 +4,44 @@ defmodule Trekmap.Bots.Admiral do
 
   @fraction_klingon 4_153_667_145
 
+  @klingon_systems [
+                     1_984_126_753,
+                     355_503_878,
+                     1_731_519_518,
+                     975_691_590,
+                     1_691_252_927,
+                     1_744_652_289,
+                     846_029_245,
+                     1_780_286_771,
+                     1_358_992_189,
+                     1_057_703_933,
+                     369_364_082,
+                     399_469_984,
+                     893_618_014,
+                     186_798_495,
+                     1_090_722_450,
+                     265_649_208,
+                     395_344_716,
+                     1_735_899_624,
+                     1_244_441_919,
+                     1_926_261_734,
+                     430_080_081,
+                     1_490_400_924,
+                     2_075_950_099,
+                     1_694_524_999,
+                     1_756_718_205,
+                     776_886_360,
+                     1_295_669_729,
+                     1_759_717_590,
+                     1_101_989_561,
+                     1_862_365_964,
+                     1_660_792_724,
+                     1_245_655_537,
+                     1_566_236_961,
+                     477_613_271
+                   ]
+                   |> Enum.uniq()
+
   @other_time_officers [
     1_622_062_016,
     1_525_867_544,
@@ -231,44 +269,7 @@ defmodule Trekmap.Bots.Admiral do
         ],
         [
           fraction_ids: [@fraction_klingon],
-          patrol_systems:
-            [
-              1_984_126_753,
-              355_503_878,
-              1_731_519_518,
-              975_691_590,
-              1_691_252_927,
-              1_744_652_289,
-              846_029_245,
-              1_780_286_771,
-              1_358_992_189,
-              1_057_703_933,
-              369_364_082,
-              399_469_984,
-              893_618_014,
-              186_798_495,
-              1_090_722_450,
-              265_649_208,
-              395_344_716,
-              1_735_899_624,
-              1_244_441_919,
-              1_926_261_734,
-              430_080_081,
-              1_490_400_924,
-              2_075_950_099,
-              1_694_524_999,
-              1_756_718_205,
-              776_886_360,
-              1_295_669_729,
-              1_759_717_590,
-              1_101_989_561,
-              1_862_365_964,
-              1_660_792_724,
-              1_245_655_537,
-              1_566_236_961,
-              477_613_271
-            ]
-            |> Enum.uniq(),
+          patrol_systems: @klingon_systems,
           min_targets_in_system: 1,
           min_target_level: 27,
           max_target_level: 30,
@@ -306,6 +307,54 @@ defmodule Trekmap.Bots.Admiral do
           min_target_bounty_score: 2_000,
           skip_nearest_system?: true,
           max_warp_distance: 21
+        ]
+      }
+    }
+  end
+
+  def klingon_hunting_mission_plan do
+    %{
+      Trekmap.Me.Fleet.drydock1_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
+        [
+          ship: "Vahklas",
+          crew: @other_time_officers
+        ],
+        [
+          fraction_ids: [@fraction_klingon],
+          patrol_systems: @klingon_systems,
+          min_targets_in_system: 1,
+          min_target_level: 27,
+          max_target_level: 30,
+          skip_nearest_system?: false,
+          max_warp_distance: 23
+        ]
+      },
+      Trekmap.Me.Fleet.drydock2_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
+        [
+          ship: "North Star",
+          crew: @enterprise_crew_officers
+        ],
+        [
+          fraction_ids: [@fraction_klingon],
+          patrol_systems: @klingon_systems,
+          min_targets_in_system: 1,
+          min_target_level: 27,
+          max_target_level: 30,
+          skip_nearest_system?: true,
+          max_warp_distance: 29
+        ]
+      },
+      Trekmap.Me.Fleet.drydock3_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
+        [
+          ship: "Kehra",
+          crew: @glory_in_kill_officers
+        ],
+        [
+          min_target_level: 18,
+          max_target_level: 33
         ]
       }
     }
