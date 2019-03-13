@@ -89,9 +89,20 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.Punisher do
         target = List.first(targets)
         {{:fly, system, target.coords}, config}
       else
-        name = Trekmap.Bots.FleetCommander.StartshipActor.name(fleet.id)
-        Logger.info("[#{name}] Can't find any targets")
-        {:recall, config}
+        %{patrol_systems: patrol_systems} = config
+
+        system_id =
+          patrol_systems
+          |> Enum.reject(&(&1 == fleet.system_id))
+          |> Enum.sort_by(patrol_systems, fn system_id ->
+            path = Trekmap.Galaxy.find_path(session.galaxy, fleet.system_id, system_id)
+            Trekmap.Galaxy.get_path_distance(session.galaxy, path)
+          end)
+          |> Enum.take(3)
+          |> Enum.random()
+
+        system = Trekmap.Me.get_system(system_id, session)
+        {{:fly, system, {0, 0}}, config}
       end
     end
   end
