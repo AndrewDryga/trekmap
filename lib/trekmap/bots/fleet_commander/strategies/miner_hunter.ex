@@ -17,7 +17,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
     max_warp_distance = Keyword.fetch!(config, :max_warp_distance)
 
     patrol_systems =
-      Keyword.fetch!(config, :patrol_systems)
+      (Keyword.fetch!(config, :patrol_systems) ++ [session.hive_system_id])
       |> Enum.filter(fn system_id ->
         path = Trekmap.Galaxy.find_path(session.galaxy, session.home_system_id, system_id)
         warp_distance = Trekmap.Galaxy.get_path_max_warp_distance(session.galaxy, path)
