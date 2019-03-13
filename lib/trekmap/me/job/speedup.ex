@@ -17,9 +17,9 @@ defmodule Trekmap.Me.Job.Speedup do
 
   @paid_repair_tokens [
     {60, 2, 1_445_265_330},
-    {180, 3, 3_019_850_922},
     {300, 5, 1_827_073_923},
     {900, 8, 821_696_896},
+    {1800, 12, 3_097_592_274},
     {3600, 15, 3_586_919_025}
   ]
 
@@ -102,7 +102,7 @@ defmodule Trekmap.Me.Job.Speedup do
 
     with {:ok, _resp} <-
            APIClient.json_request(:post, @paid_speedup_job_endpoint, additional_headers, body) do
-      Logger.info("Using paid repair token for #{duration} seconds to boost ship job #{job_id}")
+      Logger.info("Used paid repair token for #{duration} seconds to boost ship job #{job_id}")
       :ok
     else
       {:error, %{"code" => 400}} ->
@@ -129,7 +129,7 @@ defmodule Trekmap.Me.Job.Speedup do
       :ok
     else
       {:error, %{body: "resources", type: 1}} ->
-        :error
+        {:error, :invalid_resource}
 
       {:error, %{"code" => 400}} ->
         :error
