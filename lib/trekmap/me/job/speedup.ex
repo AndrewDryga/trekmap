@@ -32,7 +32,7 @@ defmodule Trekmap.Me.Job.Speedup do
   end
 
   def get_next_ship_repair_token(repair_duration) do
-    if repair_duration <= 300 do
+    if repair_duration < 300 do
       @free_ship_repair_token
     else
       paid_repair_duration = repair_duration - 300
@@ -71,8 +71,6 @@ defmodule Trekmap.Me.Job.Speedup do
   end
 
   def boost_job(job_id, @free_ship_repair_token, session) do
-    Logger.info("Using free repair token to boost ship repair #{job_id}")
-
     additional_headers = Session.session_headers(session)
 
     body =
@@ -83,6 +81,7 @@ defmodule Trekmap.Me.Job.Speedup do
 
     with {:ok, _resp} <-
            APIClient.json_request(:post, @free_speedup_job_endpoint, additional_headers, body) do
+      Logger.info("Used free repair token to boost ship repair #{job_id}")
       :ok
     else
       {:error, %{"code" => 400}} ->
@@ -117,8 +116,6 @@ defmodule Trekmap.Me.Job.Speedup do
   end
 
   defp buy_resources(resource_id, session) do
-    Logger.info("Purchasing additional repair token ID #{resource_id}")
-
     additional_headers = Session.session_headers(session)
 
     body =
@@ -128,6 +125,7 @@ defmodule Trekmap.Me.Job.Speedup do
 
     with {:ok, _resp} <-
            APIClient.json_request(:post, @buy_resources_endpoint, additional_headers, body) do
+      Logger.info("Purchased additional repair token ID #{resource_id}")
       :ok
     else
       {:error, %{body: "resources", type: 1}} ->

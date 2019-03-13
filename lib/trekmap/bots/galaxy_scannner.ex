@@ -102,6 +102,20 @@ defmodule Trekmap.Bots.GalaxyScanner do
       if station.player.level < 15 do
         {:cont, {status, acc}}
       else
+        total_resources =
+          (station.resources.dlithium ||
+             0) + (station.resources.parsteel || 0) + (station.resources.thritanium || 0)
+
+        if station.strength < 100 and total_resources > 2_000_000 do
+          alliance_tag =
+            if station.player.alliance, do: "[#{station.player.alliance.tag}] ", else: ""
+
+          ("Found zeroed base #{alliance_tag}#{station.player.name} with #{total_resources} rss, " <>
+             "at #{to_string(station.system.name)} / #{to_string(station.planet.name)}" <>
+             "cc @AndrewDryga#5388")
+          |> Trekmap.Discord.send_message()
+        end
+
         with {:ok, station} <- sync_station(system, station) do
           {:cont, {status, [station] ++ acc}}
         else

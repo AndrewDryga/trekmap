@@ -1,5 +1,5 @@
 defmodule Trekmap.Galaxy.System.Station.Resources do
-  defstruct parsteel: nil,
-            thritanium: nil,
-            dlithium: nil
+  defstruct parsteel: 0,
+            thritanium: 0,
+            dlithium: 0
 end
