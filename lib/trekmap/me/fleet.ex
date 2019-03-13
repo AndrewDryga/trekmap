@@ -179,12 +179,14 @@ defmodule Trekmap.Me.Fleet do
   def ship_id("Vahklas"), do: 818_908_769_273_857_488
   def ship_id("Kehra"), do: 809_553_354_052_421_083
   def ship_id("North Star"), do: 793_228_477_045_490_952
+  def ship_id("Kumari"), do: 822_579_326_280_352_768
   def ship_id("Envoy 1"), do: 788_241_743_887_025_466
   def ship_id("Envoy 2"), do: 813_554_350_852_228_185
 
   def ship_name(818_908_769_273_857_488), do: "Vahklas"
   def ship_name(809_553_354_052_421_083), do: "Kehra"
   def ship_name(793_228_477_045_490_952), do: "North Star"
+  def ship_name(822_579_326_280_352_768), do: "Kumari"
   def ship_name(788_241_743_887_025_466), do: "Envoy 1"
   def ship_name(813_554_350_852_228_185), do: "Envoy 2"
   def ship_name(ship_id), do: ship_id

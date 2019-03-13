@@ -49,7 +49,7 @@ defmodule Trekmap.Bots.Admiral do
     1_853_520_303,
     4_066_988_596,
     4_150_311_506,
-    668_528_267,
+    3_394_864_658,
     2_865_735_742,
     -1,
     -1
@@ -68,15 +68,28 @@ defmodule Trekmap.Bots.Admiral do
     -1
   ]
 
-  @glory_in_kill_officers [
-    3_394_864_658,
+  # @glory_in_kill_officers [
+  #   3_394_864_658,
+  #   2_517_597_941,
+  #   680_147_223,
+  #   339_936_167,
+  #   98_548_875,
+  #   2_235_857_051,
+  #   2_601_201_375,
+  #   176_044_746,
+  #   -1,
+  #   -1
+  # ]
+
+  @nero_crew_officers [
+    668_528_267,
+    2_333_021_829,
+    339_936_167,
+    2_235_857_051,
+    98_548_875,
     2_517_597_941,
     680_147_223,
-    339_936_167,
-    98_548_875,
-    2_235_857_051,
     2_601_201_375,
-    176_044_746,
     -1,
     -1
   ]
@@ -190,8 +203,8 @@ defmodule Trekmap.Bots.Admiral do
       Trekmap.Me.Fleet.drydock3_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
-          ship: "Kehra",
-          crew: @glory_in_kill_officers
+          ship: "Kumari",
+          crew: @nero_crew_officers
         ],
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
@@ -200,7 +213,7 @@ defmodule Trekmap.Bots.Admiral do
           max_target_level: 33,
           min_target_bounty_score: 2_000,
           skip_nearest_system?: true,
-          max_warp_distance: 21
+          max_warp_distance: 26
         ]
       }
     }
@@ -243,8 +256,8 @@ defmodule Trekmap.Bots.Admiral do
       Trekmap.Me.Fleet.drydock3_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
-          ship: "Kehra",
-          crew: @glory_in_kill_officers
+          ship: "Kumari",
+          crew: @nero_crew_officers
         ],
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
@@ -253,7 +266,7 @@ defmodule Trekmap.Bots.Admiral do
           max_target_level: 33,
           min_target_bounty_score: 30_000,
           skip_nearest_system?: true,
-          max_warp_distance: 21
+          max_warp_distance: 26
         ]
       }
     }
@@ -262,18 +275,18 @@ defmodule Trekmap.Bots.Admiral do
   def g2_miners_and_klingon_hunting_mission_plan do
     %{
       Trekmap.Me.Fleet.drydock1_id() => {
-        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
+        Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
           ship: "Vahklas",
           crew: @other_time_officers
         ],
         [
-          fraction_ids: [@fraction_klingon],
-          patrol_systems: @klingon_systems,
+          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
           min_targets_in_system: 1,
-          min_target_level: 27,
-          max_target_level: 30,
-          skip_nearest_system?: false,
+          min_target_level: 18,
+          max_target_level: 33,
+          min_target_bounty_score: 2_000,
+          skip_nearest_system?: true,
           max_warp_distance: 23
         ]
       },
@@ -294,31 +307,10 @@ defmodule Trekmap.Bots.Admiral do
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
-        Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
-        [
-          ship: "Kehra",
-          crew: @glory_in_kill_officers
-        ],
-        [
-          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
-          min_targets_in_system: 1,
-          min_target_level: 18,
-          max_target_level: 33,
-          min_target_bounty_score: 2_000,
-          skip_nearest_system?: true,
-          max_warp_distance: 21
-        ]
-      }
-    }
-  end
-
-  def klingon_hunting_mission_plan do
-    %{
-      Trekmap.Me.Fleet.drydock1_id() => {
         Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
         [
-          ship: "Vahklas",
-          crew: @other_time_officers
+          ship: "Kumari",
+          crew: @nero_crew_officers
         ],
         [
           fraction_ids: [@fraction_klingon],
@@ -327,7 +319,23 @@ defmodule Trekmap.Bots.Admiral do
           min_target_level: 27,
           max_target_level: 30,
           skip_nearest_system?: false,
-          max_warp_distance: 23
+          max_warp_distance: 26
+        ]
+      }
+    }
+  end
+
+  def klingon_hunting_mission_plan do
+    %{
+      Trekmap.Me.Fleet.drydock1_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
+        [
+          ship: "Vahklas",
+          crew: @other_time_officers
+        ],
+        [
+          min_target_level: 18,
+          max_target_level: 33
         ]
       },
       Trekmap.Me.Fleet.drydock2_id() => {
@@ -347,14 +355,19 @@ defmodule Trekmap.Bots.Admiral do
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
-        Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
+        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
         [
-          ship: "Kehra",
-          crew: @glory_in_kill_officers
+          ship: "Kumari",
+          crew: @nero_crew_officers
         ],
         [
-          min_target_level: 18,
-          max_target_level: 33
+          fraction_ids: [@fraction_klingon],
+          patrol_systems: @klingon_systems,
+          min_targets_in_system: 1,
+          min_target_level: 27,
+          max_target_level: 30,
+          skip_nearest_system?: false,
+          max_warp_distance: 26
         ]
       }
     }
@@ -392,8 +405,8 @@ defmodule Trekmap.Bots.Admiral do
       Trekmap.Me.Fleet.drydock3_id() => {
         Trekmap.Bots.FleetCommander.Strategies.Punisher,
         [
-          ship: "Kehra",
-          crew: @glory_in_kill_officers
+          ship: "Kumari",
+          crew: @nero_crew_officers
         ],
         [
           patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
@@ -401,7 +414,7 @@ defmodule Trekmap.Bots.Admiral do
           min_target_level: 18,
           max_target_level: 33,
           skip_nearest_system?: false,
-          max_warp_distance: 21
+          max_warp_distance: 26
         ]
       }
     }
