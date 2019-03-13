@@ -110,9 +110,11 @@ defmodule Trekmap.Bots.GalaxyScanner do
           alliance_tag =
             if station.player.alliance, do: "[#{station.player.alliance.tag}] ", else: ""
 
+          {x, y} = station.coords
+
           ("Found zeroed base #{alliance_tag}#{station.player.name} with #{total_resources} rss, " <>
-             "at #{to_string(station.system.name)} / #{to_string(station.planet.name)}" <>
-             "cc @AndrewDryga#5388")
+             "at `[S:#{station.system.id} X:#{x} Y:#{y}]` / #{to_string(station.planet.name)}" <>
+             "cc @AndrewDryga")
           |> Trekmap.Discord.send_message()
         end
 
