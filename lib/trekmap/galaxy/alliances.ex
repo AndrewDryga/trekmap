@@ -75,4 +75,13 @@ defmodule Trekmap.Galaxy.Alliances do
 
     AirDB.list(Alliance, query_params)
   end
+
+  def list_bad_alliances do
+    query_params = %{
+      "maxRecords" => 100,
+      "filterByFormula" => "OR({Should Suffer})"
+    }
+
+    AirDB.list(Alliance, query_params)
+  end
 end

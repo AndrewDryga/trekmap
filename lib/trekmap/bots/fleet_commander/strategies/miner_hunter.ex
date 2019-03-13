@@ -6,10 +6,12 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
   def init(config, session) do
     {:ok, allies} = Trekmap.Galaxy.Alliances.list_nap()
     {:ok, enemies} = Trekmap.Galaxy.Alliances.list_enemies()
+    {:ok, bad_alliances} = Trekmap.Galaxy.Alliances.list_bad_alliances()
     {:ok, bad_people} = Trekmap.Galaxy.Player.list_bad_people()
 
     allies = Enum.map(allies, & &1.tag)
     enemies = Enum.map(enemies, & &1.tag)
+    bad_alliances = Enum.map(bad_alliances, & &1.tag)
     bad_people_ids = Enum.map(bad_people, & &1.id)
 
     max_warp_distance = Keyword.fetch!(config, :max_warp_distance)
@@ -26,6 +28,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
      %{
        allies: allies,
        enemies: enemies,
+       bad_alliances: bad_alliances,
        bad_people_ids: bad_people_ids,
        patrol_systems: patrol_systems,
        min_targets_in_system: Keyword.fetch!(config, :min_targets_in_system),
@@ -93,6 +96,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
     %{
       enemies: enemies,
       allies: allies,
+      bad_alliances: bad_alliances,
       bad_people_ids: bad_people_ids,
       min_target_level: min_target_level,
       max_target_level: max_target_level,
@@ -107,7 +111,9 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
         |> Enum.reject(&ally?(&1, allies))
         |> Enum.filter(&can_kill?(&1, fleet))
         |> Enum.filter(&can_attack?(&1, min_target_level, max_target_level))
-        |> Enum.filter(&should_kill?(&1, min_target_bounty_score, enemies, bad_people_ids))
+        |> Enum.filter(
+          &should_kill?(&1, min_target_bounty_score, enemies, bad_alliances, bad_people_ids)
+        )
 
       {:ok, targets}
     else
@@ -167,10 +173,14 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
     min_target_level <= miner.player.level and miner.player.level <= max_target_level
   end
 
-  defp should_kill?(miner, min_target_bounty_score, enemies, bad_people_ids) do
+  defp should_kill?(miner, min_target_bounty_score, enemies, bad_alliances, bad_people_ids) do
     overcargo? = not is_nil(miner.bounty_score) and miner.bounty_score > 1
 
-    should_suffer? = miner.player.id in bad_people_ids and overcargo?
+    bad_alliance? =
+      if miner.player.alliance, do: miner.player.alliance.tag in bad_alliances, else: false
+
+    bad_person? = miner.player.id in bad_people_ids
+    should_suffer? = (bad_person? or bad_alliance?) and overcargo?
     enemy? = if miner.player.alliance, do: miner.player.alliance.tag in enemies, else: false
     over_bounty_score? = overcargo? and miner.bounty_score > min_target_bounty_score
 
