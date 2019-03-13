@@ -341,7 +341,7 @@ defmodule Trekmap.Bots.Admiral do
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
-        Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+        Trekmap.Bots.FleetCommander.Strategies.Punisher,
         [
           ship: "Kehra",
           crew: @glory_in_kill_officers
@@ -351,7 +351,6 @@ defmodule Trekmap.Bots.Admiral do
           min_targets_in_system: 1,
           min_target_level: 18,
           max_target_level: 33,
-          min_target_bounty_score: 2_000,
           skip_nearest_system?: false,
           max_warp_distance: 21
         ]
