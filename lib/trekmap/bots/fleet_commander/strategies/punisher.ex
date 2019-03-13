@@ -94,7 +94,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.Punisher do
         system_id =
           patrol_systems
           |> Enum.reject(&(&1 == fleet.system_id))
-          |> Enum.sort_by(patrol_systems, fn system_id ->
+          |> Enum.sort_by(fn system_id ->
             path = Trekmap.Galaxy.find_path(session.galaxy, fleet.system_id, system_id)
             Trekmap.Galaxy.get_path_distance(session.galaxy, path)
           end)
