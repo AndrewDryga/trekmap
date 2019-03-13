@@ -83,7 +83,7 @@ defmodule Trekmap.Bots.FleetCommander.Observers.RaidObserver do
       mission_plan = Trekmap.Bots.Admiral.raid_mission_plan(raid_target.id)
       Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
-      {:noreply, %{target_station: raid_target}}
+      {:noreply, %{state | target_station: raid_target}}
     end
   end
 end
