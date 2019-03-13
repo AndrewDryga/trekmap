@@ -7,7 +7,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLooter do
 
   def init(config, _session) do
     target_station = Keyword.fetch!(config, :target_station)
-    {:ok, %{target_station: target_station, last_total_resources: nil}}
+    {:ok, %{target_station: target_station, last_total_resources: nil, killed_times: 0}}
   end
 
   def handle_continue(%{state: :at_dock, hull_health: hull_health}, _session, config)
@@ -20,8 +20,17 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLooter do
     {:recall, config}
   end
 
+  def handle_continue(%{hull_health: hull_health}, _session, config)
+      when hull_health < 5 do
+    {:instant_repair, %{config | killed_times: config.killed_times + 1}}
+  end
+
   def handle_continue(%{cargo_size: 0} = fleet, session, config) do
-    %{target_station: target_station, last_total_resources: last_total_resources} = config
+    %{
+      target_station: target_station,
+      last_total_resources: last_total_resources,
+      killed_times: killed_times
+    } = config
 
     name = Trekmap.Bots.FleetCommander.StartshipActor.name(fleet.id)
 
@@ -31,6 +40,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLooter do
         station.resources.dlithium + station.resources.parsteel + station.resources.thritanium
 
       cond do
+        killed_times >= 3 ->
+          Logger.info("[#{name}] Got killed for #{killed_times} times, aborting")
+          RaidObserver.abort(station)
+          {:recall, config}
+
         not is_nil(last_total_resources) and
           last_total_resources - total_resources < 30_000 and
             total_resources < 300_000 ->
@@ -39,7 +53,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLooter do
           RaidObserver.abort(station)
           {:recall, config}
 
-        station.hull_health > 2 or station.strength > 20_000 ->
+        station.hull_health > 0 or station.strength > 20_000 ->
           Logger.info("[#{name}] Waiting till base opened")
           {:recall, config}
 

@@ -43,7 +43,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLeader do
           RaidObserver.abort(station)
           {:recall, config}
 
-        station.hull_health > 2 or station.strength > 20_000 ->
+        station.hull_health > 0 or station.strength > 20_000 ->
           if station.system.id == fleet.system_id do
             Logger.info("[#{name}] Opening, current strength: #{station.strength}")
             {{:attack, station}, %{config | last_strength: station.strength}}
