@@ -329,10 +329,12 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
       ) do
     alliance_tag = if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
 
-    Logger.info(
-      "[#{name(fleet_id)}] Killing #{alliance_tag}#{target.player.name}, " <>
+    log_string =
+      "Killing #{alliance_tag}#{target.player.name}, " <>
         "score: #{inspect(target.bounty_score)} at #{to_string(target.system.name)}"
-    )
+
+    Logger.info("[#{name(fleet_id)}] #{log_string}")
+    Trekmap.Discord.log_kill(log_string)
 
     case Trekmap.Me.attack_spacecraft(fleet, target, session) do
       {:ok, fleet} ->
