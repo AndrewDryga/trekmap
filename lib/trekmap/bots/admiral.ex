@@ -364,7 +364,7 @@ defmodule Trekmap.Bots.Admiral do
           fraction_ids: [@fraction_klingon],
           patrol_systems: @klingon_systems,
           min_targets_in_system: 1,
-          min_target_level: 27,
+          min_target_level: 28,
           max_target_level: 30,
           skip_nearest_system?: false,
           max_warp_distance: 26
