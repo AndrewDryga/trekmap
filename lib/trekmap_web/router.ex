@@ -118,9 +118,27 @@ defmodule Trekmap.Router do
           <input type="text" name="target_user_id">
           <input type="submit" value="Loot">
         </form>
+        <br/><br/>
+        Scan: <br/>
+        <form action="/scan">
+          <input type="text" name="system_id">
+          <input type="submit" value="Scan">
+        </form>
       </body>
     </html>
     """)
+  end
+
+  get "/scan" do
+    %{"system_id" => system_id} = conn.query_params
+
+    {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
+    system = Trekmap.Me.get_system(system_id, session)
+    Trekmap.Bots.GalaxyScanner.scan_and_sync_system(system, session)
+
+    conn
+    |> put_resp_header("location", "/")
+    |> send_resp(302, "")
   end
 
   get "/pause" do
