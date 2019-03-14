@@ -133,7 +133,7 @@ defmodule Trekmap.Router do
     %{"system_id" => system_id} = conn.query_params
 
     {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
-    system = Trekmap.Me.get_system(system_id, session)
+    system = system_id |> String.to_integer() |> Trekmap.Me.get_system(session)
     Trekmap.Bots.GalaxyScanner.scan_and_sync_system(system, session)
 
     conn
