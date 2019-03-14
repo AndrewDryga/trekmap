@@ -191,6 +191,13 @@ defmodule Trekmap.Me.Fleet do
   def ship_name(813_554_350_852_228_185), do: "Envoy 2"
   def ship_name(ship_id), do: ship_id
 
+  def ship_type(818_908_769_273_857_488), do: :explorer
+  def ship_type(809_553_354_052_421_083), do: :interceptor
+  def ship_type(793_228_477_045_490_952), do: :mining
+  def ship_type(822_579_326_280_352_768), do: :battleship
+  def ship_type(788_241_743_887_025_466), do: :mining
+  def ship_type(813_554_350_852_228_185), do: :mining
+
   def drydock_num(771_246_931_724_024_704), do: 1
   def drydock_num(771_331_774_860_311_262), do: 2
   def drydock_num(791_687_022_921_464_764), do: 3

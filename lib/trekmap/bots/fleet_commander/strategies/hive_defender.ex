@@ -108,7 +108,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
 
   defp can_kill?(miner, fleet) do
     if is_nil(fleet.strength) do
-      miner.strength < 85_000
+      miner.strength < 140_000
     else
       miner.strength < fleet.strength
     end

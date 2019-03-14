@@ -117,8 +117,8 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
 
   defp can_kill?(marauder, fleet) do
     cond do
-      is_nil(fleet.strength) -> true
-      not is_nil(marauder.strength) -> marauder.strength < fleet.strength * 1.3
+      is_nil(fleet.strength) -> marauder.strength * 0.9 < 150_000
+      not is_nil(marauder.strength) -> marauder.strength * 0.8 < fleet.strength
       true -> false
     end
   end
