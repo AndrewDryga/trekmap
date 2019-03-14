@@ -6,6 +6,7 @@ defmodule Trekmap.Bots.Admiral do
 
   @klingon_systems [
                      1_984_126_753,
+                     1_369_594_429,
                      355_503_878,
                      1_731_519_518,
                      975_691_590,
