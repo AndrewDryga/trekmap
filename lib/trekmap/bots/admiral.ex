@@ -327,18 +327,42 @@ defmodule Trekmap.Bots.Admiral do
   end
 
   def klingon_hunting_mission_plan do
+    vahklas_mission =
+      with {:ok, session} <- Trekmap.Bots.SessionManager.fetch_session(),
+           true <- session.hive_system_id == session.home_system_id do
+        {
+          Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
+          [
+            ship: "Vahklas",
+            crew: @other_time_officers
+          ],
+          [
+            min_target_level: 18,
+            max_target_level: 33
+          ]
+        }
+      else
+        _other ->
+          {
+            Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+            [
+              ship: "Vahklas",
+              crew: @other_time_officers
+            ],
+            [
+              patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+              min_targets_in_system: 1,
+              min_target_level: 18,
+              max_target_level: 33,
+              min_target_bounty_score: 2_000,
+              skip_nearest_system?: true,
+              max_warp_distance: 23
+            ]
+          }
+      end
+
     %{
-      Trekmap.Me.Fleet.drydock1_id() => {
-        Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
-        [
-          ship: "Vahklas",
-          crew: @other_time_officers
-        ],
-        [
-          min_target_level: 18,
-          max_target_level: 33
-        ]
-      },
+      Trekmap.Me.Fleet.drydock1_id() => vahklas_mission,
       Trekmap.Me.Fleet.drydock2_id() => {
         Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
         [
