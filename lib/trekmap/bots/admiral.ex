@@ -485,46 +485,48 @@ defmodule Trekmap.Bots.Admiral do
     }
   end
 
-  def raid_mission_plan(target_user_id) do
-    with {:ok, target_station} = Trekmap.Galaxy.System.Station.find_station(target_user_id) do
-      %{
-        Trekmap.Me.Fleet.drydock1_id() => {
-          Trekmap.Bots.FleetCommander.Strategies.RaidLooter,
-          [
-            ship: "Envoy 1",
-            crew: @other_time_officers
-          ],
-          [
-            target_station: target_station
-          ]
-        },
-        Trekmap.Me.Fleet.drydock2_id() => {
-          Trekmap.Bots.FleetCommander.Strategies.RaidLeader,
-          [
-            ship: "North Star",
-            crew: @enterprise_crew_officers
-          ],
-          [
-            target_station: target_station
-          ]
-        },
-        Trekmap.Me.Fleet.drydock3_id() => {
-          Trekmap.Bots.FleetCommander.Strategies.RaidLooter,
-          [
-            ship: "Envoy 2",
-            crew: @raid_transport_officers
-          ],
-          [
-            target_station: target_station
-          ]
-        },
-        "mission_observer" =>
-          {Trekmap.Bots.FleetCommander.Observers.RaidObserver,
-           [
-             target_station: target_station
-           ]}
-      }
-    end
+  def raid_mission_plan(%{strength: strength} = target_station) when strength < 0 do
+    loot_mission_plan(target_station)
+  end
+
+  def raid_mission_plan(target_station) do
+    %{
+      Trekmap.Me.Fleet.drydock1_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.RaidLooter,
+        [
+          ship: "Envoy 1",
+          crew: @other_time_officers
+        ],
+        [
+          target_station: target_station
+        ]
+      },
+      Trekmap.Me.Fleet.drydock2_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.RaidLeader,
+        [
+          ship: "North Star",
+          crew: @enterprise_crew_officers
+        ],
+        [
+          target_station: target_station
+        ]
+      },
+      Trekmap.Me.Fleet.drydock3_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.RaidLeader,
+        [
+          ship: "Kumari",
+          crew: @nero_crew_officers
+        ],
+        [
+          target_station: target_station
+        ]
+      },
+      "mission_observer" =>
+        {Trekmap.Bots.FleetCommander.Observers.RaidObserver,
+         [
+           target_station: target_station
+         ]}
+    }
   end
 
   def raid_mission_plan do

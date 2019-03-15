@@ -224,7 +224,9 @@ defmodule Trekmap.Router do
     mission_plan =
       case conn.query_params do
         %{"target_user_id" => target_user_id} ->
-          Trekmap.Bots.Admiral.raid_mission_plan(target_user_id)
+          with {:ok, target_station} = Trekmap.Galaxy.System.Station.find_station(target_user_id) do
+            Trekmap.Bots.Admiral.raid_mission_plan(target_station)
+          end
 
         _other ->
           Trekmap.Bots.Admiral.raid_mission_plan()
