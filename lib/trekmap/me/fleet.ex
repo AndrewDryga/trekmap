@@ -182,6 +182,7 @@ defmodule Trekmap.Me.Fleet do
   def ship_id("Kumari"), do: 822_579_326_280_352_768
   def ship_id("Envoy 1"), do: 788_241_743_887_025_466
   def ship_id("Envoy 2"), do: 813_554_350_852_228_185
+  def ship_id("Envoy 3"), do: 824_733_744_035_612_116
 
   def ship_name(818_908_769_273_857_488), do: "Vahklas"
   def ship_name(809_553_354_052_421_083), do: "Kehra"
@@ -189,6 +190,7 @@ defmodule Trekmap.Me.Fleet do
   def ship_name(822_579_326_280_352_768), do: "Kumari"
   def ship_name(788_241_743_887_025_466), do: "Envoy 1"
   def ship_name(813_554_350_852_228_185), do: "Envoy 2"
+  def ship_name(824_733_744_035_612_116), do: "Envoy 3"
   def ship_name(ship_id), do: ship_id
 
   def ship_type(818_908_769_273_857_488), do: :explorer
@@ -197,6 +199,7 @@ defmodule Trekmap.Me.Fleet do
   def ship_type(822_579_326_280_352_768), do: :battleship
   def ship_type(788_241_743_887_025_466), do: :mining
   def ship_type(813_554_350_852_228_185), do: :mining
+  def ship_type(824_733_744_035_612_116), do: :mining
 
   def drydock_num(771_246_931_724_024_704), do: 1
   def drydock_num(771_331_774_860_311_262), do: 2

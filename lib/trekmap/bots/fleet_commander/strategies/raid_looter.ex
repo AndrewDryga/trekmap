@@ -47,13 +47,13 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLooter do
 
         not is_nil(last_total_resources) and
           last_total_resources - total_resources < 30_000 and
-            total_resources < 300_000 ->
+            total_resources < 500_000 ->
           diff = last_total_resources - total_resources
           Logger.info("[#{name}] Empty, last hit got #{diff}, aborting")
           RaidObserver.abort(station)
           {:recall, config}
 
-        station.hull_health > 0 or station.strength > 20_000 ->
+        station.hull_health > 0 or station.strength > -1 ->
           Logger.info("[#{name}] Waiting till base opened")
           {:recall, config}
 

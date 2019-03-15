@@ -32,6 +32,9 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLeader do
           {:recall, config}
 
         station_open? ->
+          Trekmap.Bots.Admiral.loot_mission_plan(station)
+          |> Trekmap.Bots.Admiral.set_mission_plan()
+
           {:recall, config}
 
         Station.temporary_shield_enabled?(station) ->
@@ -43,7 +46,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLeader do
           RaidObserver.abort(station)
           {:recall, config}
 
-        station.hull_health > 0 or station.strength > 20_000 ->
+        station.hull_health > 0 or station.strength > -1 ->
           if station.system.id == fleet.system_id do
             Logger.info("[#{name}] Opening, current strength: #{station.strength}")
             {{:attack, station}, %{config | last_strength: station.strength}}

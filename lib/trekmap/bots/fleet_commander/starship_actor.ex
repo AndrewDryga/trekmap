@@ -134,12 +134,17 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
       else
         if fleet.state == :at_dock do
           :ok = Trekmap.Me.full_repair(session)
-          :ok = Trekmap.Me.Fleet.assign_ship(fleet_id, ship_id, session)
-          :ok = Trekmap.Me.Fleet.assign_officers(fleet_id, ship_crew, session)
 
-          continue(fleet)
+          with :ok <- Trekmap.Me.Fleet.assign_ship(fleet_id, ship_id, session) do
+            :ok = Trekmap.Me.Fleet.assign_officers(fleet_id, ship_crew, session)
 
-          fetch_fleet(fleet_id, session)
+            continue(fleet)
+
+            fetch_fleet(fleet_id, session)
+          else
+            {:error, %{type: 6, body: "fleet"}} ->
+              continue(fleet, 15_000)
+          end
         else
           perform_fleet_action(fleet, :recall, state)
 
