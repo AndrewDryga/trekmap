@@ -146,7 +146,32 @@ defmodule Trekmap.Galaxy.System do
       level = levels |> Enum.to_list() |> List.first() |> elem(1)
 
       if marauder_fleet = Map.get(deployed_fleets, to_string(target_fleet_id)) do
-        %{"current_coords" => %{"x" => x, "y" => y}} = marauder_fleet
+        {x, y} =
+          case marauder_fleet do
+            %{
+              "current_course" => %{
+                "start_x" => sx,
+                "start_y" => sy,
+                "end_x" => ex,
+                "end_y" => ey,
+                "start_time" => started_at,
+                "duration" => duration
+              }
+            }
+            when not is_nil(sx) and not is_nil(sy) and not is_nil(ex) and not is_nil(ey) ->
+              course_progress =
+                NaiveDateTime.diff(
+                  NaiveDateTime.utc_now(),
+                  NaiveDateTime.from_iso8601!(started_at)
+                ) / (duration / 100)
+
+              course_progress = Enum.max([1, course_progress])
+
+              {sx + trunc((sx + ex) / course_progress), sy + trunc((sy + ey) / course_progress)}
+
+            %{"current_coords" => %{"x" => x, "y" => y}} ->
+              {x, y}
+          end
 
         [
           %Marauder{
@@ -155,7 +180,8 @@ defmodule Trekmap.Galaxy.System do
             system: system,
             coords: {x, y},
             strength: strength,
-            level: level
+            level: level,
+            pursuit_fleet_id: Map.get(marauder_fleet, "pursuit_target_id")
           }
         ]
       else
@@ -246,7 +272,8 @@ defmodule Trekmap.Galaxy.System do
             system: system,
             id: fleet_id,
             mining_node_id: mining_node_id,
-            coords: {x, y}
+            coords: {x, y},
+            pursuit_fleet_id: Map.get(deployed_fleet, "pursuit_target_id")
           }
         ]
       else

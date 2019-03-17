@@ -3,11 +3,21 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
 
   @behaviour Trekmap.Bots.FleetCommander.Strategy
 
-  def init(config, _session) do
+  def init(config, session) do
+    max_warp_distance = Keyword.fetch!(config, :max_warp_distance)
+
+    patrol_systems =
+      Keyword.fetch!(config, :patrol_systems)
+      |> Enum.filter(fn system_id ->
+        path = Trekmap.Galaxy.find_path(session.galaxy, session.home_system_id, system_id)
+        warp_distance = Trekmap.Galaxy.get_path_max_warp_distance(session.galaxy, path)
+        warp_distance <= max_warp_distance
+      end)
+
     {:ok,
      %{
        fraction_ids: Keyword.fetch!(config, :fraction_ids),
-       patrol_systems: Keyword.fetch!(config, :patrol_systems),
+       patrol_systems: patrol_systems,
        min_targets_in_system: Keyword.fetch!(config, :min_targets_in_system),
        min_target_level: Keyword.fetch!(config, :min_target_level),
        max_target_level: Keyword.fetch!(config, :max_target_level),
@@ -26,13 +36,20 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
   end
 
   def handle_continue(fleet, session, config) do
-    {:ok, targets} = find_targets_in_current_system(fleet, session, config)
+    {:ok, targets, pursuiters} = find_targets_in_current_system(fleet, session, config)
 
-    if length(targets) > 0 do
+    name = Trekmap.Bots.FleetCommander.StartshipActor.name(fleet.id)
+
+    need_evacuation? = need_evacuation?(fleet, pursuiters)
+    if need_evacuation?, do: Logger.warn("[#{name}] Need to leave, pursuiters are nearby")
+
+    if length(targets) > 0 and not need_evacuation? do
       target =
         targets
-        |> Enum.sort_by(&distance(&1.coords, fleet.coords))
+        |> Enum.sort_by(&safe_distance(&1.coords, fleet.coords, pursuiters))
         |> List.first()
+
+      # |> IO.inspect(label: "targ")
 
       {{:attack, target}, config}
     else
@@ -41,10 +58,34 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
         target = List.first(targets)
         {{:fly, system, target.coords}, config}
       else
-        name = Trekmap.Bots.FleetCommander.StartshipActor.name(fleet.id)
         Logger.info("[#{name}] Can't find any targets")
         {:recall, config}
       end
+    end
+  end
+
+  defp need_evacuation?(_fleet, []), do: false
+
+  defp need_evacuation?(fleet, pursuiters) do
+    nearest_pursuiter_distance =
+      pursuiters
+      # |> IO.inspect(label: "psts")
+      |> Enum.map(&distance(&1.coords, fleet.coords))
+      # |> IO.inspect(label: "psts dist")
+      |> Enum.sort()
+      |> List.first()
+
+    # |> IO.inspect(label: "pdist")
+
+    max_pursuiter_strength =
+      pursuiters
+      |> Enum.sort_by(& &1.strength, &>=/2)
+      |> List.first()
+
+    if max_pursuiter_strength > fleet.strength * 0.8 do
+      nearest_pursuiter_distance < 150
+    else
+      false
     end
   end
 
@@ -67,7 +108,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
         |> Enum.filter(&should_kill?(&1, min_target_level, max_target_level))
         |> Enum.filter(&can_kill?(&1, fleet))
 
-      {:ok, targets}
+      # |> IO.inspect()
+
+      pursuiters = Enum.filter(hostiles, &(&1.pursuit_fleet_id == fleet.id))
+
+      {:ok, targets, pursuiters}
     else
       {:error, %{"code" => 400}} = error ->
         Logger.error("Can't list targets in system #{inspect(system)}, reason: #{inspect(error)}")
@@ -90,7 +135,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
       end)
       |> Enum.reduce_while({nil, not skip_nearest_system?}, fn system_id, {acc, should_stop?} ->
         system = Trekmap.Me.get_system(system_id, session)
-        {:ok, targets} = find_targets_in_system(fleet, system, session, config)
+        {:ok, targets, _pursuiters} = find_targets_in_system(fleet, system, session, config)
 
         cond do
           length(targets) > min_targets_in_system and should_stop? ->
@@ -117,13 +162,50 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
 
   defp can_kill?(marauder, fleet) do
     cond do
-      is_nil(fleet.strength) -> marauder.strength * 0.9 < 150_000
-      not is_nil(marauder.strength) -> marauder.strength * 0.8 < fleet.strength
+      is_nil(fleet.strength) -> marauder.strength < 150_000
+      not is_nil(marauder.strength) -> marauder.strength < fleet.strength
       true -> false
     end
   end
 
+  defp safe_distance({x1, y1}, {x2, y2}, []) do
+    distance({x1, y1}, {x2, y2})
+  end
+
+  defp safe_distance({x1, y1}, {x2, y2}, pursuiters) do
+    sum_of_target_distances_to_pursuiters =
+      pursuiters
+      |> Enum.map(&distance(&1.coords, {x1, y1}))
+      # |> IO.inspect(label: "distances")
+      |> Enum.sum()
+
+    sum_of_cource_angles_to_pursuiters =
+      pursuiters
+      |> Enum.map(&vector_abs_angle(&1.coords, {x1, y1}, {x2, y2}))
+      # |> IO.inspect(label: "angles")
+      |> Enum.sum()
+
+    distance({x1, y1}, {x2, y2}) *
+      sum_of_target_distances_to_pursuiters *
+      sum_of_cource_angles_to_pursuiters
+  end
+
   defp distance({x1, y1}, {x2, y2}) do
     :math.sqrt(:math.pow(x1 - x2, 2) + :math.pow(y1 - y2, 2))
+  end
+
+  defp vector_abs_angle({x1, y1}, {x2, y2}, {x3, y3}) do
+    {v1x, v1y} = {x3 - x2, y3 - y2}
+    {v2x, v2y} = {x3 - x1, y3 - y1}
+
+    mag1 = :math.sqrt(:math.pow(v1x, 2) + :math.pow(v1y, 2))
+    mag2 = :math.sqrt(:math.pow(v2x, 2) + :math.pow(v2y, 2))
+    mag = mag1 * mag2
+
+    if mag == 0 do
+      0
+    else
+      :math.cos((v1x * v2x + v1y * v2y) / mag) * (180 / :math.pi())
+    end
   end
 end

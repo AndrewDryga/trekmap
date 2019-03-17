@@ -4,5 +4,6 @@ defmodule Trekmap.Galaxy.Marauder do
             strength: nil,
             coords: {0, 0},
             target_fleet_id: nil,
-            level: nil
+            level: nil,
+            pursuit_fleet_id: nil
 end
