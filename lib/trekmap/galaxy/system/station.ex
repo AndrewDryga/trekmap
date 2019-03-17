@@ -201,8 +201,7 @@ defmodule Trekmap.Galaxy.System.Station do
       "AND({Relation} != 'Ally', " <>
         "{Relation} != 'NAP', " <>
         "{Relation} != 'NSA', " <>
-        "18 <= {Level}, " <>
-        "{Level} <= 19, " <>
+        "18 <= {Level}, {Level} <= 19, " <>
         "{Shield Enabled Ago} >= 21600, " <>
         "{Strength} <= 200000, " <>
         "{Shield Ends In} <= '600', " <>

@@ -109,7 +109,7 @@ defmodule Trekmap.Router do
         - <a href="/set_g2_miner_hunting_mission">Hunt G2 miners (agressive)</a><br/>
         - <a href="/set_g3_mining_hunting_mission">Hunt G3 miners</a><br/>
         - <a href="/set_g2_miners_and_klingon_hunting">Hunt G2 miners (agressive) and Klingons</a><br/>
-        - <a href="/set_g2_g3_miner_hunting_and_hive_defence_mission">Defend Hive, Punish and hunt G3 miners (default)</a><br/>
+        - <a href="/set_g2_g3_miner_hunting_and_hive_defence_mission">Defend Hive and hunt G3 miners (default)</a><br/>
         - <a href="/set_klingon_hunting">Hunt Klingons and Defend Hive</a><br/>
         - <a href="/set_raid_mission">Raiding</a><br/>
         <br/><br/>

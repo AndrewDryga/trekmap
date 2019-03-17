@@ -428,16 +428,17 @@ defmodule Trekmap.Bots.Admiral do
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
-        Trekmap.Bots.FleetCommander.Strategies.Punisher,
+        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
         [
           ship: "Kumari",
           crew: @nero_crew_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          fraction_ids: [@fraction_klingon],
+          patrol_systems: @klingon_systems,
           min_targets_in_system: 1,
-          min_target_level: 18,
-          max_target_level: 33,
+          min_target_level: 28,
+          max_target_level: 30,
           skip_nearest_system?: false,
           max_warp_distance: 26
         ]
