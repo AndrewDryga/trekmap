@@ -298,7 +298,7 @@ defmodule Trekmap.Bots.Admiral do
           fraction_ids: [@fraction_klingon],
           patrol_systems: @high_lvl_klingon_systems,
           min_targets_in_system: 1,
-          min_target_level: 27,
+          min_target_level: 28,
           max_target_level: 30,
           skip_nearest_system?: false,
           max_warp_distance: 26
@@ -409,18 +409,18 @@ defmodule Trekmap.Bots.Admiral do
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
-        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
+        Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
           ship: "Kumari",
           crew: @nero_crew_officers
         ],
         [
-          fraction_ids: [@fraction_klingon],
-          patrol_systems: @high_lvl_klingon_systems,
-          min_targets_in_system: 1,
-          min_target_level: 28,
-          max_target_level: 30,
-          skip_nearest_system?: false,
+          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          min_targets_in_system: 2,
+          min_target_level: 18,
+          max_target_level: 33,
+          min_target_bounty_score: 30_000,
+          skip_nearest_system?: true,
           max_warp_distance: 26
         ]
       }
