@@ -6,7 +6,6 @@ defmodule Trekmap.Galaxy.System do
 
   defmodule Scan do
     defstruct system: nil,
-              raw_result: %{},
               spacecrafts: [],
               stations: [],
               hostiles: []
@@ -83,7 +82,6 @@ defmodule Trekmap.Galaxy.System do
       {:ok,
        %Scan{
          system: system,
-         raw_result: response,
          stations: stations,
          spacecrafts: spacecrafts,
          hostiles: marauders
