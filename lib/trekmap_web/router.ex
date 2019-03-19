@@ -10,7 +10,7 @@ defmodule Trekmap.Router do
   plug(:dispatch)
 
   get "/" do
-    {status, ships_on_mission} =
+    {active?, status, ships_on_mission} =
       case Trekmap.Bots.get_status() do
         :running ->
           %{
@@ -67,16 +67,44 @@ defmodule Trekmap.Router do
             end)
             |> Enum.join(",</br> ")
 
-          {"Running#{under_attack}#{shield_enabled} / Damaged #{trunc(fleet_damage_ratio)}%",
+          {true,
+           "Running#{under_attack}#{shield_enabled} / Damaged #{trunc(fleet_damage_ratio)}%",
            ships_on_mission}
 
         :starting ->
-          {"Starting", ""}
+          {false, "Starting", ""}
 
         {:scheduled, timeout} ->
           minutes = trunc(timeout / 60)
           seconds = rem(timeout, 60) |> to_string() |> String.pad_leading(2, "0")
-          {"Would start in #{minutes}:#{seconds}", ""}
+          {false, "Would start in #{minutes}:#{seconds}", ""}
+      end
+
+    raid_mission =
+      with true <- active?,
+           %{target_station: target} = report <- Trekmap.Bots.Admiral.get_raid_report() do
+        alliance_tag = if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
+
+        total_resources =
+          (target.resources.dlithium + target.resources.parsteel + target.resources.thritanium)
+          |> to_string()
+          |> String.graphemes()
+          |> Enum.reverse()
+          |> Enum.map_every(3, &(&1 <> " "))
+          |> Enum.reverse()
+          |> Enum.join()
+
+        """
+        Raiding #{alliance_tag}#{target.player.name} (#{target.id})
+        at #{to_string(target.system.name)} / #{to_string(target.planet.name)}<br/>
+        Resources: #{total_resources} / Last Loot: #{Map.get(report, :last_loot) || 0}<br/>
+        <br/>
+        Leader: #{Map.get(report, :leader_action, "not active")}<br/>
+        Looter: #{Map.get(report, :looter_action, "not active")} / \
+        Killed #{Map.get(report, :looter_killed_times, 0)} times<br/>
+        """
+      else
+        _other -> "No raid activity"
       end
 
     conn
@@ -118,6 +146,8 @@ defmodule Trekmap.Router do
           <input type="text" name="target_user_id">
           <input type="submit" value="Loot">
         </form>
+        <br/><br/>
+        #{raid_mission}
         <br/><br/>
         Scan: <br/>
         <form action="/scan">

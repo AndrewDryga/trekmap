@@ -413,4 +413,13 @@ defmodule Trekmap.Galaxy.System do
       end
     end)
   end
+
+  def list_prohibited_systems do
+    query_params = %{
+      "maxRecords" => 100,
+      "filterByFormula" => "OR({Prohibited})"
+    }
+
+    Trekmap.AirDB.list(__MODULE__, query_params)
+  end
 end

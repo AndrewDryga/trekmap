@@ -198,15 +198,18 @@ defmodule Trekmap.Galaxy.System.Station do
 
   def fetch_raid_target(session) do
     formula =
-      "AND({Relation} != 'Ally', " <>
+      "AND(" <>
+        "{Relation} != 'Ally', " <>
         "{Relation} != 'NAP', " <>
         "{Relation} != 'NSA', " <>
+        "{In Prohibited System} = 0," <>
         "18 <= {Level}, {Level} <= 19, " <>
         "{Shield Enabled Ago} >= 21600, " <>
         "{Strength} <= 200000, " <>
         "{Shield Ends In} <= '600', " <>
         "{Last Updated} <= '10800', " <>
-        "{Total Weighted} >= '3000000')"
+        "{Total Weighted} >= '3000000'" <>
+        ")"
 
     query_params = %{
       "maxRecords" => 10,

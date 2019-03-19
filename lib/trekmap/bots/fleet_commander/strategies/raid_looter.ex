@@ -39,8 +39,16 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLooter do
       total_resources =
         station.resources.dlithium + station.resources.parsteel + station.resources.thritanium
 
+      report = %{
+        target_station: station,
+        looter_action: "Waiting",
+        looter_killed_times: killed_times,
+        last_loot: last_total_resources
+      }
+
       cond do
         killed_times >= 3 ->
+          Trekmap.Bots.Admiral.update_raid_report(%{report | looter_action: "Aborting, killed"})
           Logger.info("[#{name}] Got killed for #{killed_times} times, aborting")
           RaidObserver.abort(station)
           {:recall, config}
@@ -48,12 +56,14 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLooter do
         not is_nil(last_total_resources) and
           last_total_resources - total_resources < 30_000 and
             total_resources < 500_000 ->
+          Trekmap.Bots.Admiral.update_raid_report(%{report | looter_action: "Aborting, empty"})
           diff = last_total_resources - total_resources
           Logger.info("[#{name}] Empty, last hit got #{diff}, aborting")
           RaidObserver.abort(station)
           {:recall, config}
 
         station.hull_health > 0 or station.strength > -1 ->
+          Trekmap.Bots.Admiral.update_raid_report(%{report | looter_action: "Waiting"})
           Logger.info("[#{name}] Waiting till base opened")
           {:recall, config}
 
@@ -62,11 +72,14 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLooter do
           {{:wait, 60_000}, config}
 
         Station.shield_enabled?(station) ->
+          Trekmap.Bots.Admiral.update_raid_report(%{report | looter_action: "Aborting, shielded"})
           Logger.info("[#{name}] Shield is enabled, aborting")
           RaidObserver.abort(station)
           {{:wait, :timer.minutes(10)}, config}
 
         true ->
+          Trekmap.Bots.Admiral.update_raid_report(%{report | looter_action: "Looting"})
+
           if station.system.id == fleet.system_id do
             Logger.info("[#{name}] Looting, station has: #{total_resources}")
             {{:attack, station}, %{config | last_total_resources: total_resources}}

@@ -101,6 +101,7 @@ defmodule Trekmap.Bots.Admiral do
     state = %{
       current_mission_plan: current_mission_plan,
       fleet_reports: %{},
+      raid_report: %{},
       station_report: %{
         under_attack?: false,
         shield_enabled?: false,
@@ -143,6 +144,18 @@ defmodule Trekmap.Bots.Admiral do
   def update_station_report(report) do
     try do
       GenServer.cast(__MODULE__, {:update_station_report, report})
+    catch
+      :exit, _ -> :ok
+    end
+  end
+
+  def get_raid_report do
+    GenServer.call(__MODULE__, :get_raid_report)
+  end
+
+  def update_raid_report(report) do
+    try do
+      GenServer.cast(__MODULE__, {:update_raid_report, report})
     catch
       :exit, _ -> :ok
     end
@@ -525,6 +538,16 @@ defmodule Trekmap.Bots.Admiral do
     {:noreply, %{state | station_report: station_report}}
   end
 
+  def handle_cast({:update_raid_report, raid_report}, %{raid_report: current_raid_report} = state) do
+    raid_report =
+      Enum.reduce(raid_report, current_raid_report, fn
+        {_key, nil}, raid_report -> raid_report
+        {key, value}, raid_report -> Map.put(raid_report, key, value)
+      end)
+
+    {:noreply, %{state | raid_report: raid_report}}
+  end
+
   def handle_call(:get_mission_plan, _from, state) do
     %{current_mission_plan: current_mission_plan} = state
     {:reply, current_mission_plan, state}
@@ -554,6 +577,10 @@ defmodule Trekmap.Bots.Admiral do
     shield_enabled? = Trekmap.Me.shield_enabled?(session)
     station_report = Map.put(station_report, :shield_enabled?, shield_enabled?)
     {:reply, station_report, %{state | station_report: station_report}}
+  end
+
+  def handle_call(:get_raid_report, _from, %{raid_report: raid_report} = state) do
+    {:reply, raid_report, state}
   end
 
   def handle_info(:timeout, %{current_mission_plan: current_mission_plan} = state) do

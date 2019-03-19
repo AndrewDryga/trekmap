@@ -27,26 +27,51 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLeader do
     with {:ok, station} <- find_station(target_station, session) do
       cond do
         not is_nil(last_strength) and last_strength < station.strength - 100 ->
+          Trekmap.Bots.Admiral.update_raid_report(%{
+            target_station: station,
+            leader_action: "Aborting because station is repaired"
+          })
+
           Logger.info("[#{name}] Station repaired, aborting")
           RaidObserver.abort(station)
           {:recall, config}
 
         station_open? ->
+          Trekmap.Bots.Admiral.update_raid_report(%{
+            target_station: station,
+            leader_action: "Station is zeroed, looting"
+          })
+
           Trekmap.Bots.Admiral.loot_mission_plan(station)
           |> Trekmap.Bots.Admiral.set_mission_plan()
 
           {:recall, config}
 
         Station.temporary_shield_enabled?(station) ->
+          Trekmap.Bots.Admiral.update_raid_report(%{
+            target_station: station,
+            leader_action: "Temporary shield is enabled, waiting"
+          })
+
           Logger.info("[#{name}] Temporary shield is enabled, waiting")
           {{:wait, 60_000}, config}
 
         Station.shield_enabled?(station) ->
+          Trekmap.Bots.Admiral.update_raid_report(%{
+            target_station: station,
+            leader_action: "Aborting because shield is enabled"
+          })
+
           Logger.info("[#{name}] Shield is enabled, aborting")
           RaidObserver.abort(station)
           {:recall, config}
 
         station.hull_health > 0 or station.strength > -1 ->
+          Trekmap.Bots.Admiral.update_raid_report(%{
+            target_station: station,
+            leader_action: "Zeroing"
+          })
+
           if station.system.id == fleet.system_id do
             Logger.info("[#{name}] Opening, current strength: #{station.strength}")
             {{:attack, station}, %{config | last_strength: station.strength}}
