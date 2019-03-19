@@ -9,16 +9,13 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
     {:ok, bad_people} = Trekmap.Galaxy.Player.list_bad_people()
     home_system = Trekmap.Me.get_system(session.hive_system_id, session)
 
-    if session.hive_system_id != session.home_system_id do
-      Logger.error("HiveDefender is not in hive!")
-    end
-
     allies = Enum.map(allies, & &1.tag)
     enemies = Enum.map(enemies, & &1.tag)
     bad_people_ids = Enum.map(bad_people, & &1.id)
 
     {:ok,
      %{
+       in_hive?: session.hive_system_id == session.home_system_id,
        home_system: home_system,
        allies: allies,
        enemies: enemies,
@@ -31,6 +28,10 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
   def handle_continue(%{state: :at_dock, hull_health: hull_health}, _session, config)
       when hull_health < 100 do
     {:instant_repair, config}
+  end
+
+  def handle_continue(_fleet, _session, %{in_hive?: false} = config) do
+    {:recall, config}
   end
 
   def handle_continue(%{state: :at_dock} = fleet, session, config) do
