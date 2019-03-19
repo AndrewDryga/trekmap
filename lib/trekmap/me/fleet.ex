@@ -183,6 +183,8 @@ defmodule Trekmap.Me.Fleet do
   def ship_id("Envoy 1"), do: 788_241_743_887_025_466
   def ship_id("Envoy 2"), do: 813_554_350_852_228_185
   def ship_id("Envoy 3"), do: 824_733_744_035_612_116
+  def ship_id("Phindra"), do: 771_326_161_581_327_453
+  def ship_id("Fortunate"), do: 772_895_219_376_276_605
 
   def ship_name(818_908_769_273_857_488), do: "Vahklas"
   def ship_name(809_553_354_052_421_083), do: "Kehra"
@@ -191,6 +193,8 @@ defmodule Trekmap.Me.Fleet do
   def ship_name(788_241_743_887_025_466), do: "Envoy 1"
   def ship_name(813_554_350_852_228_185), do: "Envoy 2"
   def ship_name(824_733_744_035_612_116), do: "Envoy 3"
+  def ship_name(771_326_161_581_327_453), do: "Phindra"
+  def ship_name(772_895_219_376_276_605), do: "Fortunate"
   def ship_name(ship_id), do: ship_id
 
   def ship_type(818_908_769_273_857_488), do: :explorer

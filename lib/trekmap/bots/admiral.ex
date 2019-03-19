@@ -440,6 +440,39 @@ defmodule Trekmap.Bots.Admiral do
     }
   end
 
+  def blockade_mission_plan(target_station) do
+    %{
+      Trekmap.Me.Fleet.drydock1_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.Blockade,
+        [
+          ship: "Phindra",
+          crew: @other_time_officers
+        ],
+        [
+          target_station: target_station
+        ]
+      },
+      Trekmap.Me.Fleet.drydock2_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.Blockade,
+        [
+          ship: "Fortunate",
+          crew: @enterprise_crew_officers
+        ],
+        [
+          target_station: target_station
+        ]
+      },
+      Trekmap.Me.Fleet.drydock3_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.StationDefender,
+        [
+          ship: "Kumari",
+          crew: @nero_crew_officers
+        ],
+        []
+      }
+    }
+  end
+
   def loot_mission_plan(target_station) do
     %{
       Trekmap.Me.Fleet.drydock1_id() => {

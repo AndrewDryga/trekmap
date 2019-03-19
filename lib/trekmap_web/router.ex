@@ -48,6 +48,7 @@ defmodule Trekmap.Router do
                     Trekmap.Bots.FleetCommander.Strategies.RaidLooter -> "Looting Station"
                     Trekmap.Bots.FleetCommander.Strategies.RaidLeader -> "Opening Station"
                     Trekmap.Bots.FleetCommander.Strategies.Punisher -> "Punisher"
+                    Trekmap.Bots.FleetCommander.Strategies.Blockade -> "Blockade"
                     other -> inspect(other)
                   end
 
@@ -153,6 +154,12 @@ defmodule Trekmap.Router do
         <form action="/scan">
           <input type="text" name="system_id">
           <input type="submit" value="Scan">
+        </form>
+        <br/><br/>
+        Blockade: <br/>
+        <form action="/set_blockade_mission">
+          <input type="text" name="target_user_id">
+          <input type="submit" value="Blockade">
         </form>
       </body>
     </html>
@@ -262,6 +269,17 @@ defmodule Trekmap.Router do
           Trekmap.Bots.Admiral.raid_mission_plan()
       end
 
+    Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
+
+    conn
+    |> put_resp_header("location", "/")
+    |> send_resp(302, "")
+  end
+
+  get "/set_blockade_mission" do
+    %{"target_user_id" => target_user_id} = conn.query_params
+    {:ok, target_station} = Trekmap.Galaxy.System.Station.find_station(target_user_id)
+    mission_plan = Trekmap.Bots.Admiral.blockade_mission_plan(target_station)
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
