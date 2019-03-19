@@ -7,12 +7,6 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
   ### Public API
 
   # TODO: No need to reload fleet if we just fly
-  # switching mission plans:
-  # 2 ships on miners, 1 at home;
-  # 1 ship on heavy miners 2 at home;
-  # 1 heavy + 1 small + 1 at home;
-  # 1 ship initiating raids, 2 at home
-  # 2 ships grabbing raid loot, 1 at home
   # Notify mission controller when ship is at dock and return is triggered, then mission is idle
   # and we can switch to another mission
 

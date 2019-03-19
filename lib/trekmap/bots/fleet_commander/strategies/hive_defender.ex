@@ -40,7 +40,8 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
       target =
         targets
         |> Enum.sort_by(&distance(&1.coords, fleet.coords))
-        |> List.first()
+        |> Enum.take(3)
+        |> Enum.random()
 
       alliance_tag = if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
       {x, y} = target.coords

@@ -1,4 +1,5 @@
 defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
+  alias Trekmap.Bots.FleetCommander.Strategies.HiveDefender
   require Logger
 
   @behaviour Trekmap.Bots.FleetCommander.Strategy
@@ -80,13 +81,18 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
         {{:fly, system, target.coords}, config}
       end
     else
-      if nearby_system_with_targets = find_targets_in_nearby_system(fleet, session, config) do
-        {system, targets} = nearby_system_with_targets
-        target = List.first(targets)
-        {{:fly, system, target.coords}, config}
-      else
-        Logger.info("[#{name}] Can't find any targets")
-        {:recall, config}
+      cond do
+        nearby_system_with_targets = find_targets_in_nearby_system(fleet, session, config) ->
+          {system, targets} = nearby_system_with_targets
+          target = List.first(targets)
+          {{:fly, system, target.coords}, config}
+
+        fleet.state == :at_dock ->
+          HiveDefender.handle_continue(fleet, session, config)
+
+        true ->
+          Logger.info("[#{name}] Can't find any targets")
+          {:recall, config}
       end
     end
   end
