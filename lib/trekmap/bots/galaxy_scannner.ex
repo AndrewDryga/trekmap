@@ -49,7 +49,7 @@ defmodule Trekmap.Bots.GalaxyScanner do
       systems
       |> Enum.shuffle()
       |> Task.async_stream(&scan_and_sync_system(&1, session),
-        max_concurrency: 20,
+        max_concurrency: 15,
         timeout: :infinity
       )
       |> Enum.flat_map(fn
