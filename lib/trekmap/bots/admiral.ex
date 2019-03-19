@@ -4,6 +4,45 @@ defmodule Trekmap.Bots.Admiral do
 
   @fraction_klingon 4_153_667_145
 
+  @klingon_systems [
+                     1_984_126_753,
+                     1_369_594_429,
+                     355_503_878,
+                     1_731_519_518,
+                     975_691_590,
+                     1_691_252_927,
+                     1_744_652_289,
+                     846_029_245,
+                     1_780_286_771,
+                     1_358_992_189,
+                     1_057_703_933,
+                     369_364_082,
+                     399_469_984,
+                     893_618_014,
+                     186_798_495,
+                     1_090_722_450,
+                     265_649_208,
+                     395_344_716,
+                     1_735_899_624,
+                     1_244_441_919,
+                     1_926_261_734,
+                     430_080_081,
+                     1_490_400_924,
+                     2_075_950_099,
+                     1_694_524_999,
+                     1_756_718_205,
+                     776_886_360,
+                     1_295_669_729,
+                     1_759_717_590,
+                     1_101_989_561,
+                     1_862_365_964,
+                     1_660_792_724,
+                     1_245_655_537,
+                     1_566_236_961,
+                     477_613_271
+                   ]
+                   |> Enum.uniq()
+
   @high_lvl_klingon_systems [
                               1_926_261_734,
                               776_886_360,
@@ -385,6 +424,78 @@ defmodule Trekmap.Bots.Admiral do
           min_targets_in_system: 1,
           min_target_level: 28,
           max_target_level: 30,
+          skip_nearest_system?: false,
+          max_warp_distance: 26
+        ]
+      }
+    }
+  end
+
+  def reputation_hunting_mission_plan do
+    vahklas_mission =
+      with {:ok, session} <- Trekmap.Bots.SessionManager.fetch_session(),
+           true <- session.hive_system_id == session.home_system_id do
+        {
+          Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
+          [
+            ship: "Vahklas",
+            crew: @other_time_officers
+          ],
+          [
+            min_target_level: 18,
+            max_target_level: 33
+          ]
+        }
+      else
+        _other ->
+          {
+            Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
+            [
+              ship: "Vahklas",
+              crew: @other_time_officers
+            ],
+            [
+              patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+              min_targets_in_system: 1,
+              min_target_level: 18,
+              max_target_level: 33,
+              min_target_bounty_score: 85_000,
+              skip_nearest_system?: true,
+              max_warp_distance: 23
+            ]
+          }
+      end
+
+    %{
+      Trekmap.Me.Fleet.drydock1_id() => vahklas_mission,
+      Trekmap.Me.Fleet.drydock2_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
+        [
+          ship: "North Star",
+          crew: @enterprise_crew_officers
+        ],
+        [
+          fraction_ids: [@fraction_klingon],
+          patrol_systems: @klingon_systems,
+          min_targets_in_system: 1,
+          min_target_level: 24,
+          max_target_level: 28,
+          skip_nearest_system?: true,
+          max_warp_distance: 29
+        ]
+      },
+      Trekmap.Me.Fleet.drydock3_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
+        [
+          ship: "Kumari",
+          crew: @nero_crew_officers
+        ],
+        [
+          fraction_ids: [@fraction_klingon],
+          patrol_systems: @klingon_systems,
+          min_targets_in_system: 1,
+          min_target_level: 24,
+          max_target_level: 28,
           skip_nearest_system?: false,
           max_warp_distance: 26
         ]

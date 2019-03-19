@@ -139,7 +139,8 @@ defmodule Trekmap.Router do
         - <a href="/set_g3_mining_hunting_mission">Hunt G3 miners</a><br/>
         - <a href="/set_g2_miners_and_klingon_hunting">Hunt G2 miners (agressive) and Klingons</a><br/>
         - <a href="/set_g2_g3_miner_hunting_and_hive_defence_mission">Defend Hive and hunt G3 miners (default)</a><br/>
-        - <a href="/set_klingon_hunting">Hunt Klingons and Defend Hive</a><br/>
+        - <a href="/set_klingon_hunting">Hunt Klingons 28+ and Defend Hive</a><br/>
+        - <a href="/set_reputation_hunting">Hunt Klingons 28- and Defend Hive</a><br/>
         - <a href="/set_raid_mission">Raiding</a><br/>
         <br/><br/>
         Raid: <br/>
@@ -241,6 +242,15 @@ defmodule Trekmap.Router do
 
   get "/set_klingon_hunting" do
     mission_plan = Trekmap.Bots.Admiral.klingon_hunting_mission_plan()
+    Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
+
+    conn
+    |> put_resp_header("location", "/")
+    |> send_resp(302, "")
+  end
+
+  get "/set_reputation_hunting" do
+    mission_plan = Trekmap.Bots.Admiral.reputation_hunting_mission_plan()
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
