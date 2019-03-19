@@ -6,7 +6,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
   def init(config, session) do
     max_warp_distance = Keyword.fetch!(config, :max_warp_distance)
 
-    prohibited_systems = Trekmap.Galaxy.System.list_prohibited_systems()
+    {:ok, prohibited_systems} = Trekmap.Galaxy.System.list_prohibited_systems()
     prohibited_system_ids = Enum.map(prohibited_systems, & &1.id)
 
     patrol_systems =

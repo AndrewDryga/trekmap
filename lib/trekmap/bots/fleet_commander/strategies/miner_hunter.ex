@@ -10,7 +10,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
     {:ok, bad_alliances} = Trekmap.Galaxy.Alliances.list_bad_alliances()
     {:ok, bad_people} = Trekmap.Galaxy.Player.list_bad_people()
 
-    prohibited_systems = Trekmap.Galaxy.System.list_prohibited_systems()
+    {:ok, prohibited_systems} = Trekmap.Galaxy.System.list_prohibited_systems()
     prohibited_system_ids = Enum.map(prohibited_systems, & &1.id)
 
     allies = Enum.map(allies, & &1.tag)

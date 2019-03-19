@@ -126,6 +126,8 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
 
         fleet
       else
+        Logger.info("[#{name(state.fleet_id)}] Need to change ship or crew")
+
         if fleet.state == :at_dock do
           :ok = Trekmap.Me.full_repair(session)
 
