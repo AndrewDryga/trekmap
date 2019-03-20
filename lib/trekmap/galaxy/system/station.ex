@@ -168,9 +168,9 @@ defmodule Trekmap.Galaxy.System.Station do
        %{
          station
          | resources: %Resources{
-             parsteel: Map.get(resources, "parsteel"),
-             thritanium: Map.get(resources, "thritanium"),
-             dlithium: Map.get(resources, "dlithium")
+             parsteel: Map.get(resources, "parsteel", 0),
+             thritanium: Map.get(resources, "thritanium", 0),
+             dlithium: Map.get(resources, "dlithium", 0)
            },
            hull_health: hull_health,
            defense_platform_hull_health: defense_platform_hull_health,
