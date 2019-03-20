@@ -203,7 +203,7 @@ defmodule Trekmap.Galaxy.System.Station do
         "{Relation} != 'NAP', " <>
         "{Relation} != 'NSA', " <>
         "{In Prohibited System} = 0," <>
-        "18 <= {Level}, {Level} <= 19, " <>
+        "19 <= {Level}, {Level} <= 21, " <>
         "{Shield Enabled Ago} >= 21600, " <>
         "{Strength} <= 200000, " <>
         "{Shield Ends In} <= '600', " <>
