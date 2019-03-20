@@ -46,6 +46,13 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLooter do
         last_loot: last_total_resources
       }
 
+      last_hit_total_resources =
+        if is_nil(last_total_resources) do
+          0
+        else
+          last_total_resources - total_resources
+        end
+
       cond do
         killed_times >= 3 ->
           Trekmap.Bots.Admiral.update_raid_report(%{report | looter_action: "Aborting, killed"})
@@ -53,9 +60,8 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLooter do
           RaidObserver.abort(station)
           {:recall, config}
 
-        not is_nil(last_total_resources) and
-          last_total_resources - total_resources < 30_000 and
-            total_resources < 500_000 ->
+        (5 < last_hit_total_resources and last_hit_total_resources < 50_000) or
+            (last_hit_total_resources < 50_000 and total_resources < 800_000) ->
           Trekmap.Bots.Admiral.update_raid_report(%{report | looter_action: "Aborting, empty"})
           diff = last_total_resources - total_resources
           Logger.info("[#{name}] Empty, last hit got #{diff}, aborting")
