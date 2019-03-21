@@ -87,7 +87,14 @@ defmodule Trekmap.Router do
         alliance_tag = if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
 
         total_resources =
-          (target.resources.dlithium + target.resources.parsteel + target.resources.thritanium)
+          (target.resources.dlithium || 0) +
+            (target.resources.parsteel || 0) +
+            (target.resources.thritanium || 0)
+
+        last_loot = (Map.get(report, :last_loot) || total_resources) - total_resources
+
+        total_resources =
+          total_resources
           |> to_string()
           |> String.graphemes()
           |> Enum.reverse()
@@ -96,9 +103,10 @@ defmodule Trekmap.Router do
           |> Enum.join()
 
         """
-        Raiding #{alliance_tag}#{target.player.name} (#{target.id})
+        Raiding #{alliance_tag}#{target.player.name} #{target.player.level} (#{target.id})
         at #{to_string(target.system.name)} / #{to_string(target.planet.name)}<br/>
-        Resources: #{total_resources} / Last Loot: #{Map.get(report, :last_loot) || 0}<br/>
+        Strength: #{target.strength}<br/>
+        Resources: #{total_resources} / Last Loot: #{last_loot}<br/>
         <br/>
         Leader: #{Map.get(report, :leader_action, "not active")}<br/>
         Looter: #{Map.get(report, :looter_action, "not active")} / \

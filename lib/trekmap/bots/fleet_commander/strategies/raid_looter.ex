@@ -73,7 +73,9 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLooter do
           {:recall, config}
 
         Station.temporary_shield_enabled?(station) ->
-          Logger.info("[#{name}] Temporary shield is enabled, waiting")
+          message = "Temporary shield is enabled, waiting"
+          Trekmap.Bots.Admiral.update_raid_report(%{report | looter_action: message})
+          Logger.info("[#{name}] #{message}")
           {{:wait, 60_000}, config}
 
         Station.shield_enabled?(station) ->

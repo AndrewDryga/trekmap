@@ -140,7 +140,7 @@ defmodule Trekmap.Bots.HiveScanner do
 
   defp player_name(%{player: player}) do
     alliance_tag = if player.alliance, do: "[#{player.alliance.tag}] ", else: ""
-    "#{alliance_tag}#{player.name}"
+    "#{alliance_tag}#{player.name} lvl #{player.level}"
   end
 
   defp location(%{system: system, coords: {x, y}}) do
