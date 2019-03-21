@@ -60,7 +60,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
   end
 
   def handle_continue(%{cargo_bay_size: cargo_bay_size, cargo_size: cargo_size}, _session, config)
-      when cargo_bay_size * 0.7 < cargo_size do
+      when cargo_bay_size * 0.9 < cargo_size do
     {:recall, config}
   end
 
