@@ -78,11 +78,11 @@ defmodule Trekmap.Bots.Admiral do
 
   @enterprise_crew_officers [
     2_520_801_863,
-    282_462_507,
-    766_809_588,
     3_155_244_352,
+    766_809_588,
+    282_462_507,
     3_923_643_019,
-    2_765_885_322,
+    2_695_272_429,
     250_991_574,
     -1,
     -1,
@@ -231,7 +231,7 @@ defmodule Trekmap.Bots.Admiral do
           max_target_level: 33,
           min_target_bounty_score: 50_000,
           skip_nearest_system?: false,
-          max_warp_distance: 29
+          max_warp_distance: 32
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
@@ -284,7 +284,7 @@ defmodule Trekmap.Bots.Admiral do
           max_target_level: 33,
           min_target_bounty_score: 50_000,
           skip_nearest_system?: false,
-          max_warp_distance: 29
+          max_warp_distance: 32
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
@@ -337,7 +337,7 @@ defmodule Trekmap.Bots.Admiral do
           max_target_level: 33,
           min_target_bounty_score: 100_000,
           skip_nearest_system?: false,
-          max_warp_distance: 29
+          max_warp_distance: 32
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
@@ -409,7 +409,7 @@ defmodule Trekmap.Bots.Admiral do
           min_target_level: 27,
           max_target_level: 30,
           skip_nearest_system?: true,
-          max_warp_distance: 29
+          max_warp_distance: 32
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
@@ -424,6 +424,59 @@ defmodule Trekmap.Bots.Admiral do
           min_targets_in_system: 1,
           min_target_level: 28,
           max_target_level: 30,
+          skip_nearest_system?: false,
+          max_warp_distance: 26
+        ]
+      }
+    }
+  end
+
+  def agressive_reputation_hunting_mission_plan do
+    %{
+      Trekmap.Me.Fleet.drydock1_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
+        [
+          ship: "Vahklas",
+          crew: @other_time_officers
+        ],
+        [
+          fraction_ids: [@fraction_klingon],
+          patrol_systems: @klingon_systems,
+          min_targets_in_system: 1,
+          min_target_level: 24,
+          max_target_level: 28,
+          skip_nearest_system?: true,
+          max_warp_distance: 23
+        ]
+      },
+      Trekmap.Me.Fleet.drydock2_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
+        [
+          ship: "North Star",
+          crew: @enterprise_crew_officers
+        ],
+        [
+          fraction_ids: [@fraction_klingon],
+          patrol_systems: @klingon_systems,
+          min_targets_in_system: 1,
+          min_target_level: 24,
+          max_target_level: 28,
+          skip_nearest_system?: true,
+          max_warp_distance: 32
+        ]
+      },
+      Trekmap.Me.Fleet.drydock3_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
+        [
+          ship: "Kumari",
+          crew: @nero_crew_officers
+        ],
+        [
+          fraction_ids: [@fraction_klingon],
+          patrol_systems: @klingon_systems,
+          min_targets_in_system: 1,
+          min_target_level: 24,
+          max_target_level: 29,
           skip_nearest_system?: false,
           max_warp_distance: 26
         ]
@@ -481,7 +534,7 @@ defmodule Trekmap.Bots.Admiral do
           min_target_level: 24,
           max_target_level: 28,
           skip_nearest_system?: true,
-          max_warp_distance: 29
+          max_warp_distance: 32
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
@@ -599,7 +652,7 @@ defmodule Trekmap.Bots.Admiral do
       Trekmap.Me.Fleet.drydock2_id() => {
         Trekmap.Bots.FleetCommander.Strategies.RaidLooter,
         [
-          ship: "Envoy 3",
+          ship: "Envoy 2",
           crew: @enterprise_crew_officers
         ],
         [
@@ -609,7 +662,7 @@ defmodule Trekmap.Bots.Admiral do
       Trekmap.Me.Fleet.drydock3_id() => {
         Trekmap.Bots.FleetCommander.Strategies.RaidLooter,
         [
-          ship: "Envoy 2",
+          ship: "Horizon",
           crew: @raid_transport_officers
         ],
         [
