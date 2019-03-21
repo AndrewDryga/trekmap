@@ -63,8 +63,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLooter do
         (5 < last_hit_total_resources and last_hit_total_resources < 50_000) or
             (last_hit_total_resources < 50_000 and total_resources < 800_000) ->
           Trekmap.Bots.Admiral.update_raid_report(%{report | looter_action: "Aborting, empty"})
-          diff = last_total_resources - total_resources
-          Logger.info("[#{name}] Empty, last hit got #{diff}, aborting")
+          Logger.info("[#{name}] Empty, last hit got #{last_hit_total_resources}, aborting")
           RaidObserver.abort(station)
           {:recall, config}
 
