@@ -36,14 +36,15 @@ defmodule Trekmap.Galaxy.Spacecraft do
     %{
       "ID" => id,
       "Player" => [player_external_id],
-      "System" => [system_external_id]
+      "System" => [system_external_id],
+      "System ID" => [system_id]
     } = fields
 
     %__MODULE__{
       id: id,
       external_id: external_id,
       player: {:unfetched, Trekmap.Galaxy.Player, player_external_id},
-      system: {:unfetched, Trekmap.Galaxy.System, system_external_id},
+      system: {:unfetched, Trekmap.Galaxy.System, system_external_id, system_id},
       strength: Map.get(fields, "Strength"),
       bounty_score: Map.get(fields, "Bounty Score")
     }

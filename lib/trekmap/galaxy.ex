@@ -156,6 +156,70 @@ defmodule Trekmap.Galaxy do
     end
   end
 
+  def fetch_hunting_system_ids! do
+    {:ok, target_system_ids} = list_systems_with_target_startships()
+    {:ok, mining_system_ids} = list_systems_with_valuable_resouces()
+    legacy_system_ids = list_system_ids_with_g2_g3_resources()
+
+    Enum.uniq(target_system_ids ++ mining_system_ids ++ legacy_system_ids)
+  end
+
+  def list_systems_with_target_startships do
+    formula =
+      "AND(" <>
+        "{Relation} != 'Ally', " <>
+        "{Relation} != 'NAP', " <>
+        "{In Prohibited System} = 0," <>
+        "{Last Updated} <= '3600', " <>
+        "OR({Bounty Score} > 0, {Relation} = 'Enemy')" <>
+        ")"
+
+    query_params = %{
+      "maxRecords" => 500,
+      "filterByFormula" => formula,
+      "sort[0][field]" => "Bounty Score",
+      "sort[0][direction]" => "desc"
+    }
+
+    with {:ok, targets} when targets != [] <-
+           Trekmap.AirDB.list(Trekmap.Galaxy.Spacecraft, query_params) do
+      system_ids =
+        targets
+        |> Enum.map(fn %{system: {:unfetched, _, _, system_id}} ->
+          String.to_integer(system_id)
+        end)
+        |> Enum.uniq()
+
+      {:ok, system_ids}
+    end
+  end
+
+  def list_systems_with_valuable_resouces do
+    formula =
+      "OR(" <>
+        "SEARCH({Resources}, \"Gas\")," <>
+        "SEARCH({Resources}, \"Crystal\")," <>
+        "SEARCH({Resources}, \"Ore\")" <>
+        ")"
+
+    query_params = %{
+      "maxRecords" => 500,
+      "filterByFormula" => formula,
+      "sort[0][field]" => "Level",
+      "sort[0][direction]" => "desc"
+    }
+
+    with {:ok, systems} when systems != [] <-
+           Trekmap.AirDB.list(Trekmap.Galaxy.System, query_params) do
+      system_ids =
+        systems
+        |> Enum.map(& &1.id)
+        |> Enum.uniq()
+
+      {:ok, system_ids}
+    end
+  end
+
   def list_system_ids_with_g2_g3_resources do
     [
       # # Dlith,

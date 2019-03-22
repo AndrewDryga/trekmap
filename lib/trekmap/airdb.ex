@@ -90,6 +90,10 @@ defmodule Trekmap.AirDB do
     |> List.wrap()
     |> Enum.reduce(struct, fn field, struct ->
       case Map.fetch!(struct, field) do
+        {:unfetched, schema, external_id, _id} ->
+          {:ok, value} = fetch_by_external_id(schema, external_id)
+          Map.put(struct, field, value)
+
         {:unfetched, schema, external_id} ->
           {:ok, value} = fetch_by_external_id(schema, external_id)
           Map.put(struct, field, value)

@@ -209,7 +209,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @other_time_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
           min_targets_in_system: 1,
           min_target_level: 19,
           max_target_level: 33,
@@ -225,7 +225,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @enterprise_crew_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
           min_targets_in_system: 1,
           min_target_level: 19,
           max_target_level: 33,
@@ -241,7 +241,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @nero_crew_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
           min_targets_in_system: 2,
           min_target_level: 19,
           max_target_level: 33,
@@ -262,7 +262,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @other_time_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
           min_targets_in_system: 1,
           min_target_level: 19,
           max_target_level: 33,
@@ -278,7 +278,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @enterprise_crew_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
           min_targets_in_system: 1,
           min_target_level: 19,
           max_target_level: 33,
@@ -294,7 +294,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @nero_crew_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
           min_targets_in_system: 1,
           min_target_level: 19,
           max_target_level: 33,
@@ -315,7 +315,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @other_time_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
           min_targets_in_system: 1,
           min_target_level: 19,
           max_target_level: 33,
@@ -331,7 +331,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @enterprise_crew_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
           min_targets_in_system: 1,
           min_target_level: 19,
           max_target_level: 33,
@@ -383,7 +383,7 @@ defmodule Trekmap.Bots.Admiral do
               crew: @other_time_officers
             ],
             [
-              patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+              patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
               min_targets_in_system: 1,
               min_target_level: 19,
               max_target_level: 33,
@@ -508,7 +508,7 @@ defmodule Trekmap.Bots.Admiral do
               crew: @other_time_officers
             ],
             [
-              patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+              patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
               min_targets_in_system: 1,
               min_target_level: 19,
               max_target_level: 33,
@@ -565,7 +565,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @other_time_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
           min_targets_in_system: 1,
           min_target_level: 19,
           max_target_level: 33,
@@ -592,7 +592,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @nero_crew_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.list_system_ids_with_g2_g3_resources(),
+          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
           min_targets_in_system: 2,
           min_target_level: 19,
           max_target_level: 33,
