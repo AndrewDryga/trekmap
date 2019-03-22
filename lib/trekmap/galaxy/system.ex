@@ -8,7 +8,8 @@ defmodule Trekmap.Galaxy.System do
     defstruct system: nil,
               spacecrafts: [],
               stations: [],
-              hostiles: []
+              hostiles: [],
+              resources: []
   end
 
   @behaviour Trekmap.AirDB
@@ -20,7 +21,8 @@ defmodule Trekmap.Galaxy.System do
             external_id: nil,
             name: nil,
             fraction: nil,
-            level: nil
+            level: nil,
+            resources: []
 
   def build(id, name) do
     %__MODULE__{
@@ -32,9 +34,9 @@ defmodule Trekmap.Galaxy.System do
   def table_name, do: "Systems"
 
   def struct_to_record(%__MODULE__{} = system) do
-    %{id: id, level: level, name: name, fraction: fraction} = system
+    %{id: id, level: level, name: name, fraction: fraction, resources: resources} = system
 
-    %{"ID" => to_string(id), "Name" => name}
+    %{"ID" => to_string(id), "Name" => name, "Resources" => resources}
     |> put_if_not_nil("Fraction", fraction)
     |> put_if_not_nil("Level", level)
   end
@@ -47,6 +49,7 @@ defmodule Trekmap.Galaxy.System do
       level: Map.get(fields, "Level"),
       name: name,
       fraction: Map.get(fields, "Fraction"),
+      resources: Map.get(fields, "Resources"),
       external_id: external_id
     }
   end
@@ -75,6 +78,9 @@ defmodule Trekmap.Galaxy.System do
             Map.merge(acc, children)
         end)
 
+      resources = build_resources_list(mining_slots)
+      system = %{system | resources: resources}
+
       stations = build_stations_list(system, player_container, system_static_children)
       spacecrafts = build_spacecrafts_list(system, mining_slots, deployed_fleets)
       marauders = build_marauders_list(marauders, deployed_fleets, system)
@@ -84,7 +90,8 @@ defmodule Trekmap.Galaxy.System do
          system: system,
          stations: stations,
          spacecrafts: spacecrafts,
-         hostiles: marauders
+         hostiles: marauders,
+         resources: resources
        }}
     else
       {:error, %{body: "deployment", type: 1}} ->
@@ -129,6 +136,18 @@ defmodule Trekmap.Galaxy.System do
         error ->
           {:halt, error}
       end
+    end)
+  end
+
+  defp build_resources_list(mining_slots) do
+    Enum.flat_map(mining_slots, fn {_node_id, [mining_slot | _]} ->
+      %{"point_data" => %{"res" => resource_id}} = mining_slot
+      [resource_id]
+    end)
+    |> Enum.uniq()
+    |> Enum.map(fn resource_id ->
+      {name, _score} = Trekmap.Products.get_resource_name_and_value_score(resource_id)
+      name
     end)
   end
 

@@ -71,11 +71,15 @@ defmodule Trekmap.Bots.GalaxyScanner do
          {:ok, scan} <-
            Trekmap.Galaxy.System.enrich_stations_with_detailed_scan(scan, session),
          stations = scan.stations,
-         {:ok, stations} <- sync_stations(system, stations) do
-      # {:ok, miners} <- sync_miners(system, miners) do
+         miners = scan.miners,
+         {:ok, stations} <- sync_stations(system, stations),
+         {:ok, miners} <- sync_miners(system, miners) do
+      if system.resources == [],
+        do: Trekmap.AirDB.create_or_update(%{system | resources: scan.resources})
+
       Logger.debug(
-        "[Galaxy Scanner] Scanning #{system.name}: updated #{length(stations)} stations "
-        # <> "and #{length(miners)} miners"
+        "[Galaxy Scanner] Scanning #{system.name}: updated #{length(stations)} stations " <>
+          "and #{length(miners)} miners"
       )
 
       system
@@ -139,24 +143,40 @@ defmodule Trekmap.Bots.GalaxyScanner do
     end
   end
 
-  # defp sync_miners(system, miners) do
-  #   miners
-  #   |> Enum.reduce_while({:ok, []}, fn miner, {status, acc} ->
-  #     if miner.player.level < 15 do
-  #       {:cont, {status, acc}}
-  #     else
-  #       with {:ok, player} <- sync_player(miner.player),
-  #            miner = %{miner | player: player},
-  #            {:ok, miner} <- Trekmap.AirDB.create_or_update(miner) do
-  #         miner = %{miner | player: player, system: system}
-  #         {:cont, {status, [miner] ++ acc}}
-  #       else
-  #         error ->
-  #           {:halt, error}
-  #       end
-  #     end
-  #   end)
-  # end
+  defp sync_miners(system, miners) do
+    {:ok, bad_people} = Trekmap.Galaxy.Player.list_bad_people()
+    {:ok, bad_alliances} = Trekmap.Galaxy.Alliances.list_bad_alliances()
+
+    bad_people_ids = Enum.map(bad_people, & &1.id)
+    bad_alliance_tags = Enum.map(bad_alliances, & &1.tag)
+
+    miners
+    |> Enum.reduce_while({:ok, []}, fn miner, {status, acc} ->
+      bad_person? = miner.player.id in bad_people_ids
+
+      bad_alliance? =
+        not is_nil(miner.player.alliance) and miner.player.alliance.tag in bad_alliance_tags
+
+      cond do
+        miner.player.level <= 15 ->
+          {:cont, {status, acc}}
+
+        bad_person? or bad_alliance? ->
+          with {:ok, player} <- sync_player(miner.player),
+               miner = %{miner | player: player},
+               {:ok, miner} <- Trekmap.AirDB.create_or_update(miner) do
+            miner = %{miner | player: player, system: system}
+            {:cont, {status, [miner] ++ acc}}
+          else
+            error ->
+              {:halt, error}
+          end
+
+        true ->
+          {:cont, {status, acc}}
+      end
+    end)
+  end
 
   defp sync_player(%{alliance: nil} = player) do
     Trekmap.AirDB.create_or_update(player)
