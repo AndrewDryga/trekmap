@@ -22,7 +22,7 @@ defmodule Trekmap.Galaxy.System do
             name: nil,
             fraction: nil,
             level: nil,
-            resources: []
+            resources: nil
 
   def build(id, name) do
     %__MODULE__{
@@ -36,9 +36,10 @@ defmodule Trekmap.Galaxy.System do
   def struct_to_record(%__MODULE__{} = system) do
     %{id: id, level: level, name: name, fraction: fraction, resources: resources} = system
 
-    %{"ID" => to_string(id), "Name" => name, "Resources" => resources}
+    %{"ID" => to_string(id), "Name" => name}
     |> put_if_not_nil("Fraction", fraction)
     |> put_if_not_nil("Level", level)
+    |> put_if_not_nil("Resources", resources)
   end
 
   def record_to_struct(%{"id" => external_id, "fields" => fields}) do

@@ -71,15 +71,15 @@ defmodule Trekmap.Bots.GalaxyScanner do
          {:ok, scan} <-
            Trekmap.Galaxy.System.enrich_stations_with_detailed_scan(scan, session),
          stations = scan.stations,
-         miners = scan.miners,
+         spacecrafts = scan.spacecrafts,
          {:ok, stations} <- sync_stations(system, stations),
-         {:ok, miners} <- sync_miners(system, miners) do
-      if system.resources == [],
+         {:ok, spacecrafts} <- sync_spacecrafts(system, spacecrafts) do
+      if is_nil(system.resources),
         do: Trekmap.AirDB.create_or_update(%{system | resources: scan.resources})
 
       Logger.debug(
         "[Galaxy Scanner] Scanning #{system.name}: updated #{length(stations)} stations " <>
-          "and #{length(miners)} miners"
+          "and #{length(spacecrafts)} spacecrafts"
       )
 
       system
@@ -143,14 +143,14 @@ defmodule Trekmap.Bots.GalaxyScanner do
     end
   end
 
-  defp sync_miners(system, miners) do
+  defp sync_spacecrafts(system, spacecrafts) do
     {:ok, bad_people} = Trekmap.Galaxy.Player.list_bad_people()
     {:ok, bad_alliances} = Trekmap.Galaxy.Alliances.list_bad_alliances()
 
     bad_people_ids = Enum.map(bad_people, & &1.id)
     bad_alliance_tags = Enum.map(bad_alliances, & &1.tag)
 
-    miners
+    spacecrafts
     |> Enum.reduce_while({:ok, []}, fn miner, {status, acc} ->
       bad_person? = miner.player.id in bad_people_ids
 
