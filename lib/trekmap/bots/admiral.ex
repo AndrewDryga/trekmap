@@ -242,7 +242,7 @@ defmodule Trekmap.Bots.Admiral do
         ],
         [
           patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
-          min_targets_in_system: 2,
+          min_targets_in_system: 3,
           min_target_level: 19,
           max_target_level: 33,
           min_target_bounty_score: 2_000,
