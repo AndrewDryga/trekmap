@@ -146,9 +146,10 @@ defmodule Trekmap.Bots.GalaxyScanner do
   defp sync_spacecrafts(system, spacecrafts) do
     {:ok, bad_people} = Trekmap.Galaxy.Player.list_bad_people()
     {:ok, bad_alliances} = Trekmap.Galaxy.Alliances.list_bad_alliances()
+    {:ok, enemies} = Trekmap.Galaxy.Alliances.list_enemies()
 
     bad_people_ids = Enum.map(bad_people, & &1.id)
-    bad_alliance_tags = Enum.map(bad_alliances, & &1.tag)
+    bad_alliance_tags = Enum.map(bad_alliances, & &1.tag) ++ Enum.map(enemies, & &1.tag)
 
     spacecrafts
     |> Enum.reduce_while({:ok, []}, fn miner, {status, acc} ->
