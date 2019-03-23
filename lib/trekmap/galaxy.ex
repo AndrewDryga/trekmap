@@ -164,6 +164,43 @@ defmodule Trekmap.Galaxy do
     Enum.uniq(target_system_ids ++ mining_system_ids ++ legacy_system_ids)
   end
 
+  def list_systems_with_enemy_stations do
+    formula =
+      "AND(" <>
+        "{In Prohibited System} = 0," <>
+        "OR(" <>
+        "AND(" <>
+        "{Relation} != 'Ally', " <>
+        "{Relation} != 'NAP', " <>
+        "{Relation} != 'NSA', " <>
+        "{Total Weighted} >= '15000000'," <>
+        "19 <= {Level}, {Level} <= 26, " <>
+        "{Strength} <= 500000" <>
+        ")," <>
+        "{Relation} = 'Enemy'" <>
+        "))"
+
+    query_params = %{
+      "maxRecords" => 500,
+      "filterByFormula" => formula,
+      "sort[0][field]" => "Profitability",
+      "sort[0][direction]" => "desc"
+    }
+
+    with {:ok, targets} when targets != [] <-
+           Trekmap.AirDB.list(Trekmap.Galaxy.System.Station, query_params) do
+      system_ids =
+        targets
+        |> Enum.map(fn %{system: {:unfetched, _, _, system_id}} ->
+          String.to_integer(system_id)
+        end)
+        |> Enum.group_by(& &1)
+        |> Enum.map(fn {id, entries} -> {id, length(entries)} end)
+
+      {:ok, system_ids}
+    end
+  end
+
   def list_systems_with_target_startships do
     formula =
       "AND(" <>

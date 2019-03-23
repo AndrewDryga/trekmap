@@ -59,7 +59,8 @@ defmodule Trekmap.Galaxy.System.Station do
       "ID" => id,
       "Player" => [player_external_id],
       "Planet" => [planet_external_id],
-      "System" => [system_id]
+      "System" => [system_external_id],
+      "System ID" => system_id
     } = fields
 
     %__MODULE__{
@@ -76,7 +77,7 @@ defmodule Trekmap.Galaxy.System.Station do
       station_strength: Map.get(fields, "Station Strength"),
       hull_health: Map.get(fields, "Station Health"),
       defense_platform_hull_health: Map.get(fields, "Defence Health"),
-      system: {:unfetched, Trekmap.Galaxy.System, system_id},
+      system: {:unfetched, Trekmap.Galaxy.System, system_external_id, system_id},
       shield_triggered_at: Map.get(fields, "Shield Enabled At"),
       shield_expires_at: Map.get(fields, "Shield Ends At")
     }

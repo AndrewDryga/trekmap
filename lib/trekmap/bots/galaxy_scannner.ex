@@ -45,9 +45,21 @@ defmodule Trekmap.Bots.GalaxyScanner do
   end
 
   def scan_galaxy(session, systems) do
+    {:ok, systems_with_weight} = Trekmap.Galaxy.list_systems_with_enemy_stations()
+
     systems =
       systems
       |> Enum.shuffle()
+      |> Enum.sort_by(
+        fn system ->
+          Enum.find_value(systems_with_weight, 0, fn {id, weight} ->
+            if id == system.id do
+              weight
+            end
+          end)
+        end,
+        &>=/2
+      )
       |> Task.async_stream(&scan_and_sync_system(&1, session),
         max_concurrency: 15,
         timeout: :infinity
