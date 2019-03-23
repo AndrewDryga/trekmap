@@ -17,7 +17,7 @@ defmodule Trekmap.Products do
     {"Raw Gas **", 2, :raw, 96_209_859},
     {"Raw Gas ***", 3, :raw, 1_779_416_627},
     {"Raw Ore **", 2, :raw, 1_908_242_242},
-    {"Raw Ore ***", 3, :raw, 84_292_608},
+    {"Raw Ore ***", 4, :raw, 84_292_608},
     {"Raw Crystal **", 2, :raw, 1_371_898_528},
     {"Raw Crystal ***", 3, :raw, 680_796_905}
   ]
