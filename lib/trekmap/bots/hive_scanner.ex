@@ -11,11 +11,13 @@ defmodule Trekmap.Bots.HiveScanner do
     {:ok, allies} = Trekmap.Galaxy.Alliances.list_allies()
     {:ok, enemies} = Trekmap.Galaxy.Alliances.list_enemies()
     {:ok, kos} = Trekmap.Galaxy.Alliances.list_kos_in_hive()
+    {:ok, bad_people} = Trekmap.Galaxy.Player.list_bad_people()
     hive_system = Trekmap.Me.get_system(session.hive_system_id, session)
 
     allies = Enum.map(allies, & &1.tag)
     enemies = Enum.map(enemies, & &1.tag)
     kos = Enum.map(kos, & &1.tag)
+    bad_people_ids = Enum.map(bad_people, & &1.id)
 
     {:ok,
      %{
@@ -23,6 +25,7 @@ defmodule Trekmap.Bots.HiveScanner do
        session: session,
        allies: allies,
        enemies: enemies,
+       bad_people_ids: bad_people_ids,
        kos: kos,
        last_scan: nil,
        under_attack: []
@@ -51,6 +54,7 @@ defmodule Trekmap.Bots.HiveScanner do
       allies: allies,
       enemies: enemies,
       kos: kos,
+      bad_people_ids: bad_people_ids,
       last_scan: last_scan,
       under_attack: under_attack
     } = state
@@ -71,7 +75,7 @@ defmodule Trekmap.Bots.HiveScanner do
                  "@everyone")
               |> Trekmap.Discord.send_message()
 
-            kos?(spacecraft, kos) ->
+            kos?(spacecraft, kos) or bad_guy?(spacecraft, bad_people_ids) ->
               ("**KOS #{player_name(spacecraft)} #{startship_action(action, spacecraft)}**. " <>
                  "@everyone")
               |> Trekmap.Discord.send_message()
@@ -112,7 +116,7 @@ defmodule Trekmap.Bots.HiveScanner do
               "**Enemy #{player_name(station)} #{station_action(action, station)}**. @everyone"
               |> Trekmap.Discord.send_message()
 
-            kos?(station, kos) ->
+            kos?(station, kos) or bad_guy?(station, bad_people_ids) ->
               "**KOS #{player_name(station)} #{station_action(action, station)}**. @everyone"
               |> Trekmap.Discord.send_message()
 
@@ -149,6 +153,10 @@ defmodule Trekmap.Bots.HiveScanner do
 
   defp location(%{system: system, planet: planet}) do
     "`[S:#{system.id}]` planet #{planet.name}"
+  end
+
+  defp bad_guy?(station_or_spacecraft, bad_people_ids) do
+    station_or_spacecraft.player.id in bad_people_ids
   end
 
   defp enemy?(station_or_spacecraft, enemies) do
