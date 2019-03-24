@@ -121,10 +121,9 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
   end
 
   defp should_kill?(miner, enemies, bad_people_ids) do
-    overcargo? = not is_nil(miner.bounty_score) and miner.bounty_score > 1
-
-    enemy? = if miner.player.alliance, do: miner.player.alliance.tag in enemies, else: false
-    should_suffer? = miner.player.id in bad_people_ids and overcargo?
+    has_alliance? = not is_nil(miner.player.alliance)
+    enemy? = if has_alliance?, do: miner.player.alliance.tag in enemies, else: false
+    should_suffer? = miner.player.id in bad_people_ids
 
     enemy? or should_suffer?
   end
