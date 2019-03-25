@@ -210,8 +210,8 @@ defmodule Trekmap.Galaxy.System.Station do
         "OR(" <>
         "AND(" <>
         "{Total Weighted} >= '3000000'," <>
-        "19 <= {Level}, {Level} <= 21, " <>
-        "{Strength} <= 200000" <>
+        "19 <= {Level}, {Level} <= 23, " <>
+        "{Strength} <= 240000" <>
         ")," <>
         "AND(" <>
         "{Total Weighted} >= '800000', " <>
