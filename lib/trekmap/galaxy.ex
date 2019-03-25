@@ -158,11 +158,11 @@ defmodule Trekmap.Galaxy do
 
   def fetch_hunting_system_ids!(opts \\ []) do
     target_system_ids =
-      if Keyword.fetch!(opts, :skip) == :enemy_starship_locations do
+      if Keyword.get(opts, :skip) == :enemy_starship_locations do
+        []
+      else
         {:ok, target_system_ids} = list_systems_with_target_startships()
         target_system_ids
-      else
-        []
       end
 
     {:ok, mining_system_ids} = list_systems_with_valuable_resouces()
