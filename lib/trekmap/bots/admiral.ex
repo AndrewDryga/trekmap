@@ -262,7 +262,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @other_time_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
+          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(grade: "***"),
           min_targets_in_system: 1,
           min_target_level: 19,
           max_target_level: 33,
@@ -278,7 +278,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @enterprise_crew_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
+          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(grade: "***"),
           min_targets_in_system: 1,
           min_target_level: 19,
           max_target_level: 33,
@@ -294,7 +294,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @nero_crew_officers
         ],
         [
-          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
+          patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(grade: "***"),
           min_targets_in_system: 2,
           min_target_level: 19,
           max_target_level: 33,
@@ -443,7 +443,7 @@ defmodule Trekmap.Bots.Admiral do
           fraction_ids: [@fraction_klingon],
           patrol_systems: @klingon_systems,
           min_targets_in_system: 1,
-          min_target_level: 24,
+          min_target_level: 25,
           max_target_level: 28,
           skip_nearest_system?: true,
           max_warp_distance: 23
@@ -459,7 +459,7 @@ defmodule Trekmap.Bots.Admiral do
           fraction_ids: [@fraction_klingon],
           patrol_systems: @klingon_systems,
           min_targets_in_system: 1,
-          min_target_level: 24,
+          min_target_level: 25,
           max_target_level: 28,
           skip_nearest_system?: true,
           max_warp_distance: 32
@@ -475,7 +475,7 @@ defmodule Trekmap.Bots.Admiral do
           fraction_ids: [@fraction_klingon],
           patrol_systems: @klingon_systems,
           min_targets_in_system: 1,
-          min_target_level: 24,
+          min_target_level: 26,
           max_target_level: 29,
           skip_nearest_system?: false,
           max_warp_distance: 26
@@ -512,7 +512,7 @@ defmodule Trekmap.Bots.Admiral do
               min_targets_in_system: 1,
               min_target_level: 19,
               max_target_level: 33,
-              min_target_bounty_score: 85_000,
+              min_target_bounty_score: 50_000,
               skip_nearest_system?: true,
               max_warp_distance: 23
             ]
@@ -531,7 +531,7 @@ defmodule Trekmap.Bots.Admiral do
           fraction_ids: [@fraction_klingon],
           patrol_systems: @klingon_systems,
           min_targets_in_system: 1,
-          min_target_level: 24,
+          min_target_level: 25,
           max_target_level: 28,
           skip_nearest_system?: true,
           max_warp_distance: 32
@@ -547,7 +547,7 @@ defmodule Trekmap.Bots.Admiral do
           fraction_ids: [@fraction_klingon],
           patrol_systems: @klingon_systems,
           min_targets_in_system: 1,
-          min_target_level: 24,
+          min_target_level: 26,
           max_target_level: 28,
           skip_nearest_system?: false,
           max_warp_distance: 26

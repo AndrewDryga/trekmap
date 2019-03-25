@@ -157,18 +157,20 @@ defmodule Trekmap.Galaxy do
   end
 
   def fetch_hunting_system_ids!(opts \\ []) do
+    grade = Keyword.get(opts, :grade, "***")
+    skip_enemy_systems? = Keyword.get(opts, :skip) == :enemy_starship_locations
+
     target_system_ids =
-      if Keyword.get(opts, :skip) == :enemy_starship_locations do
+      if skip_enemy_systems? do
         []
       else
         {:ok, target_system_ids} = list_systems_with_target_startships()
         target_system_ids
       end
 
-    {:ok, mining_system_ids} = list_systems_with_valuable_resouces()
-    legacy_system_ids = list_system_ids_with_g2_g3_resources()
+    {:ok, mining_system_ids} = list_systems_with_valuable_resouces(grade)
 
-    Enum.uniq(target_system_ids ++ mining_system_ids ++ legacy_system_ids)
+    Enum.uniq(target_system_ids ++ mining_system_ids)
   end
 
   def list_systems_with_enemy_stations do
@@ -238,19 +240,12 @@ defmodule Trekmap.Galaxy do
     end
   end
 
-  def list_systems_with_valuable_resouces do
-    formula =
-      "OR(" <>
-        "SEARCH({Resources}, \"Gas\")," <>
-        "SEARCH({Resources}, \"Crystal\")," <>
-        "SEARCH({Resources}, \"Ore\")" <>
-        ")"
+  def list_systems_with_valuable_resouces(grade \\ "**") do
+    formula = "SEARCH(\"#{grade}\", {Resources})"
 
     query_params = %{
       "maxRecords" => 500,
-      "filterByFormula" => formula,
-      "sort[0][field]" => "Level",
-      "sort[0][direction]" => "desc"
+      "filterByFormula" => formula
     }
 
     with {:ok, systems} when systems != [] <-
@@ -262,54 +257,5 @@ defmodule Trekmap.Galaxy do
 
       {:ok, system_ids}
     end
-  end
-
-  def list_system_ids_with_g2_g3_resources do
-    [
-      # # Dlith,
-      # 958_423_648,
-      # 1_017_582_787,
-      # 218_039_082,
-      # 2** raw
-      81250,
-      83345,
-      81459,
-      81497,
-      81286,
-      81354,
-      601_072_182,
-      1_854_874_708,
-      1_718_038_036,
-      849_541_812,
-      1_790_049_115,
-      1_462_287_177,
-      1_083_794_899,
-      1_490_914_183,
-      1_745_143_614,
-      1_203_174_739,
-      959_318_428,
-      # 3** raw
-      830_770_182,
-      1_133_522_720,
-      2_102_605_227,
-      1_747_858_074,
-      625_581_925,
-      186_798_495,
-      1_691_252_927,
-      717_782_925,
-      955_177_926,
-      739_609_161,
-      1_744_652_289,
-      1_735_899_624,
-      # 3** raw long warp
-      1_016_428_829,
-      579_218_493,
-      468_245_102,
-      516_359_977,
-      634_286_176,
-      1_057_703_933,
-      1_342_058_302
-    ]
-    |> Enum.uniq()
   end
 end
