@@ -156,8 +156,15 @@ defmodule Trekmap.Galaxy do
     end
   end
 
-  def fetch_hunting_system_ids! do
-    {:ok, target_system_ids} = list_systems_with_target_startships()
+  def fetch_hunting_system_ids!(opts \\ []) do
+    target_system_ids =
+      if Keyword.fetch!(opts, :skip) == :enemy_starship_locations do
+        {:ok, target_system_ids} = list_systems_with_target_startships()
+        target_system_ids
+      else
+        []
+      end
+
     {:ok, mining_system_ids} = list_systems_with_valuable_resouces()
     legacy_system_ids = list_system_ids_with_g2_g3_resources()
 

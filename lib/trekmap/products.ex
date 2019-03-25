@@ -19,7 +19,7 @@ defmodule Trekmap.Products do
     {"Raw Ore **", 2, :raw, 1_908_242_242},
     {"Raw Ore ***", 4, :raw, 84_292_608},
     {"Raw Crystal **", 2, :raw, 1_371_898_528},
-    {"Raw Crystal ***", 3, :raw, 680_796_905}
+    {"Raw Crystal ***", 4, :raw, 680_796_905}
   ]
 
   for {name, level, _type, id} <- @refined_resources do
