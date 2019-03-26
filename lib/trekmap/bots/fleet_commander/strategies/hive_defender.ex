@@ -104,26 +104,26 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
     end
   end
 
-  def ally?(miner, allies) do
-    if miner.player.alliance, do: miner.player.alliance.tag in allies, else: false
+  def ally?(ship, allies) do
+    if ship.player.alliance, do: ship.player.alliance.tag in allies, else: false
   end
 
-  defp can_kill?(miner, fleet) do
+  defp can_kill?(ship, fleet) do
     if is_nil(fleet.strength) do
-      miner.strength < 140_000
+      ship.strength < 250_000
     else
-      miner.strength < fleet.strength
+      ship.strength < fleet.strength
     end
   end
 
-  defp can_attack?(miner, min_target_level, max_target_level) do
-    min_target_level <= miner.player.level and miner.player.level <= max_target_level
+  defp can_attack?(ship, min_target_level, max_target_level) do
+    min_target_level <= ship.player.level and ship.player.level <= max_target_level
   end
 
-  defp should_kill?(miner, enemies, bad_people_ids) do
-    has_alliance? = not is_nil(miner.player.alliance)
-    enemy? = if has_alliance?, do: miner.player.alliance.tag in enemies, else: false
-    should_suffer? = miner.player.id in bad_people_ids
+  defp should_kill?(ship, enemies, bad_people_ids) do
+    has_alliance? = not is_nil(ship.player.alliance)
+    enemy? = if has_alliance?, do: ship.player.alliance.tag in enemies, else: false
+    should_suffer? = ship.player.id in bad_people_ids
 
     enemy? or should_suffer?
   end

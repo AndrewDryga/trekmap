@@ -123,10 +123,10 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.Punisher do
     } = config
 
     with {:ok, scan} <- Trekmap.Galaxy.System.scan_system(system, session),
-         {:ok, %{spacecrafts: miners}} <-
+         {:ok, %{spacecrafts: ships}} <-
            Trekmap.Galaxy.System.enrich_stations_and_spacecrafts(scan, session) do
       targets =
-        miners
+        ships
         |> Enum.reject(&ally?(&1, allies))
         |> Enum.filter(&can_kill?(&1, fleet))
         |> Enum.filter(&can_attack?(&1, min_target_level, max_target_level))
@@ -174,31 +174,31 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.Punisher do
     nearby_system_with_targets
   end
 
-  def ally?(miner, allies) do
-    if miner.player.alliance, do: miner.player.alliance.tag in allies, else: false
+  def ally?(ship, allies) do
+    if ship.player.alliance, do: ship.player.alliance.tag in allies, else: false
   end
 
-  defp can_kill?(miner, fleet) do
+  defp can_kill?(ship, fleet) do
     cond do
-      is_nil(fleet.strength) -> miner.strength < 80_000
-      not is_nil(miner.strength) -> miner.strength * 1.2 < fleet.strength
+      is_nil(fleet.strength) -> ship.strength < 240_000
+      not is_nil(ship.strength) -> ship.strength < fleet.strength
       true -> false
     end
   end
 
-  defp can_attack?(miner, min_target_level, max_target_level) do
-    min_target_level <= miner.player.level and miner.player.level <= max_target_level
+  defp can_attack?(ship, min_target_level, max_target_level) do
+    min_target_level <= ship.player.level and ship.player.level <= max_target_level
   end
 
-  defp should_kill?(miner, enemies, bad_alliances, bad_people_ids) do
-    overcargo? = not is_nil(miner.bounty_score) and miner.bounty_score > 1
+  defp should_kill?(ship, enemies, bad_alliances, bad_people_ids) do
+    overcargo? = not is_nil(ship.bounty_score) and ship.bounty_score > 1
 
     bad_alliance? =
-      if miner.player.alliance, do: miner.player.alliance.tag in bad_alliances, else: false
+      if ship.player.alliance, do: ship.player.alliance.tag in bad_alliances, else: false
 
-    bad_person? = miner.player.id in bad_people_ids
+    bad_person? = ship.player.id in bad_people_ids
 
-    enemy? = if miner.player.alliance, do: miner.player.alliance.tag in enemies, else: false
+    enemy? = if ship.player.alliance, do: ship.player.alliance.tag in enemies, else: false
 
     enemy? or ((bad_person? or bad_alliance?) and overcargo?)
   end
