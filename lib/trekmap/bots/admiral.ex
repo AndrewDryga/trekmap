@@ -205,7 +205,7 @@ defmodule Trekmap.Bots.Admiral do
       Trekmap.Me.Fleet.drydock1_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
-          ship: "Vahklas",
+          ship: "Horizon",
           crew: @other_time_officers
         ],
         [
