@@ -605,7 +605,7 @@ defmodule Trekmap.Bots.Admiral do
   end
 
   def blockade_mission_plan(target_station) do
-    if target_station.player.level > 26 do
+    if target_station.player.level < 27 do
       %{
         Trekmap.Me.Fleet.drydock1_id() => {
           Trekmap.Bots.FleetCommander.Strategies.StationDefender,
