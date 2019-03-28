@@ -20,7 +20,8 @@ defmodule Trekmap.Me.Job.Speedup do
     {300, 5, 1_827_073_923},
     {900, 8, 821_696_896},
     # {1800, 12, 3_097_592_274},
-    {3600, 15, 3_586_919_025}
+    {3600, 15, 3_586_919_025},
+    {10800, 30, 1_108_300_794}
   ]
 
   def get_station_repair_token do
@@ -115,7 +116,7 @@ defmodule Trekmap.Me.Job.Speedup do
     end
   end
 
-  defp buy_resources(resource_id, session) do
+  def buy_resources(resource_id, session) do
     additional_headers = Session.session_headers(session)
 
     body =
