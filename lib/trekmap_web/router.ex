@@ -150,6 +150,7 @@ defmodule Trekmap.Router do
         - <a href="/set_klingon_hunting">Hunt Klingons 28+ and Defend Hive</a><br/>
         - <a href="/set_reputation_hunting">Hunt Klingons 28- and Defend Hive</a><br/>
         - <a href="/set_agressive_reputation_hunting">Hunt Klingons 29-</a><br/>
+        - <a href="/set_elite_reputation_hunting">Hunt Klingons Elite-</a><br/>
         - <a href="/set_raid_mission">Raiding</a><br/>
         <br/><br/>
         Raid: <br/>
@@ -269,6 +270,15 @@ defmodule Trekmap.Router do
 
   get "/set_agressive_reputation_hunting" do
     mission_plan = Trekmap.Bots.Admiral.agressive_reputation_hunting_mission_plan()
+    Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
+
+    conn
+    |> put_resp_header("location", "/")
+    |> send_resp(302, "")
+  end
+
+  get "/set_elite_reputation_hunting" do
+    mission_plan = Trekmap.Bots.Admiral.agressive_elite_reputation_hunting_mission_plan()
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn

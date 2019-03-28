@@ -3,6 +3,7 @@ defmodule Trekmap.Bots.Admiral do
   require Logger
 
   @fraction_klingon 4_153_667_145
+  @fraction_neutral_or_elite -1
 
   @klingon_systems [
                      1_984_126_753,
@@ -42,6 +43,8 @@ defmodule Trekmap.Bots.Admiral do
                      477_613_271
                    ]
                    |> Enum.uniq()
+
+  @klingon_elite_systems [395_344_716, 1_090_722_450]
 
   @high_lvl_klingon_systems [
                               1_926_261_734,
@@ -424,6 +427,59 @@ defmodule Trekmap.Bots.Admiral do
           min_targets_in_system: 1,
           min_target_level: 28,
           max_target_level: 30,
+          skip_nearest_system?: false,
+          max_warp_distance: 26
+        ]
+      }
+    }
+  end
+
+  def agressive_elite_reputation_hunting_mission_plan do
+    %{
+      Trekmap.Me.Fleet.drydock1_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
+        [
+          ship: "Vahklas",
+          crew: @other_time_officers
+        ],
+        [
+          fraction_ids: [@fraction_klingon, @fraction_neutral_or_elite],
+          patrol_systems: @klingon_elite_systems,
+          min_targets_in_system: 1,
+          min_target_level: 17,
+          max_target_level: 25,
+          skip_nearest_system?: true,
+          max_warp_distance: 23
+        ]
+      },
+      Trekmap.Me.Fleet.drydock2_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
+        [
+          ship: "North Star",
+          crew: @enterprise_crew_officers
+        ],
+        [
+          fraction_ids: [@fraction_klingon, @fraction_neutral_or_elite],
+          patrol_systems: @klingon_elite_systems,
+          min_targets_in_system: 1,
+          min_target_level: 17,
+          max_target_level: 25,
+          skip_nearest_system?: true,
+          max_warp_distance: 32
+        ]
+      },
+      Trekmap.Me.Fleet.drydock3_id() => {
+        Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
+        [
+          ship: "Kumari",
+          crew: @nero_crew_officers
+        ],
+        [
+          fraction_ids: [@fraction_klingon, @fraction_neutral_or_elite],
+          patrol_systems: @klingon_elite_systems,
+          min_targets_in_system: 1,
+          min_target_level: 17,
+          max_target_level: 25,
           skip_nearest_system?: false,
           max_warp_distance: 26
         ]
