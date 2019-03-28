@@ -176,6 +176,7 @@ defmodule Trekmap.Me.Fleet do
   defp state(0), do: :idle
   defp state(other), do: other
 
+  def ship_id("Mayflower"), do: 834_523_813_579_670_645
   def ship_id("Vahklas"), do: 818_908_769_273_857_488
   def ship_id("Kehra"), do: 809_553_354_052_421_083
   def ship_id("North Star"), do: 793_228_477_045_490_952
@@ -187,6 +188,7 @@ defmodule Trekmap.Me.Fleet do
   def ship_id("Phindra"), do: 771_326_161_581_327_453
   def ship_id("Fortunate"), do: 772_895_219_376_276_605
 
+  def ship_name(834_523_813_579_670_645), do: "Mayflower"
   def ship_name(818_908_769_273_857_488), do: "Vahklas"
   def ship_name(809_553_354_052_421_083), do: "Kehra"
   def ship_name(793_228_477_045_490_952), do: "North Star"
@@ -199,6 +201,7 @@ defmodule Trekmap.Me.Fleet do
   def ship_name(772_895_219_376_276_605), do: "Fortunate"
   def ship_name(ship_id), do: ship_id
 
+  def ship_type(834_523_813_579_670_645), do: :explorer
   def ship_type(818_908_769_273_857_488), do: :explorer
   def ship_type(809_553_354_052_421_083), do: :interceptor
   def ship_type(793_228_477_045_490_952), do: :mining

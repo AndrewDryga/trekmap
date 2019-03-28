@@ -80,12 +80,12 @@ defmodule Trekmap.Bots.Admiral do
   ]
 
   @enterprise_crew_officers [
+    282_462_507,
+    2_695_272_429,
+    766_809_588,
     2_520_801_863,
     3_155_244_352,
-    766_809_588,
-    282_462_507,
     3_923_643_019,
-    2_695_272_429,
     2_765_885_322,
     250_991_574,
     -1,
@@ -208,8 +208,8 @@ defmodule Trekmap.Bots.Admiral do
       Trekmap.Me.Fleet.drydock1_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
-          ship: "Horizon",
-          crew: @other_time_officers
+          ship: "Mayflower",
+          crew: @enterprise_crew_officers
         ],
         [
           patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
@@ -218,14 +218,14 @@ defmodule Trekmap.Bots.Admiral do
           max_target_level: 33,
           min_target_bounty_score: 2_000,
           skip_nearest_system?: false,
-          max_warp_distance: 23
+          max_warp_distance: 33
         ]
       },
       Trekmap.Me.Fleet.drydock2_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
           ship: "North Star",
-          crew: @enterprise_crew_officers
+          crew: @other_time_officers
         ],
         [
           patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
@@ -261,8 +261,8 @@ defmodule Trekmap.Bots.Admiral do
       Trekmap.Me.Fleet.drydock1_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
-          ship: "Vahklas",
-          crew: @other_time_officers
+          ship: "Mayflower",
+          crew: @enterprise_crew_officers
         ],
         [
           patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(grade: "***"),
@@ -271,14 +271,14 @@ defmodule Trekmap.Bots.Admiral do
           max_target_level: 33,
           min_target_bounty_score: 25_000,
           skip_nearest_system?: false,
-          max_warp_distance: 23
+          max_warp_distance: 33
         ]
       },
       Trekmap.Me.Fleet.drydock2_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
           ship: "North Star",
-          crew: @enterprise_crew_officers
+          crew: @other_time_officers
         ],
         [
           patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(grade: "***"),
@@ -314,8 +314,8 @@ defmodule Trekmap.Bots.Admiral do
       Trekmap.Me.Fleet.drydock1_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
-          ship: "Vahklas",
-          crew: @other_time_officers
+          ship: "Mayflower",
+          crew: @enterprise_crew_officers
         ],
         [
           patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
@@ -324,14 +324,14 @@ defmodule Trekmap.Bots.Admiral do
           max_target_level: 33,
           min_target_bounty_score: 2_000,
           skip_nearest_system?: true,
-          max_warp_distance: 23
+          max_warp_distance: 33
         ]
       },
       Trekmap.Me.Fleet.drydock2_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
           ship: "North Star",
-          crew: @enterprise_crew_officers
+          crew: @other_time_officers
         ],
         [
           patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
@@ -369,8 +369,8 @@ defmodule Trekmap.Bots.Admiral do
         {
           Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
           [
-            ship: "Vahklas",
-            crew: @other_time_officers
+            ship: "Mayflower",
+            crew: @enterprise_crew_officers
           ],
           [
             min_target_level: 19,
@@ -382,8 +382,8 @@ defmodule Trekmap.Bots.Admiral do
           {
             Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
             [
-              ship: "Vahklas",
-              crew: @other_time_officers
+              ship: "Mayflower",
+              crew: @enterprise_crew_officers
             ],
             [
               patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
@@ -392,7 +392,7 @@ defmodule Trekmap.Bots.Admiral do
               max_target_level: 33,
               min_target_bounty_score: 85_000,
               skip_nearest_system?: true,
-              max_warp_distance: 23
+              max_warp_distance: 33
             ]
           }
       end
@@ -403,7 +403,7 @@ defmodule Trekmap.Bots.Admiral do
         Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
         [
           ship: "North Star",
-          crew: @enterprise_crew_officers
+          crew: @other_time_officers
         ],
         [
           fraction_ids: [@fraction_klingon],
@@ -439,27 +439,27 @@ defmodule Trekmap.Bots.Admiral do
       Trekmap.Me.Fleet.drydock1_id() => {
         Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
         [
-          ship: "Vahklas",
-          crew: @other_time_officers
+          ship: "Mayflower",
+          crew: @enterprise_crew_officers
         ],
         [
-          fraction_ids: [@fraction_klingon, @fraction_neutral_or_elite],
+          fraction_ids: [@fraction_neutral_or_elite],
           patrol_systems: @klingon_elite_systems,
           min_targets_in_system: 1,
           min_target_level: 17,
           max_target_level: 25,
           skip_nearest_system?: true,
-          max_warp_distance: 23
+          max_warp_distance: 33
         ]
       },
       Trekmap.Me.Fleet.drydock2_id() => {
         Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
         [
           ship: "North Star",
-          crew: @enterprise_crew_officers
+          crew: @other_time_officers
         ],
         [
-          fraction_ids: [@fraction_klingon, @fraction_neutral_or_elite],
+          fraction_ids: [@fraction_neutral_or_elite],
           patrol_systems: @klingon_elite_systems,
           min_targets_in_system: 1,
           min_target_level: 17,
@@ -475,7 +475,7 @@ defmodule Trekmap.Bots.Admiral do
           crew: @nero_crew_officers
         ],
         [
-          fraction_ids: [@fraction_klingon, @fraction_neutral_or_elite],
+          fraction_ids: [@fraction_neutral_or_elite],
           patrol_systems: @klingon_elite_systems,
           min_targets_in_system: 1,
           min_target_level: 17,
@@ -492,8 +492,8 @@ defmodule Trekmap.Bots.Admiral do
       Trekmap.Me.Fleet.drydock1_id() => {
         Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
         [
-          ship: "Vahklas",
-          crew: @other_time_officers
+          ship: "Mayflower",
+          crew: @enterprise_crew_officers
         ],
         [
           fraction_ids: [@fraction_klingon],
@@ -502,14 +502,14 @@ defmodule Trekmap.Bots.Admiral do
           min_target_level: 25,
           max_target_level: 28,
           skip_nearest_system?: true,
-          max_warp_distance: 23
+          max_warp_distance: 33
         ]
       },
       Trekmap.Me.Fleet.drydock2_id() => {
         Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
         [
           ship: "North Star",
-          crew: @enterprise_crew_officers
+          crew: @other_time_officers
         ],
         [
           fraction_ids: [@fraction_klingon],
@@ -547,8 +547,8 @@ defmodule Trekmap.Bots.Admiral do
         {
           Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
           [
-            ship: "Vahklas",
-            crew: @other_time_officers
+            ship: "Mayflower",
+            crew: @enterprise_crew_officers
           ],
           [
             min_target_level: 19,
@@ -560,8 +560,8 @@ defmodule Trekmap.Bots.Admiral do
           {
             Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
             [
-              ship: "Vahklas",
-              crew: @other_time_officers
+              ship: "Mayflower",
+              crew: @enterprise_crew_officers
             ],
             [
               patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
@@ -570,7 +570,7 @@ defmodule Trekmap.Bots.Admiral do
               max_target_level: 33,
               min_target_bounty_score: 50_000,
               skip_nearest_system?: true,
-              max_warp_distance: 23
+              max_warp_distance: 33
             ]
           }
       end
@@ -581,7 +581,7 @@ defmodule Trekmap.Bots.Admiral do
         Trekmap.Bots.FleetCommander.Strategies.FractionHunter,
         [
           ship: "North Star",
-          crew: @enterprise_crew_officers
+          crew: @other_time_officers
         ],
         [
           fraction_ids: [@fraction_klingon],
@@ -617,8 +617,8 @@ defmodule Trekmap.Bots.Admiral do
       Trekmap.Me.Fleet.drydock1_id() => {
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
-          ship: "Vahklas",
-          crew: @other_time_officers
+          ship: "Mayflower",
+          crew: @enterprise_crew_officers
         ],
         [
           patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(),
@@ -627,14 +627,14 @@ defmodule Trekmap.Bots.Admiral do
           max_target_level: 33,
           min_target_bounty_score: 25_000,
           skip_nearest_system?: false,
-          max_warp_distance: 23
+          max_warp_distance: 33
         ]
       },
       Trekmap.Me.Fleet.drydock2_id() => {
         Trekmap.Bots.FleetCommander.Strategies.HiveDefender,
         [
           ship: "North Star",
-          crew: @enterprise_crew_officers
+          crew: @other_time_officers
         ],
         [
           min_target_level: 19,
@@ -666,8 +666,8 @@ defmodule Trekmap.Bots.Admiral do
         Trekmap.Me.Fleet.drydock1_id() => {
           Trekmap.Bots.FleetCommander.Strategies.StationDefender,
           [
-            ship: "Vahklas",
-            crew: @other_time_officers
+            ship: "Mayflower",
+            crew: @enterprise_crew_officers
           ],
           [
             target_station: target_station
@@ -677,7 +677,7 @@ defmodule Trekmap.Bots.Admiral do
           Trekmap.Bots.FleetCommander.Strategies.Blockade,
           [
             ship: "North Star",
-            crew: @enterprise_crew_officers
+            crew: @other_time_officers
           ],
           [
             target_station: target_station
@@ -698,7 +698,7 @@ defmodule Trekmap.Bots.Admiral do
           Trekmap.Bots.FleetCommander.Strategies.Blockade,
           [
             ship: "Phindra",
-            crew: @other_time_officers
+            crew: @enterprise_crew_officers
           ],
           [
             target_station: target_station
@@ -708,7 +708,7 @@ defmodule Trekmap.Bots.Admiral do
           Trekmap.Bots.FleetCommander.Strategies.Blockade,
           [
             ship: "Fortunate",
-            crew: @enterprise_crew_officers
+            crew: @other_time_officers
           ],
           [
             target_station: target_station
@@ -732,7 +732,7 @@ defmodule Trekmap.Bots.Admiral do
         Trekmap.Bots.FleetCommander.Strategies.RaidLooter,
         [
           ship: "Envoy 1",
-          crew: @other_time_officers
+          crew: @enterprise_crew_officers
         ],
         [
           target_station: target_station
@@ -742,7 +742,7 @@ defmodule Trekmap.Bots.Admiral do
         Trekmap.Bots.FleetCommander.Strategies.RaidLooter,
         [
           ship: "Envoy 2",
-          crew: @enterprise_crew_officers
+          crew: @other_time_officers
         ],
         [
           target_station: target_station
@@ -776,7 +776,7 @@ defmodule Trekmap.Bots.Admiral do
         Trekmap.Bots.FleetCommander.Strategies.RaidLooter,
         [
           ship: "Envoy 1",
-          crew: @other_time_officers
+          crew: @enterprise_crew_officers
         ],
         [
           target_station: target_station
@@ -786,7 +786,7 @@ defmodule Trekmap.Bots.Admiral do
         Trekmap.Bots.FleetCommander.Strategies.RaidLeader,
         [
           ship: "North Star",
-          crew: @enterprise_crew_officers
+          crew: @other_time_officers
         ],
         [
           target_station: target_station
