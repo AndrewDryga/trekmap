@@ -40,6 +40,8 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
   end
 
   def handle_continue(fleet, session, config) do
+    %{patrol_systems: patrol_systems} = config
+
     {:ok, targets, pursuiters} = find_targets_in_current_system(fleet, session, config)
 
     name = Trekmap.Bots.FleetCommander.StartshipActor.name(fleet.id)
@@ -47,13 +49,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
     need_evacuation? = need_evacuation?(fleet, pursuiters)
     if need_evacuation?, do: Logger.warn("[#{name}] Need to leave, pursuiters are nearby")
 
-    if length(targets) > 0 and not need_evacuation? do
+    if length(targets) > 0 and not need_evacuation? and fleet.system_id in patrol_systems do
       target =
         targets
         |> Enum.sort_by(&safe_distance(&1.coords, fleet.coords, pursuiters))
         |> List.first()
-
-      # |> IO.inspect(label: "targ")
 
       {{:attack, target}, config}
     else
@@ -73,13 +73,9 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
   defp need_evacuation?(fleet, pursuiters) do
     nearest_pursuiter_distance =
       pursuiters
-      # |> IO.inspect(label: "psts")
       |> Enum.map(&distance(&1.coords, fleet.coords))
-      # |> IO.inspect(label: "psts dist")
       |> Enum.sort()
       |> List.first()
-
-    # |> IO.inspect(label: "pdist")
 
     max_pursuiter_strength =
       pursuiters
@@ -111,8 +107,6 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
         |> Enum.filter(&enemy_fraction?(&1, fraction_ids))
         |> Enum.filter(&should_kill?(&1, min_target_level, max_target_level))
         |> Enum.filter(&can_kill?(&1, fleet))
-
-      # |> IO.inspect()
 
       pursuiters = Enum.filter(hostiles, &(&1.pursuit_fleet_id == fleet.id))
 
@@ -180,13 +174,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
     sum_of_target_distances_to_pursuiters =
       pursuiters
       |> Enum.map(&distance(&1.coords, {x1, y1}))
-      # |> IO.inspect(label: "distances")
       |> Enum.sum()
 
     sum_of_cource_angles_to_pursuiters =
       pursuiters
       |> Enum.map(&vector_abs_angle(&1.coords, {x1, y1}, {x2, y2}))
-      # |> IO.inspect(label: "angles")
       |> Enum.sum()
 
     distance({x1, y1}, {x2, y2}) *
