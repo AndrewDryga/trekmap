@@ -446,7 +446,7 @@ defmodule Trekmap.Bots.Admiral do
           fraction_ids: [@fraction_neutral_or_elite],
           patrol_systems: @klingon_elite_systems,
           min_targets_in_system: 1,
-          min_target_level: 17,
+          min_target_level: 21,
           max_target_level: 25,
           skip_nearest_system?: true,
           max_warp_distance: 33
@@ -462,7 +462,7 @@ defmodule Trekmap.Bots.Admiral do
           fraction_ids: [@fraction_neutral_or_elite],
           patrol_systems: @klingon_elite_systems,
           min_targets_in_system: 1,
-          min_target_level: 17,
+          min_target_level: 21,
           max_target_level: 25,
           skip_nearest_system?: true,
           max_warp_distance: 32
@@ -478,7 +478,7 @@ defmodule Trekmap.Bots.Admiral do
           fraction_ids: [@fraction_neutral_or_elite],
           patrol_systems: @klingon_elite_systems,
           min_targets_in_system: 1,
-          min_target_level: 17,
+          min_target_level: 21,
           max_target_level: 25,
           skip_nearest_system?: false,
           max_warp_distance: 26
