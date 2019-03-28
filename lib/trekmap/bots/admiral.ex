@@ -773,9 +773,9 @@ defmodule Trekmap.Bots.Admiral do
   def raid_mission_plan(target_station) do
     %{
       Trekmap.Me.Fleet.drydock1_id() => {
-        Trekmap.Bots.FleetCommander.Strategies.RaidLooter,
+        Trekmap.Bots.FleetCommander.Strategies.RaidLeader,
         [
-          ship: "Envoy 1",
+          ship: "Mayflower",
           crew: @enterprise_crew_officers
         ],
         [
@@ -793,10 +793,10 @@ defmodule Trekmap.Bots.Admiral do
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
-        Trekmap.Bots.FleetCommander.Strategies.RaidLeader,
+        Trekmap.Bots.FleetCommander.Strategies.RaidLooter,
         [
-          ship: "Kumari",
-          crew: @nero_crew_officers
+          ship: "Horizon",
+          crew: @raid_transport_officers
         ],
         [
           target_station: target_station
