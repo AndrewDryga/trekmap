@@ -140,6 +140,8 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
           else
             {:error, %{type: 6, body: "fleet"}} ->
               continue(fleet, 15_000)
+
+              fleet
           end
         else
           perform_fleet_action(fleet, :recall, state)
