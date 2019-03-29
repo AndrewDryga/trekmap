@@ -816,6 +816,7 @@ defmodule Trekmap.Bots.Admiral do
   end
 
   def handle_cast({:update_fleet_report, report}, %{fleet_reports: fleet_reports} = state) do
+    report = Map.put(report, :updated_at, DateTime.utc_now())
     fleet_reports = Map.put(fleet_reports, report.fleet_id, report)
     {:noreply, %{state | fleet_reports: fleet_reports}}
   end

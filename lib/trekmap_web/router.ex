@@ -37,7 +37,8 @@ defmodule Trekmap.Router do
                   cargo_size: cargo_size,
                   remaining_travel_time: remaining_travel_time,
                   cargo_bay_size: cargo_bay_size
-                }
+                },
+                updated_at: updated_at
               } ->
                 task_name =
                   case strategy do
@@ -59,8 +60,14 @@ defmodule Trekmap.Router do
                 clearence_granted =
                   if clearence_granted, do: "", else: "; <b>WAITING FOR CLEARENCE</b>"
 
+                remaining_travel_time =
+                  if remaining_travel_time > 0 do
+                    arrives_at = DateTime.add(updated_at, remaining_travel_time, :second)
+                    to_string(DateTime.diff(DateTime.utc_now(), arrives_at, :second)) <> "s "
+                  end
+
                 [
-                  " - #{ship_name}: #{task_name} #{inspect(state)} #{remaining_travel_time}s " <>
+                  " - #{ship_name}: #{task_name} #{inspect(state)} #{remaining_travel_time}" <>
                     "at #{system_name} (H:#{trunc(hull_health || 100)}%; " <>
                     "C:#{trunc(cargo_size || 0)}/#{trunc(cargo_bay_size || 0)}" <>
                     "#{mission_paused}#{clearence_granted})"
