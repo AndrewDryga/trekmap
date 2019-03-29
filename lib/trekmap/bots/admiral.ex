@@ -80,7 +80,7 @@ defmodule Trekmap.Bots.Admiral do
   ]
 
   @enterprise_crew_officers [
-    282_462_507,
+    988_947_581,
     2_695_272_429,
     766_809_588,
     2_520_801_863,
