@@ -63,7 +63,7 @@ defmodule Trekmap.Router do
                 remaining_travel_time =
                   if remaining_travel_time > 0 do
                     arrives_at = DateTime.add(updated_at, remaining_travel_time, :second)
-                    format_time(DateTime.diff(DateTime.utc_now(), arrives_at, :second))
+                    format_time(DateTime.diff(arrives_at, DateTime.utc_now(), :second))
                   end
 
                 [
