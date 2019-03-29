@@ -79,6 +79,19 @@ defmodule Trekmap.Bots.Admiral do
     -1
   ]
 
+  @other_time_long_warp_officers [
+    1_622_062_016,
+    1_525_867_544,
+    4_150_311_506,
+    1_853_520_303,
+    4_066_988_596,
+    194_631_754,
+    3_394_864_658,
+    2_865_735_742,
+    -1,
+    -1
+  ]
+
   @enterprise_crew_officers [
     988_947_581,
     2_695_272_429,
@@ -234,7 +247,7 @@ defmodule Trekmap.Bots.Admiral do
           max_target_level: 33,
           min_target_bounty_score: 50_000,
           skip_nearest_system?: false,
-          max_warp_distance: 32
+          max_warp_distance: 39
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
@@ -278,7 +291,7 @@ defmodule Trekmap.Bots.Admiral do
         Trekmap.Bots.FleetCommander.Strategies.MinerHunter,
         [
           ship: "North Star",
-          crew: @other_time_officers
+          crew: @other_time_long_warp_officers
         ],
         [
           patrol_systems: Trekmap.Galaxy.fetch_hunting_system_ids!(grade: "***"),
@@ -287,7 +300,7 @@ defmodule Trekmap.Bots.Admiral do
           max_target_level: 33,
           min_target_bounty_score: 50_000,
           skip_nearest_system?: false,
-          max_warp_distance: 32
+          max_warp_distance: 43
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
@@ -340,7 +353,7 @@ defmodule Trekmap.Bots.Admiral do
           max_target_level: 33,
           min_target_bounty_score: 100_000,
           skip_nearest_system?: false,
-          max_warp_distance: 32
+          max_warp_distance: 39
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
@@ -412,7 +425,7 @@ defmodule Trekmap.Bots.Admiral do
           min_target_level: 27,
           max_target_level: 30,
           skip_nearest_system?: true,
-          max_warp_distance: 32
+          max_warp_distance: 39
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
@@ -465,7 +478,7 @@ defmodule Trekmap.Bots.Admiral do
           min_target_level: 21,
           max_target_level: 25,
           skip_nearest_system?: true,
-          max_warp_distance: 32
+          max_warp_distance: 39
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
@@ -518,7 +531,7 @@ defmodule Trekmap.Bots.Admiral do
           min_target_level: 25,
           max_target_level: 28,
           skip_nearest_system?: true,
-          max_warp_distance: 32
+          max_warp_distance: 39
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
@@ -590,7 +603,7 @@ defmodule Trekmap.Bots.Admiral do
           min_target_level: 25,
           max_target_level: 28,
           skip_nearest_system?: true,
-          max_warp_distance: 32
+          max_warp_distance: 39
         ]
       },
       Trekmap.Me.Fleet.drydock3_id() => {
