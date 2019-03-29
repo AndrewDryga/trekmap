@@ -63,7 +63,7 @@ defmodule Trekmap.Router do
                 remaining_travel_time =
                   if remaining_travel_time > 0 do
                     arrives_at = DateTime.add(updated_at, remaining_travel_time, :second)
-                    to_string(DateTime.diff(DateTime.utc_now(), arrives_at, :second)) <> "s "
+                    format_time(DateTime.diff(DateTime.utc_now(), arrives_at, :second))
                   end
 
                 [
@@ -334,5 +334,19 @@ defmodule Trekmap.Router do
 
   match _ do
     send_resp(conn, 404, "not found")
+  end
+
+  defp format_time(seconds) do
+    %{hour: hour, minute: minute, second: second} =
+      %Time{hour: 0, minute: 0, second: 0}
+      |> Time.add(seconds, :second)
+
+    [
+      if(hour != 0, do: "#{hour}h"),
+      if(minute != 0, do: "#{minute}m"),
+      "#{second}s"
+    ]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
   end
 end
