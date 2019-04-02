@@ -6,6 +6,7 @@ defmodule Trekmap.Session do
   @check_account_endpoint "https://live-193-web.startrek.digitgaming.com/check_account"
 
   defstruct account_id: nil,
+            master_account_id: nil,
             master_session_id: nil,
             session_instance_id: nil,
             fleet_id: nil,
@@ -32,8 +33,14 @@ defmodule Trekmap.Session do
        ]}
 
     {:ok, body} = APIClient.request(:post, @sessions_endpoint, additional_headers(), body)
-    %{"session_id" => master_session_id} = Jason.decode!(body)
-    {:ok, %__MODULE__{master_session_id: master_session_id, account_id: account_id}}
+    %{"session_id" => master_session_id, "master_id" => master_account_id} = Jason.decode!(body)
+
+    {:ok,
+     %__MODULE__{
+       master_session_id: master_session_id,
+       master_account_id: master_account_id,
+       account_id: account_id
+     }}
   end
 
   def start_session_instance(%__MODULE__{} = session) do
