@@ -52,7 +52,10 @@ defmodule Trekmap.Session do
         %{"instance_session_id" => instance_session_id} ->
           {:ok, %{session | session_instance_id: instance_session_id}}
 
-        %{"code" => 42, "http_code" => 400, "msg" => "Instance is under maintenance"} ->
+        %{"code" => 42, "http_code" => 400} ->
+          {:error, :retry_later}
+
+        %{"msg" => "Instance is in maintenance"} ->
           {:error, :retry_later}
       end
     end
