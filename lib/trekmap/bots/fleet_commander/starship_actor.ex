@@ -395,10 +395,14 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
     end
   end
 
-  def perform_fleet_action(fleet, {:attack, %Marauder{} = target}, %{session: session} = state) do
+  def perform_fleet_action(
+        fleet,
+        {:attack, %Marauder{} = target},
+        %{session: session, fleet_id: fleet_id} = state
+      ) do
     Logger.info(
-      "[FractionHunter] Killing marauder #{target.fraction_id} (#{target.target_fleet_id}) " <>
-        "lvl #{target.level}, " <>
+      "[#{name(fleet_id)}:FractionHunter] Killing marauder #{target.fraction_id} " <>
+        "(#{target.target_fleet_id}) lvl #{target.level}, " <>
         "strength: #{inspect(target.strength)} at #{to_string(target.system.name)}"
     )
 
