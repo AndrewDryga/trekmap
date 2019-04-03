@@ -456,5 +456,6 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
   def name(771_246_931_724_024_704), do: :"#{__MODULE__}.Drydock1"
   def name(771_331_774_860_311_262), do: :"#{__MODULE__}.Drydock2"
   def name(791_687_022_921_464_764), do: :"#{__MODULE__}.Drydock3"
+  def name(838_875_307_527_453_592), do: :"#{__MODULE__}.Drydock4"
   def name(fleet_id), do: :"#{__MODULE__}.Fleet_#{to_string(fleet_id)}"
 end

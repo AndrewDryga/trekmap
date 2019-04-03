@@ -40,7 +40,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
        min_target_level: Keyword.fetch!(config, :min_target_level),
        max_target_level: Keyword.fetch!(config, :max_target_level),
        min_target_bounty_score: Keyword.fetch!(config, :min_target_bounty_score),
-       skip_nearest_system?: Keyword.fetch!(config, :skip_nearest_system?)
+       skip_nearest_system?: Keyword.get(config, :skip_nearest_system?, false)
      }}
   end
 

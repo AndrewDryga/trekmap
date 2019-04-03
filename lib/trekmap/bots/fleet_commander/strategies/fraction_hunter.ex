@@ -25,7 +25,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
        min_targets_in_system: Keyword.fetch!(config, :min_targets_in_system),
        min_target_level: Keyword.fetch!(config, :min_target_level),
        max_target_level: Keyword.fetch!(config, :max_target_level),
-       skip_nearest_system?: Keyword.fetch!(config, :skip_nearest_system?)
+       skip_nearest_system?: Keyword.get(config, :skip_nearest_system?, false)
      }}
   end
 

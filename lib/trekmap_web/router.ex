@@ -150,18 +150,15 @@ defmodule Trekmap.Router do
         <br/>
         <br/>
         Missions: <br/>
-        - <a href="/set_g2_miner_hunting_mission">Hunt G2 miners (agressive)</a><br/>
-        - <a href="/set_g3_mining_hunting_mission">Hunt G3 miners</a><br/>
-        - <a href="/set_g2_miners_and_klingon_hunting">Hunt G2 miners (agressive) and Klingons</a><br/>
-        - <a href="/set_g2_g3_miner_hunting_and_hive_defence_mission">Defend Hive and hunt G3 miners (default)</a><br/>
-        - <a href="/set_klingon_hunting">Hunt Klingons 28+ and Defend Hive</a><br/>
-        - <a href="/set_reputation_hunting">Hunt Klingons 28- and Defend Hive</a><br/>
-        - <a href="/set_agressive_reputation_hunting">Hunt Klingons 29-</a><br/>
-        - <a href="/set_elite_reputation_hunting">Hunt Klingons Elite-</a><br/>
-        - <a href="/set_raid_mission">Raiding</a><br/>
+        - <a href="/set_multitasking_mission_plan">Faction + Miners + Defence (default)</a><br/>
+        - <a href="/set_overcargo_hunting_mission_plan">Hunt G3 miners</a><br/>
+        - <a href="/set_agressive_overcargo_hunting_mission_plan">Hunt G2/G3 miners</a><br/>
+        - <a href="/set_faction_hunting_mission_plan">Hunt Klingons</a><br/>
+        - <a href="/set_elite_faction_hunting_mission_plan">Hunt Klingons Elite</a><br/>
+        - <a href="/set_raid_mission_plan">Raid</a><br/>
         <br/><br/>
         Raid: <br/>
-        <form action="/set_raid_mission">
+        <form action="/set_raid_mission_plan">
           <input type="text" name="target_user_id">
           <input type="submit" value="Loot">
         </form>
@@ -175,7 +172,7 @@ defmodule Trekmap.Router do
         </form>
         <br/><br/>
         Blockade: <br/>
-        <form action="/set_blockade_mission">
+        <form action="/set_blockade_mission_plan">
           <input type="text" name="target_user_id">
           <input type="submit" value="Blockade">
         </form>
@@ -230,8 +227,8 @@ defmodule Trekmap.Router do
     |> send_resp(302, "")
   end
 
-  get "/set_g2_miner_hunting_mission" do
-    mission_plan = Trekmap.Bots.Admiral.g2_miner_hunting_mission_plan()
+  get "/set_multitasking_mission_plan" do
+    mission_plan = Trekmap.Bots.Admiral.MissionPlans.multitasking_mission_plan()
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
@@ -239,8 +236,8 @@ defmodule Trekmap.Router do
     |> send_resp(302, "")
   end
 
-  get "/set_g3_mining_hunting_mission" do
-    mission_plan = Trekmap.Bots.Admiral.g3_mining_hunting_mission_plan()
+  get "/set_overcargo_hunting_mission_plan" do
+    mission_plan = Trekmap.Bots.Admiral.MissionPlans.overcargo_hunting_mission_plan()
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
@@ -248,8 +245,8 @@ defmodule Trekmap.Router do
     |> send_resp(302, "")
   end
 
-  get "/set_g2_miners_and_klingon_hunting" do
-    mission_plan = Trekmap.Bots.Admiral.g2_miners_and_klingon_hunting_mission_plan()
+  get "/set_agressive_overcargo_hunting_mission_plan" do
+    mission_plan = Trekmap.Bots.Admiral.MissionPlans.agressive_overcargo_hunting_mission_plan()
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
@@ -257,8 +254,8 @@ defmodule Trekmap.Router do
     |> send_resp(302, "")
   end
 
-  get "/set_klingon_hunting" do
-    mission_plan = Trekmap.Bots.Admiral.klingon_hunting_mission_plan()
+  get "/set_faction_hunting_mission_plan" do
+    mission_plan = Trekmap.Bots.Admiral.MissionPlans.faction_hunting_mission_plan()
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
@@ -266,8 +263,8 @@ defmodule Trekmap.Router do
     |> send_resp(302, "")
   end
 
-  get "/set_reputation_hunting" do
-    mission_plan = Trekmap.Bots.Admiral.reputation_hunting_mission_plan()
+  get "/set_elite_faction_hunting_mission_plan" do
+    mission_plan = Trekmap.Bots.Admiral.MissionPlans.elite_faction_hunting_mission_plan()
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
@@ -275,43 +272,16 @@ defmodule Trekmap.Router do
     |> send_resp(302, "")
   end
 
-  get "/set_agressive_reputation_hunting" do
-    mission_plan = Trekmap.Bots.Admiral.agressive_reputation_hunting_mission_plan()
-    Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
-
-    conn
-    |> put_resp_header("location", "/")
-    |> send_resp(302, "")
-  end
-
-  get "/set_elite_reputation_hunting" do
-    mission_plan = Trekmap.Bots.Admiral.agressive_elite_reputation_hunting_mission_plan()
-    Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
-
-    conn
-    |> put_resp_header("location", "/")
-    |> send_resp(302, "")
-  end
-
-  get "/set_g2_g3_miner_hunting_and_hive_defence_mission" do
-    mission_plan = Trekmap.Bots.Admiral.g2_g3_miner_hunting_and_hive_defence_mission_plan()
-    Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
-
-    conn
-    |> put_resp_header("location", "/")
-    |> send_resp(302, "")
-  end
-
-  get "/set_raid_mission" do
+  get "/set_raid_mission_plan" do
     mission_plan =
       case conn.query_params do
         %{"target_user_id" => target_user_id} ->
           with {:ok, target_station} = Trekmap.Galaxy.System.Station.find_station(target_user_id) do
-            Trekmap.Bots.Admiral.raid_mission_plan(target_station)
+            Trekmap.Bots.Admiral.MissionPlans.raid_mission_plan(target_station)
           end
 
         _other ->
-          Trekmap.Bots.Admiral.raid_mission_plan()
+          Trekmap.Bots.Admiral.MissionPlans.raid_mission_plan()
       end
 
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
@@ -321,10 +291,10 @@ defmodule Trekmap.Router do
     |> send_resp(302, "")
   end
 
-  get "/set_blockade_mission" do
+  get "/set_blockade_mission_plan" do
     %{"target_user_id" => target_user_id} = conn.query_params
     {:ok, target_station} = Trekmap.Galaxy.System.Station.find_station(target_user_id)
-    mission_plan = Trekmap.Bots.Admiral.blockade_mission_plan(target_station)
+    mission_plan = Trekmap.Bots.Admiral.MissionPlans.blockade_mission_plan(target_station)
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn

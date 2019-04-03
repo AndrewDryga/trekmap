@@ -61,7 +61,7 @@ defmodule Trekmap.Bots.FleetCommander.Observers.RaidObserver do
     else
       other ->
         Logger.warn("[#{inspect(__MODULE__)}] Can't find new raid targets. #{inspect(other)}")
-        mission_plan = Trekmap.Bots.Admiral.raid_mission_plan()
+        mission_plan = Trekmap.Bots.Admiral.MissionPlans.raid_mission_plan()
         Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
         {:noreply, state}
     end
@@ -80,7 +80,7 @@ defmodule Trekmap.Bots.FleetCommander.Observers.RaidObserver do
   defp find_and_raid_next(state, session) do
     with {:ok, raid_target} <- Trekmap.Galaxy.System.Station.fetch_raid_target(session) do
       Logger.info("[#{inspect(__MODULE__)}] Found new target #{inspect(raid_target)}")
-      mission_plan = Trekmap.Bots.Admiral.raid_mission_plan(raid_target)
+      mission_plan = Trekmap.Bots.Admiral.MissionPlans.raid_mission_plan(raid_target)
       Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
       {:noreply, %{state | target_station: raid_target}}

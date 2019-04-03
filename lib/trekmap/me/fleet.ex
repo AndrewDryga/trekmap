@@ -185,8 +185,9 @@ defmodule Trekmap.Me.Fleet do
   def ship_id("Envoy 2"), do: 813_554_350_852_228_185
   def ship_id("Envoy 3"), do: 824_733_744_035_612_116
   def ship_id("Horizon"), do: 829_530_915_272_475_702
-  def ship_id("Phindra"), do: 771_326_161_581_327_453
+  def ship_id("Phindra"), do: 774_102_373_647_074_543
   def ship_id("Fortunate"), do: 772_895_219_376_276_605
+  def ship_id("Orion"), do: 771_326_161_581_327_453
 
   def ship_name(834_523_813_579_670_645), do: "Mayflower"
   def ship_name(818_908_769_273_857_488), do: "Vahklas"
@@ -197,8 +198,9 @@ defmodule Trekmap.Me.Fleet do
   def ship_name(813_554_350_852_228_185), do: "Envoy 2"
   def ship_name(824_733_744_035_612_116), do: "Envoy 3"
   def ship_name(829_530_915_272_475_702), do: "Horizon"
-  def ship_name(771_326_161_581_327_453), do: "Phindra"
+  def ship_name(774_102_373_647_074_543), do: "Phindra"
   def ship_name(772_895_219_376_276_605), do: "Fortunate"
+  def ship_name(771_326_161_581_327_453), do: "Orion"
   def ship_name(ship_id), do: ship_id
 
   def ship_type(834_523_813_579_670_645), do: :explorer
@@ -210,14 +212,17 @@ defmodule Trekmap.Me.Fleet do
   def ship_type(813_554_350_852_228_185), do: :mining
   def ship_type(824_733_744_035_612_116), do: :mining
   def ship_type(829_530_915_272_475_702), do: :mining
+  def ship_type(771_326_161_581_327_453), do: :mining
 
   def drydock_num(771_246_931_724_024_704), do: 1
   def drydock_num(771_331_774_860_311_262), do: 2
   def drydock_num(791_687_022_921_464_764), do: 3
+  def drydock_num(838_875_307_527_453_592), do: 4
 
   def drydock1_id, do: 771_246_931_724_024_704
   def drydock2_id, do: 771_331_774_860_311_262
   def drydock3_id, do: 791_687_022_921_464_764
+  def drydock4_id, do: 838_875_307_527_453_592
 
-  def drydocs, do: [drydock1_id(), drydock2_id(), drydock3_id()]
+  def drydocs, do: [drydock1_id(), drydock2_id(), drydock3_id(), drydock4_id()]
 end

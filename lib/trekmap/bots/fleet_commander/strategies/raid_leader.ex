@@ -42,7 +42,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.RaidLeader do
             leader_action: "Station is zeroed, looting"
           })
 
-          Trekmap.Bots.Admiral.loot_mission_plan(station)
+          Trekmap.Bots.Admiral.MissionPlans.loot_mission_plan(station)
           |> Trekmap.Bots.Admiral.set_mission_plan()
 
           {:recall, config}

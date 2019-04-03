@@ -258,4 +258,28 @@ defmodule Trekmap.Galaxy do
       {:ok, system_ids}
     end
   end
+
+  def list_systems_for_faction(faction, min_system_level \\ nil) do
+    formula =
+      if min_system_level do
+        "AND({Fraction} = '#{faction}', {Level} > #{min_system_level})"
+      else
+        "{Fraction} = '#{faction}'"
+      end
+
+    query_params = %{
+      "maxRecords" => 200,
+      "filterByFormula" => formula
+    }
+
+    with {:ok, systems} when systems != [] <-
+           Trekmap.AirDB.list(Trekmap.Galaxy.System, query_params) do
+      system_ids =
+        systems
+        |> Enum.map(& &1.id)
+        |> Enum.uniq()
+
+      {:ok, system_ids}
+    end
+  end
 end
