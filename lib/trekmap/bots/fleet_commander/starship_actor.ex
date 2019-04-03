@@ -270,11 +270,19 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
     continue(fleet, 5_000)
   end
 
-  def perform_fleet_action(fleet, :recall, %{session: session, fleet_id: fleet_id}) do
+  def perform_fleet_action(fleet, :recall, %{session: session, fleet_id: fleet_id} = state) do
     Logger.debug("[#{name(fleet_id)}] Recalling fleet")
 
     case Trekmap.Me.recall_fleet(fleet, session) do
       {:ok, fleet} ->
+        Trekmap.Bots.Admiral.update_fleet_report(%{
+          clearence_granted: state.clearence_granted,
+          mission_paused: state.mission_paused,
+          strategy: state.strategy,
+          fleet_id: state.fleet_id,
+          fleet: fleet
+        })
+
         if not is_nil(fleet.system_id) and fleet.system_id != session.home_system_id do
           fleet = %{fleet | state: :charging, remaining_travel_time: 6}
           continue_and_reload_fleet(:timer.seconds(fleet.remaining_travel_time))
@@ -296,11 +304,19 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
   def perform_fleet_action(
         %{system_id: system_id} = fleet,
         {:fly, %{id: system_id} = system, coords},
-        %{session: session, fleet_id: fleet_id}
+        %{session: session, fleet_id: fleet_id} = state
       ) do
     Logger.debug("[#{name(fleet_id)}] Flying to coords in the same system #{inspect(coords)}")
 
     with {:ok, fleet} <- Trekmap.Me.fly_to_coords(fleet, coords, session) do
+      Trekmap.Bots.Admiral.update_fleet_report(%{
+        clearence_granted: state.clearence_granted,
+        mission_paused: state.mission_paused,
+        strategy: state.strategy,
+        fleet_id: state.fleet_id,
+        fleet: fleet
+      })
+
       continue_and_reload_fleet(:timer.seconds(fleet.remaining_travel_time))
     else
       other ->
@@ -312,11 +328,19 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
   def perform_fleet_action(
         fleet,
         {:fly, system, coords},
-        %{session: session, fleet_id: fleet_id}
+        %{session: session, fleet_id: fleet_id} = state
       ) do
     Logger.debug("[#{name(fleet_id)}] Warping to #{inspect(coords)} in system #{system.name}")
 
     with {:ok, fleet} <- Trekmap.Me.warp_to_system(fleet, system.id, coords, session) do
+      Trekmap.Bots.Admiral.update_fleet_report(%{
+        clearence_granted: state.clearence_granted,
+        mission_paused: state.mission_paused,
+        strategy: state.strategy,
+        fleet_id: state.fleet_id,
+        fleet: fleet
+      })
+
       continue_and_reload_fleet(:timer.seconds(fleet.remaining_travel_time))
     else
       other ->
@@ -341,6 +365,14 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
 
     case Trekmap.Me.attack_spacecraft(fleet, target, session) do
       {:ok, fleet} ->
+        Trekmap.Bots.Admiral.update_fleet_report(%{
+          clearence_granted: state.clearence_granted,
+          mission_paused: state.mission_paused,
+          strategy: state.strategy,
+          fleet_id: state.fleet_id,
+          fleet: fleet
+        })
+
         if fleet.state == :flying and fleet.remaining_travel_time < 2 do
           continue_and_reload_fleet(5_000)
         else
@@ -363,14 +395,23 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
     end
   end
 
-  def perform_fleet_action(fleet, {:attack, %Marauder{} = target}, %{session: session}) do
+  def perform_fleet_action(fleet, {:attack, %Marauder{} = target}, %{session: session} = state) do
     Logger.info(
-      "[FractionHunter] Killing marauder #{target.fraction_id} lvl #{target.level}, " <>
+      "[FractionHunter] Killing marauder #{target.fraction_id} (#{target.target_fleet_id}) " <>
+        "lvl #{target.level}, " <>
         "strength: #{inspect(target.strength)} at #{to_string(target.system.name)}"
     )
 
     case Trekmap.Me.attack_spacecraft(fleet, target, session) do
       {:ok, fleet} ->
+        Trekmap.Bots.Admiral.update_fleet_report(%{
+          clearence_granted: state.clearence_granted,
+          mission_paused: state.mission_paused,
+          strategy: state.strategy,
+          fleet_id: state.fleet_id,
+          fleet: fleet
+        })
+
         continue(fleet)
 
       {:error, :in_warp} ->
@@ -399,6 +440,14 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
 
     case Trekmap.Me.attack_station(fleet, target, session) do
       {:ok, fleet} ->
+        Trekmap.Bots.Admiral.update_fleet_report(%{
+          clearence_granted: state.clearence_granted,
+          mission_paused: state.mission_paused,
+          strategy: state.strategy,
+          fleet_id: state.fleet_id,
+          fleet: fleet
+        })
+
         if fleet.state == :flying and fleet.remaining_travel_time < 2 do
           continue_and_reload_fleet(5_000)
         else
