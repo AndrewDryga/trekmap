@@ -95,6 +95,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
         nearby_system_with_targets = find_targets_in_nearby_system(fleet, session, config) ->
           {system, targets} = nearby_system_with_targets
           target = List.first(targets)
+          Trekmap.Locker.lock(target.id)
           {{:fly, system, target.coords}, config}
 
         fleet.state == :at_dock ->
