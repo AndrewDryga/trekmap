@@ -12,11 +12,11 @@ defmodule Trekmap.Bots.SupervisorChild do
       Trekmap.Bots.FleetCommander,
       Trekmap.Bots.Admiral,
       Trekmap.Bots.Guardian,
-      Trekmap.Bots.GalaxyScanner,
+      # Trekmap.Bots.GalaxyScanner,
       Trekmap.Bots.Helper,
       Trekmap.Bots.ChestCollector,
-      Trekmap.Bots.HiveScanner,
-      Trekmap.Bots.NameChanger
+      # Trekmap.Bots.HiveScanner,
+      # Trekmap.Bots.NameChanger
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
