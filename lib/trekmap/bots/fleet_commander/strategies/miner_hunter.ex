@@ -51,16 +51,19 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
 
   def handle_continue(%{state: :at_dock, hull_health: hull_health}, _session, config)
       when hull_health < 100 do
+    Trekmap.Locker.unlock_caller_locks()
     {:instant_repair, config}
   end
 
   def handle_continue(%{hull_health: hull_health}, _session, config)
       when hull_health < 33 do
+    Trekmap.Locker.unlock_caller_locks()
     {:recall, config}
   end
 
   def handle_continue(%{cargo_bay_size: cargo_bay_size, cargo_size: cargo_size}, _session, config)
       when cargo_bay_size * 0.9 < cargo_size do
+    Trekmap.Locker.unlock_caller_locks()
     {:recall, config}
   end
 
@@ -76,7 +79,10 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
       target =
         targets
         |> Enum.sort_by(&safe_distance(&1.coords, fleet.coords, pursuiters))
+        |> Enum.reject(&Trekmap.Locker.locked?(&1.id))
         |> List.first()
+
+      Trekmap.Locker.lock(target.id)
 
       if distance(target.coords, fleet.coords) < 7 do
         {{:attack, target}, config}
@@ -92,10 +98,12 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
           {{:fly, system, target.coords}, config}
 
         fleet.state == :at_dock ->
+          Trekmap.Locker.unlock_caller_locks()
           HiveDefender.handle_continue(fleet, session, config)
 
         true ->
           Logger.info("[#{name}] Can't find any targets")
+          Trekmap.Locker.unlock_caller_locks()
           {:recall, config}
       end
     end
@@ -143,6 +151,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
            Trekmap.Galaxy.System.enrich_stations_and_spacecrafts(scan, session) do
       targets =
         miners
+        |> Enum.reject(&Trekmap.Locker.locked?(&1.id))
         |> Enum.reject(&ally?(&1, allies))
         |> Enum.filter(&can_kill?(&1, fleet))
         |> Enum.filter(&can_attack?(&1, min_target_level, max_target_level))

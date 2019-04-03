@@ -8,6 +8,7 @@ defmodule Trekmap.Bots.SupervisorChild do
   @impl true
   def init(_init_arg) do
     children = [
+      Trekmap.Locker,
       Trekmap.Bots.SessionManager,
       Trekmap.Bots.FleetCommander,
       Trekmap.Bots.Admiral,

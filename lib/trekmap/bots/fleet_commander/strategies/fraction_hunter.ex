@@ -31,11 +31,13 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
 
   def handle_continue(%{state: :at_dock, hull_health: hull_health}, _session, config)
       when hull_health < 100 do
+    Trekmap.Locker.unlock_caller_locks()
     {:instant_repair, config}
   end
 
   def handle_continue(%{hull_health: hull_health}, _session, config)
       when hull_health < 33 do
+    Trekmap.Locker.unlock_caller_locks()
     {:recall, config}
   end
 
@@ -53,7 +55,10 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
       target =
         targets
         |> Enum.sort_by(&safe_distance(&1.coords, fleet.coords, pursuiters))
+        |> Enum.reject(&Trekmap.Locker.locked?(&1.target_fleet_id))
         |> List.first()
+
+      Trekmap.Locker.lock(target.target_fleet_id)
 
       {{:attack, target}, config}
     else
@@ -63,6 +68,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
         {{:fly, system, target.coords}, config}
       else
         Logger.info("[#{name}] Can't find any targets")
+        Trekmap.Locker.unlock_caller_locks()
         {:recall, config}
       end
     end
@@ -104,6 +110,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
     with {:ok, %{hostiles: hostiles}} <- Trekmap.Galaxy.System.scan_system(system, session) do
       targets =
         hostiles
+        |> Enum.reject(&Trekmap.Locker.locked?(&1.target_fleet_id))
         |> Enum.filter(&enemy_fraction?(&1, fraction_ids))
         |> Enum.filter(&should_kill?(&1, min_target_level, max_target_level))
         |> Enum.filter(&can_kill?(&1, fleet))
