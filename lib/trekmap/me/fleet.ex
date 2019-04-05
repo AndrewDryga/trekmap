@@ -9,6 +9,7 @@ defmodule Trekmap.Me.Fleet do
             system_id: nil,
             cargo_bay_size: nil,
             cargo_size: 0,
+            protected_cargo_size: 0,
             strength: nil,
             hull_health: 100,
             shield_health: 100,
@@ -17,7 +18,8 @@ defmodule Trekmap.Me.Fleet do
             shield_regeneration_duration: nil,
             shield_regeneration_started_at: 0,
             max_warp_distance: nil,
-            state: :at_dock
+            state: :at_dock,
+            mining_node: nil
 
   @modify_fleet_endpoint "https://live-193-web.startrek.digitgaming.com/fleet/modify_fleet"
   @assign_fleet_officers_endpoint "https://live-193-web.startrek.digitgaming.com/officer/assign_fleet_officers"
@@ -109,6 +111,7 @@ defmodule Trekmap.Me.Fleet do
       system_id: system_id,
       cargo_bay_size: cargo_max,
       cargo_size: cargo_size,
+      protected_cargo_size: ship_protected_cargo(ship_id),
       strength: strength || ship_strength(ship_id),
       hull_health: hull_health,
       shield_health: shield_health,
@@ -211,11 +214,25 @@ defmodule Trekmap.Me.Fleet do
   def ship_strength(788_241_743_887_025_466), do: 50_000
   def ship_strength(813_554_350_852_228_185), do: 50_000
   def ship_strength(824_733_744_035_612_116), do: 50_000
-  def ship_strength(829_530_915_272_475_702), do: 153_000
+  def ship_strength(829_530_915_272_475_702), do: 150_000
   def ship_strength(774_102_373_647_074_543), do: 25_000
   def ship_strength(772_895_219_376_276_605), do: 20_000
   def ship_strength(771_326_161_581_327_453), do: 20_000
-  def ship_strength(ship_id), do: ship_id
+  def ship_strength(_ship_id), do: 200_000
+
+  def ship_protected_cargo(834_523_813_579_670_645), do: 790
+  def ship_protected_cargo(818_908_769_273_857_488), do: 580
+  def ship_protected_cargo(809_553_354_052_421_083), do: 474
+  def ship_protected_cargo(793_228_477_045_490_952), do: 1320
+  def ship_protected_cargo(822_579_326_280_352_768), do: 580
+  def ship_protected_cargo(788_241_743_887_025_466), do: 10_000
+  def ship_protected_cargo(813_554_350_852_228_185), do: 10_000
+  def ship_protected_cargo(824_733_744_035_612_116), do: 10_000
+  def ship_protected_cargo(829_530_915_272_475_702), do: 9945
+  def ship_protected_cargo(774_102_373_647_074_543), do: 0
+  def ship_protected_cargo(772_895_219_376_276_605), do: 0
+  def ship_protected_cargo(771_326_161_581_327_453), do: 0
+  def ship_protected_cargo(_ship_id), do: 0
 
   def ship_type(834_523_813_579_670_645), do: :explorer
   def ship_type(818_908_769_273_857_488), do: :explorer

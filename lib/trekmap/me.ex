@@ -1,6 +1,6 @@
 defmodule Trekmap.Me do
   alias Trekmap.{APIClient, Session, Galaxy}
-  alias Trekmap.Galaxy.{Spacecraft, Marauder, System.Station}
+  alias Trekmap.Galaxy.{Spacecraft, Marauder, System.Station, System.MiningNode}
   alias Trekmap.Me.Job
   alias Trekmap.Me.Fleet
   require Logger
@@ -72,6 +72,39 @@ defmodule Trekmap.Me do
       {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
       {:error, %{body: "deployment", type: 5}} -> {:error, :in_warp}
       {:error, %{body: "fleet", type: 9}} -> {:error, :fleet_on_repair}
+      {:error, %{body: "course", type: 13}} -> {:error, :invalid_course}
+    end
+  end
+
+  def occupy_mining_node(%Fleet{} = fleet, %MiningNode{} = mining_node, %Session{} = session) do
+    {x, y} = mining_node.coords
+    path = [fleet.system_id]
+
+    body =
+      Jason.encode!(%{
+        "target_action" => 4,
+        "target_action_id" => mining_node.id,
+        "fleet_id" => fleet.id,
+        "client_warp_path" => path,
+        "target_node" => fleet.system_id,
+        "target_x" => x,
+        "target_y" => y
+      })
+
+    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
+
+    with {:ok, %{response: response}} <-
+           APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
+      %{"my_deployed_fleets" => deployed_fleets} = response
+      fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
+      {:ok, Fleet.build(fleet_map)}
+    else
+      {:error, %{body: "course", type: 2}} -> {:ok, fleet}
+      {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
+      {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
+      {:error, %{body: "deployment", type: 5}} -> {:error, :in_warp}
+      {:error, %{body: "fleet", type: 9}} -> {:error, :fleet_on_repair}
+      {:error, %{body: "fleet", type: 4}} -> {:error, :fleet_on_repair}
       {:error, %{body: "course", type: 13}} -> {:error, :invalid_course}
     end
   end
@@ -151,7 +184,7 @@ defmodule Trekmap.Me do
 
   def attack_spacecraft(
         %Fleet{} = fleet,
-        %Spacecraft{mining_node_id: nil} = spacecraft,
+        %Spacecraft{mining_node: nil} = spacecraft,
         %Session{} = session
       ) do
     %{coords: {x, y}} = spacecraft
@@ -203,7 +236,7 @@ defmodule Trekmap.Me do
     body =
       Jason.encode!(%{
         "target_action" => 4,
-        "target_action_id" => spacecraft.mining_node_id,
+        "target_action_id" => spacecraft.mining_node.id,
         "fleet_id" => fleet.id,
         "client_warp_path" => path,
         "target_node" => fleet.system_id,

@@ -1,7 +1,7 @@
 defmodule Trekmap.Bots.FleetCommander.StartshipActor do
   use GenServer
   alias Trekmap.Me.Fleet
-  alias Trekmap.Galaxy.{Spacecraft, Marauder, System.Station}
+  alias Trekmap.Galaxy.{Spacecraft, Marauder, System.Station, System.MiningNode}
   require Logger
 
   ### Public API
@@ -351,6 +351,42 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
 
   def perform_fleet_action(
         fleet,
+        {:mine, %MiningNode{} = mining_node},
+        %{session: session} = state
+      ) do
+    case Trekmap.Me.occupy_mining_node(fleet, mining_node, session) do
+      {:ok, fleet} ->
+        Trekmap.Bots.Admiral.update_fleet_report(%{
+          clearence_granted: state.clearence_granted,
+          mission_paused: state.mission_paused,
+          strategy: state.strategy,
+          fleet_id: state.fleet_id,
+          fleet: fleet
+        })
+
+        if fleet.state == :flying and fleet.remaining_travel_time < 2 do
+          continue_and_reload_fleet(5_000)
+        else
+          continue(fleet)
+        end
+
+      {:error, :in_warp} ->
+        continue_and_reload_fleet(0)
+
+      {:error, :fleet_on_repair} ->
+        continue_and_reload_fleet(0)
+
+      {:error, :shield_is_enabled} ->
+        perform_fleet_action(fleet, :recall, state)
+
+      other ->
+        Logger.warn("Cant mine #{inspect({mining_node, other}, pretty: true)}")
+        continue_and_reload_fleet(0)
+    end
+  end
+
+  def perform_fleet_action(
+        fleet,
         {:attack, %Spacecraft{} = target},
         %{session: session, fleet_id: fleet_id} = state
       ) do
@@ -474,8 +510,8 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
     end
   end
 
-  def perform_fleet_action(fleet, {:wait, timeout}, _state) do
-    continue(fleet, timeout)
+  def perform_fleet_action(_fleet, {:wait, timeout}, _state) do
+    continue_and_reload_fleet(timeout)
   end
 
   def fetch_fleet(fleet_id, session) do

@@ -8,7 +8,7 @@ defmodule Trekmap.Galaxy.Spacecraft do
             strength: nil,
             bounty_score: nil,
             coords: {0, 0},
-            mining_node_id: nil,
+            mining_node: nil,
             pursuit_fleet_id: nil
 
   def table_name, do: "Spacecrafts"

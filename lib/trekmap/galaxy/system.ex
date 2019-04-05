@@ -2,14 +2,15 @@ defmodule Trekmap.Galaxy.System do
   alias Trekmap.{APIClient, Session}
   alias Trekmap.Galaxy
   alias Trekmap.Galaxy.{Spacecraft, Player, Alliances, Alliances.Alliance, Marauder}
-  alias Trekmap.Galaxy.System.{Planet, Station}
+  alias Trekmap.Galaxy.System.{Planet, Station, MiningNode}
 
   defmodule Scan do
     defstruct system: nil,
               spacecrafts: [],
               stations: [],
               hostiles: [],
-              resources: []
+              resources: [],
+              mining_nodes: []
   end
 
   @behaviour Trekmap.AirDB
@@ -82,8 +83,9 @@ defmodule Trekmap.Galaxy.System do
       resources = build_resources_list(mining_slots)
       system = %{system | resources: resources}
 
+      mining_nodes = build_mining_slots_list(mining_slots, system)
       stations = build_stations_list(system, player_container, system_static_children)
-      spacecrafts = build_spacecrafts_list(system, mining_slots, deployed_fleets)
+      spacecrafts = build_spacecrafts_list(system, mining_nodes, deployed_fleets)
       marauders = build_marauders_list(marauders, deployed_fleets, system)
 
       {:ok,
@@ -92,6 +94,7 @@ defmodule Trekmap.Galaxy.System do
          stations: stations,
          spacecrafts: spacecrafts,
          hostiles: marauders,
+         mining_nodes: mining_nodes,
          resources: resources
        }}
     else
@@ -137,6 +140,44 @@ defmodule Trekmap.Galaxy.System do
         error ->
           {:halt, error}
       end
+    end)
+  end
+
+  defp build_mining_slots_list(mining_slots, system) do
+    Enum.flat_map(mining_slots, fn {_node_id, [mining_slot | _]} ->
+      %{
+        "id" => id,
+        "is_active" => is_active,
+        "is_expired" => is_expired,
+        "is_occupied" => is_occupied,
+        "occupy_time" => occupy_time,
+        "point_data" => %{"res" => resource_id, "count" => count}
+      } = mining_slot
+
+      {resource_name, _score} = Trekmap.Products.get_resource_name_and_value_score(resource_id)
+
+      occupied_by_fleet_id = Map.get(mining_slot, "fleet_id")
+      occupied_by_fleet_id = if occupied_by_fleet_id != -1, do: occupied_by_fleet_id
+
+      occupied_by_user_id = Map.get(mining_slot, "user_id")
+      occupied_by_user_id = if occupied_by_user_id != -1, do: occupied_by_user_id
+
+      occupy_time = if occupy_time, do: NaiveDateTime.from_iso8601!(occupy_time)
+
+      [
+        %MiningNode{
+          id: id,
+          is_active: is_active and not is_expired,
+          is_occupied: is_occupied,
+          occupied_by_fleet_id: occupied_by_fleet_id,
+          occupied_by_user_id: occupied_by_user_id,
+          occupied_at: occupy_time,
+          remaining_count: count,
+          resource_id: resource_id,
+          resource_name: resource_name,
+          system: system
+        }
+      ]
     end)
   end
 
@@ -272,12 +313,12 @@ defmodule Trekmap.Galaxy.System do
       } = deployed_fleet
 
       if type == 1 do
-        mining_node_id =
+        mining_node =
           if is_mining do
             Enum.find_value(mining_slots, fn
-              {_x_id, [%{"fleet_id" => miner_fleet_id, "id" => id} | _]} ->
+              %MiningNode{occupied_by_fleet_id: miner_fleet_id} = mining_node ->
                 if miner_fleet_id == fleet_id do
-                  id
+                  mining_node
                 else
                   nil
                 end
@@ -289,7 +330,7 @@ defmodule Trekmap.Galaxy.System do
             player: %Player{id: player_id},
             system: system,
             id: fleet_id,
-            mining_node_id: mining_node_id,
+            mining_node: mining_node,
             coords: {x, y},
             pursuit_fleet_id: Map.get(deployed_fleet, "pursuit_target_id")
           }

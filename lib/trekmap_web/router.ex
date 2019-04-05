@@ -45,6 +45,7 @@ defmodule Trekmap.Router do
                     Trekmap.Bots.FleetCommander.Strategies.StationDefender -> "Defending Station"
                     Trekmap.Bots.FleetCommander.Strategies.HiveDefender -> "Defending Hive"
                     Trekmap.Bots.FleetCommander.Strategies.MinerHunter -> "Hunting Miners"
+                    Trekmap.Bots.FleetCommander.Strategies.Miner -> "Miner"
                     Trekmap.Bots.FleetCommander.Strategies.FractionHunter -> "Hunting Hostiles"
                     Trekmap.Bots.FleetCommander.Strategies.RaidLooter -> "Looting Station"
                     Trekmap.Bots.FleetCommander.Strategies.RaidLeader -> "Opening Station"
@@ -151,6 +152,7 @@ defmodule Trekmap.Router do
         <br/>
         Missions: <br/>
         - <a href="/set_multitasking_mission_plan">Faction + Miners + Defence (default)</a><br/>
+        - <a href="/set_mining_mission_plan">Miners + Mining</a><br/>
         - <a href="/set_overcargo_hunting_mission_plan">Hunt G3 miners</a><br/>
         - <a href="/set_agressive_overcargo_hunting_mission_plan">Hunt G2/G3 miners</a><br/>
         - <a href="/set_faction_hunting_mission_plan">Hunt Klingons</a><br/>
@@ -229,6 +231,15 @@ defmodule Trekmap.Router do
 
   get "/set_multitasking_mission_plan" do
     mission_plan = Trekmap.Bots.Admiral.MissionPlans.multitasking_mission_plan()
+    Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
+
+    conn
+    |> put_resp_header("location", "/")
+    |> send_resp(302, "")
+  end
+
+  get "/set_mining_mission_plan" do
+    mission_plan = Trekmap.Bots.Admiral.MissionPlans.mining_mission_plan()
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn

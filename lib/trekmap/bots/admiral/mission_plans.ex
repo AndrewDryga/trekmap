@@ -16,6 +16,16 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
     }
   end
 
+  defp mine(ship_set, opts) do
+    {max_warp_distance, ship_opts} = Keyword.pop(ship_set, :max_warp_distance)
+
+    {
+      Trekmap.Bots.FleetCommander.Strategies.Miner,
+      ship_opts,
+      [max_warp_distance: max_warp_distance] ++ @pvp_target_level_opts ++ opts
+    }
+  end
+
   defp defend_hive_or_station(ship_set, opts \\ []) do
     {max_warp_distance, ship_opts} = Keyword.pop(ship_set, :max_warp_distance)
 
@@ -146,6 +156,32 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
           patrol_systems: patrol_systems,
           min_targets_in_system: 2,
           min_target_bounty_score: 50_000
+        ),
+      Trekmap.Me.Fleet.drydock4_id() =>
+        defend_hive_or_station(Trekmap.Me.Fleet.Setups.vahklas_with_station_defence_set())
+    }
+  end
+
+  def mining_mission_plan do
+    patrol_systems = Trekmap.Galaxy.fetch_hunting_system_ids!(grade: "***")
+    {:ok, mining_systems} = Trekmap.Galaxy.list_mining_systems("***")
+
+    %{
+      Trekmap.Me.Fleet.drydock1_id() =>
+        hunt_miners(Trekmap.Me.Fleet.Setups.mayflower_set(),
+          patrol_systems: patrol_systems,
+          min_targets_in_system: 1,
+          min_target_bounty_score: 50_000
+        ),
+      Trekmap.Me.Fleet.drydock2_id() =>
+        mine(Trekmap.Me.Fleet.Setups.north_star_set(),
+          patrol_systems: mining_systems,
+          resource_name_filters: ["***"]
+        ),
+      Trekmap.Me.Fleet.drydock3_id() =>
+        mine(Trekmap.Me.Fleet.Setups.horizon_set(),
+          patrol_systems: mining_systems,
+          resource_name_filters: ["***"]
         ),
       Trekmap.Me.Fleet.drydock4_id() =>
         defend_hive_or_station(Trekmap.Me.Fleet.Setups.vahklas_with_station_defence_set())

@@ -282,4 +282,23 @@ defmodule Trekmap.Galaxy do
       {:ok, system_ids}
     end
   end
+
+  def list_mining_systems(grade \\ "***") do
+    formula = "AND({Fraction} != 'Klingon', SEARCH(\"#{grade}\", {Resources}))"
+
+    query_params = %{
+      "maxRecords" => 200,
+      "filterByFormula" => formula
+    }
+
+    with {:ok, systems} when systems != [] <-
+           Trekmap.AirDB.list(Trekmap.Galaxy.System, query_params) do
+      system_ids =
+        systems
+        |> Enum.map(& &1.id)
+        |> Enum.uniq()
+
+      {:ok, system_ids}
+    end
+  end
 end
