@@ -1,5 +1,4 @@
 defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
-  alias Trekmap.Bots.FleetCommander.Strategies.HiveDefender
   require Logger
 
   @behaviour Trekmap.Bots.FleetCommander.Strategy
