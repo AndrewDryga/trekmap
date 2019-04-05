@@ -51,11 +51,12 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
     need_evacuation? = need_evacuation?(fleet, pursuiters)
     if need_evacuation?, do: Logger.warn("[#{name}] Need to leave, pursuiters are nearby")
 
+    targets = Enum.reject(targets, &Trekmap.Locker.locked?(&1.target_fleet_id))
+
     if length(targets) > 0 and not need_evacuation? and fleet.system_id in patrol_systems do
       target =
         targets
         |> Enum.sort_by(&safe_distance(&1.coords, fleet.coords, pursuiters))
-        |> Enum.reject(&Trekmap.Locker.locked?(&1.target_fleet_id))
         |> List.first()
 
       Trekmap.Locker.lock(target.target_fleet_id)
@@ -110,7 +111,6 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
     with {:ok, %{hostiles: hostiles}} <- Trekmap.Galaxy.System.scan_system(system, session) do
       targets =
         hostiles
-        |> Enum.reject(&Trekmap.Locker.locked?(&1.target_fleet_id))
         |> Enum.filter(&enemy_fraction?(&1, fraction_ids))
         |> Enum.filter(&should_kill?(&1, min_target_level, max_target_level))
         |> Enum.filter(&can_kill?(&1, fleet))

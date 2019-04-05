@@ -38,10 +38,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
   def handle_continue(%{state: :at_dock} = fleet, session, config) do
     {:ok, targets} = find_targets_in_hive_systems(fleet, session, config)
 
+    targets = Enum.reject(targets, &Trekmap.Locker.locked?(&1.id))
+
     if length(targets) > 0 do
       target =
         targets
-        |> Enum.reject(&Trekmap.Locker.locked?(&1.id))
         |> Enum.sort_by(&distance(&1.coords, fleet.coords))
         |> Enum.take(3)
         |> Enum.random()
@@ -57,10 +58,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
   def handle_continue(fleet, session, config) do
     {:ok, targets} = find_targets_in_hive_systems(fleet, session, config)
 
+    targets = Enum.reject(targets, &Trekmap.Locker.locked?(&1.id))
+
     if length(targets) > 0 do
       target =
         targets
-        |> Enum.reject(&Trekmap.Locker.locked?(&1.id))
         |> Enum.sort_by(&distance(&1.coords, fleet.coords))
         |> List.first()
 

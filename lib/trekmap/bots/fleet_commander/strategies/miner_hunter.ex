@@ -82,11 +82,12 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
     need_evacuation? = need_evacuation?(fleet, pursuiters)
     if need_evacuation?, do: Logger.warn("[#{name}] Need to leave, pursuiters are nearby")
 
+    targets = Enum.reject(targets, &Trekmap.Locker.locked?(&1.id))
+
     if length(targets) > 0 and not need_evacuation? do
       target =
         targets
         |> Enum.sort_by(&safe_distance(&1.coords, fleet.coords, pursuiters))
-        |> Enum.reject(&Trekmap.Locker.locked?(&1.id))
         |> List.first()
 
       Trekmap.Locker.lock(target.id)
@@ -160,7 +161,6 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
            Trekmap.Galaxy.System.enrich_stations_and_spacecrafts(scan, session) do
       targets =
         miners
-        |> Enum.reject(&Trekmap.Locker.locked?(&1.id))
         |> Enum.reject(&ally?(&1, allies))
         |> Enum.filter(&can_kill?(&1, fleet))
         |> Enum.filter(&can_attack?(&1, min_target_level, max_target_level))
