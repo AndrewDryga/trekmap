@@ -47,8 +47,19 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
         |> Enum.take(3)
         |> Enum.random()
 
-      system = Trekmap.Me.get_system(fleet.system_id, session)
-      {{:fly, system, target.coords}, config}
+      if target.system.id == fleet.system_id do
+        alliance_tag = if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
+        {x, y} = target.coords
+
+        Trekmap.Discord.send_message(
+          "Killing: #{alliance_tag}#{target.player.name}  " <>
+            "at [S:#{target.system.id} X:#{x} Y:#{y}] system #{target.system.name}."
+        )
+
+        {{:attack, target}, config}
+      else
+        {{:fly, target.system, target.coords}, config}
+      end
     else
       Trekmap.Locker.unlock_caller_locks()
       {{:wait, :timer.seconds(5)}, config}
