@@ -68,4 +68,13 @@ defmodule Trekmap.Galaxy.Player do
 
     Trekmap.AirDB.list(__MODULE__, query_params)
   end
+
+  def list_kos_people do
+    query_params = %{
+      "maxRecords" => 100,
+      "filterByFormula" => "OR({KOS})"
+    }
+
+    Trekmap.AirDB.list(__MODULE__, query_params)
+  end
 end

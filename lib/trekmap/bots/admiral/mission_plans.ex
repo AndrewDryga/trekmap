@@ -22,7 +22,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
     strategy_opts = [max_warp_distance: max_warp_distance] ++ @pvp_target_level_opts ++ opts
 
     with {:ok, session} <- Trekmap.Bots.SessionManager.fetch_session(),
-         true <- session.hive_system_id == session.home_system_id do
+         true <- session.home_system_id in session.hive_system_ids do
       {Trekmap.Bots.FleetCommander.Strategies.HiveDefender, ship_opts, strategy_opts}
     else
       _other ->
@@ -68,18 +68,19 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
   end
 
   def multitasking_mission_plan do
-    {:ok, faction_patrol_systems} = Trekmap.Galaxy.list_systems_for_faction("Klingon", 29)
+    # {:ok, faction_patrol_systems} = Trekmap.Galaxy.list_systems_for_faction("Klingon", 29)
     overcargo_patrol_systems = Trekmap.Galaxy.fetch_hunting_system_ids!(grade: "***")
 
     %{
+      #   hunt_maradeurs(Trekmap.Me.Fleet.Setups.mayflower_set(),
+      #     fraction_ids: [@fraction_klingon],
+      #     patrol_systems: faction_patrol_systems,
+      #     min_targets_in_system: 2,
+      #     min_target_level: 29,
+      #     max_target_level: 33
+      #   ),
       Trekmap.Me.Fleet.drydock1_id() =>
-        hunt_maradeurs(Trekmap.Me.Fleet.Setups.mayflower_set(),
-          fraction_ids: [@fraction_klingon],
-          patrol_systems: faction_patrol_systems,
-          min_targets_in_system: 5,
-          min_target_level: 29,
-          max_target_level: 33
-        ),
+        defend_hive_or_station(Trekmap.Me.Fleet.Setups.mayflower_set()),
       Trekmap.Me.Fleet.drydock2_id() =>
         hunt_miners(Trekmap.Me.Fleet.Setups.north_star_set(),
           patrol_systems: overcargo_patrol_systems,

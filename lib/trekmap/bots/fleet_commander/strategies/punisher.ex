@@ -27,7 +27,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.Punisher do
 
     patrol_systems =
       (Keyword.fetch!(config, :patrol_systems) ++
-         [session.hive_system_id] ++ bad_people_home_system_ids)
+         session.hive_system_ids ++ bad_people_home_system_ids)
       |> Enum.filter(fn system_id ->
         path = Trekmap.Galaxy.find_path(session.galaxy, session.home_system_id, system_id)
         warp_distance = Trekmap.Galaxy.get_path_max_warp_distance(session.galaxy, path)

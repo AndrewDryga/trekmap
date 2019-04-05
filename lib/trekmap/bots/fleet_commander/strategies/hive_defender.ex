@@ -7,7 +7,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
     {:ok, allies} = Trekmap.Galaxy.Alliances.list_nap()
     {:ok, enemies} = Trekmap.Galaxy.Alliances.list_kos_in_hive()
     {:ok, bad_people} = Trekmap.Galaxy.Player.list_bad_people()
-    home_system = Trekmap.Me.get_system(session.hive_system_id, session)
+    hive_systems = Enum.map(session.hive_system_ids, &Trekmap.Me.get_system(&1, session))
 
     allies = Enum.map(allies, & &1.tag)
     enemies = Enum.map(enemies, & &1.tag)
@@ -15,8 +15,8 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
 
     {:ok,
      %{
-       in_hive?: session.hive_system_id == session.home_system_id,
-       home_system: home_system,
+       in_hive?: session.home_system_id in session.hive_system_ids,
+       hive_systems: hive_systems,
        allies: allies,
        enemies: enemies,
        bad_people_ids: bad_people_ids,
@@ -27,6 +27,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
 
   def handle_continue(%{state: :at_dock, hull_health: hull_health}, _session, config)
       when hull_health < 100 do
+    Trekmap.Locker.unlock_caller_locks()
     {:instant_repair, config}
   end
 
@@ -35,49 +36,69 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
   end
 
   def handle_continue(%{state: :at_dock} = fleet, session, config) do
-    {:ok, targets} = find_targets_in_home_system(fleet, session, config)
+    {:ok, targets} = find_targets_in_hive_systems(fleet, session, config)
 
     if length(targets) > 0 do
       target =
         targets
+        |> Enum.reject(&Trekmap.Locker.locked?(&1.id))
         |> Enum.sort_by(&distance(&1.coords, fleet.coords))
         |> Enum.take(3)
         |> Enum.random()
 
-      alliance_tag = if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
-      {x, y} = target.coords
-
-      Trekmap.Discord.send_message(
-        "Killing: #{alliance_tag}#{target.player.name} at [S:#{target.system.id} X:#{x} Y:#{y}]."
-      )
-
       system = Trekmap.Me.get_system(fleet.system_id, session)
       {{:fly, system, target.coords}, config}
     else
+      Trekmap.Locker.unlock_caller_locks()
       {{:wait, :timer.seconds(5)}, config}
     end
   end
 
   def handle_continue(fleet, session, config) do
-    {:ok, targets} = find_targets_in_home_system(fleet, session, config)
+    {:ok, targets} = find_targets_in_hive_systems(fleet, session, config)
 
     if length(targets) > 0 do
       target =
         targets
+        |> Enum.reject(&Trekmap.Locker.locked?(&1.id))
         |> Enum.sort_by(&distance(&1.coords, fleet.coords))
         |> List.first()
 
-      Logger.warn("Found enemy in hive: #{inspect(target)}")
+      Trekmap.Locker.lock(target.id)
 
-      {{:attack, target}, config}
+      if target.system.id == fleet.system_id do
+        alliance_tag = if target.player.alliance, do: "[#{target.player.alliance.tag}] ", else: ""
+        {x, y} = target.coords
+
+        Trekmap.Discord.send_message(
+          "Killing: #{alliance_tag}#{target.player.name}  " <>
+            "at [S:#{target.system.id} X:#{x} Y:#{y}] system #{target.system.name}."
+        )
+
+        {{:attack, target}, config}
+      else
+        {{:fly, target.system, target.coords}, config}
+      end
     else
+      Trekmap.Locker.unlock_caller_locks()
       {:recall, config}
     end
   end
 
-  defp find_targets_in_home_system(fleet, session, config) do
+  defp find_targets_in_hive_systems(fleet, session, config) do
+    %{hive_systems: hive_systems} = config
+
+    Enum.reduce_while(hive_systems, {:ok, []}, fn system, return ->
+      with {:ok, []} <- find_targets_in_system(system, fleet, session, config) do
+        {:cont, return}
+      else
+        other -> {:halt, other}
+      end
+    end)
+  end
+
+  defp find_targets_in_system(system, fleet, session, config) do
     %{
-      home_system: system,
       allies: allies,
       enemies: enemies,
       bad_people_ids: bad_people_ids,
@@ -100,7 +121,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
       {:error, %{"code" => 400}} = error ->
         Logger.error("Can't list targets in system #{inspect(system)}, reason: #{inspect(error)}")
         :timer.sleep(5_000)
-        find_targets_in_home_system(fleet, session, config)
+        find_targets_in_system(system, fleet, session, config)
     end
   end
 

@@ -53,7 +53,7 @@ defmodule Trekmap.Locker do
         if pid == lock_owner_pid do
           []
         else
-          {id, lock_owner_pid}
+          [{id, lock_owner_pid}]
         end
       end)
       |> Enum.into(%{})

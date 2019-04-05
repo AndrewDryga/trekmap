@@ -306,6 +306,10 @@ defmodule Trekmap.Router do
     send_resp(conn, 404, "not found")
   end
 
+  defp format_time(seconds) when seconds <= 0 do
+    ""
+  end
+
   defp format_time(seconds) do
     %{hour: hour, minute: minute, second: second} =
       %Time{hour: 0, minute: 0, second: 0}

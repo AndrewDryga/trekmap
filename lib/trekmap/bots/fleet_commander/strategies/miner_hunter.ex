@@ -9,19 +9,23 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
     {:ok, enemies} = Trekmap.Galaxy.Alliances.list_enemies()
     {:ok, bad_alliances} = Trekmap.Galaxy.Alliances.list_bad_alliances()
     {:ok, bad_people} = Trekmap.Galaxy.Player.list_bad_people()
+    {:ok, kos_people} = Trekmap.Galaxy.Player.list_kos_people()
 
     {:ok, prohibited_systems} = Trekmap.Galaxy.System.list_prohibited_systems()
     prohibited_system_ids = Enum.map(prohibited_systems, & &1.id)
+
+    hive_systems = Enum.map(session.hive_system_ids, &Trekmap.Me.get_system(&1, session))
 
     allies = Enum.map(allies, & &1.tag)
     enemies = Enum.map(enemies, & &1.tag)
     bad_alliances = Enum.map(bad_alliances, & &1.tag)
     bad_people_ids = Enum.map(bad_people, & &1.id)
+    kos_people_ids = Enum.map(kos_people, & &1.id)
 
     max_warp_distance = Keyword.fetch!(config, :max_warp_distance)
 
     patrol_systems =
-      (Keyword.fetch!(config, :patrol_systems) ++ [session.hive_system_id])
+      (Keyword.fetch!(config, :patrol_systems) ++ session.hive_system_ids)
       |> Enum.filter(fn system_id ->
         path = Trekmap.Galaxy.find_path(session.galaxy, session.home_system_id, system_id)
         warp_distance = Trekmap.Galaxy.get_path_max_warp_distance(session.galaxy, path)
@@ -31,10 +35,13 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
 
     {:ok,
      %{
+       in_hive?: session.home_system_id in session.hive_system_ids,
+       hive_systems: hive_systems,
        allies: allies,
        enemies: enemies,
        bad_alliances: bad_alliances,
        bad_people_ids: bad_people_ids,
+       kos_people_ids: kos_people_ids,
        patrol_systems: patrol_systems,
        min_targets_in_system: Keyword.fetch!(config, :min_targets_in_system),
        min_target_level: Keyword.fetch!(config, :min_target_level),
@@ -98,9 +105,9 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
           Trekmap.Locker.lock(target.id)
           {{:fly, system, target.coords}, config}
 
-        fleet.state == :at_dock ->
-          Trekmap.Locker.unlock_caller_locks()
-          HiveDefender.handle_continue(fleet, session, config)
+        # fleet.state == :at_dock ->
+        #   Trekmap.Locker.unlock_caller_locks()
+        #   HiveDefender.handle_continue(fleet, session, config)
 
         true ->
           Logger.info("[#{name}] Can't find any targets")
@@ -142,6 +149,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
       allies: allies,
       bad_alliances: bad_alliances,
       bad_people_ids: bad_people_ids,
+      kos_people_ids: kos_people_ids,
       min_target_level: min_target_level,
       max_target_level: max_target_level,
       min_target_bounty_score: min_target_bounty_score
@@ -157,7 +165,14 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
         |> Enum.filter(&can_kill?(&1, fleet))
         |> Enum.filter(&can_attack?(&1, min_target_level, max_target_level))
         |> Enum.filter(
-          &should_kill?(&1, min_target_bounty_score, enemies, bad_alliances, bad_people_ids)
+          &should_kill?(
+            &1,
+            min_target_bounty_score,
+            enemies,
+            bad_alliances,
+            bad_people_ids,
+            kos_people_ids
+          )
         )
 
       pursuiters = Enum.filter(miners, &(&1.pursuit_fleet_id == fleet.id))
@@ -220,18 +235,26 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
     min_target_level <= miner.player.level and miner.player.level <= max_target_level
   end
 
-  defp should_kill?(miner, min_target_bounty_score, enemies, bad_alliances, bad_people_ids) do
+  defp should_kill?(
+         miner,
+         min_target_bounty_score,
+         enemies,
+         bad_alliances,
+         bad_people_ids,
+         kos_people_ids
+       ) do
     overcargo? = not is_nil(miner.bounty_score) and miner.bounty_score > 1
 
     bad_alliance? =
       if miner.player.alliance, do: miner.player.alliance.tag in bad_alliances, else: false
 
+    kos_person? = miner.player.id in kos_people_ids
     bad_person? = miner.player.id in bad_people_ids
     should_suffer? = (bad_person? or bad_alliance?) and overcargo?
     enemy? = if miner.player.alliance, do: miner.player.alliance.tag in enemies, else: false
     over_bounty_score? = overcargo? and miner.bounty_score > min_target_bounty_score
 
-    enemy? or should_suffer? or over_bounty_score?
+    enemy? or kos_person? or should_suffer? or over_bounty_score?
   end
 
   defp safe_distance({x1, y1}, {x2, y2}, []) do
