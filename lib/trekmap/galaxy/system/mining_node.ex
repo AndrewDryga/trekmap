@@ -1,5 +1,6 @@
 defmodule Trekmap.Galaxy.System.MiningNode do
   defstruct id: nil,
+            index: nil,
             is_active: nil,
             is_occupied: nil,
             occupied_by_fleet_id: nil,

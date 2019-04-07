@@ -144,41 +144,47 @@ defmodule Trekmap.Galaxy.System do
   end
 
   defp build_mining_slots_list(mining_slots, system) do
-    Enum.flat_map(mining_slots, fn {_node_id, [mining_slot | _]} ->
-      %{
-        "id" => id,
-        "is_active" => is_active,
-        "is_expired" => is_expired,
-        "is_occupied" => is_occupied,
-        "occupy_time" => occupy_time,
-        "point_data" => %{"res" => resource_id, "count" => count}
-      } = mining_slot
+    {mining_nodes, _index} =
+      Enum.reduce(mining_slots, {[], 0}, fn
+        {_node_id, [mining_slot | _]}, {mining_nodes, index} ->
+          %{
+            "id" => id,
+            "is_active" => is_active,
+            "is_expired" => is_expired,
+            "is_occupied" => is_occupied,
+            "occupy_time" => occupy_time,
+            "point_data" => %{"res" => resource_id, "count" => count}
+          } = mining_slot
 
-      {resource_name, _score} = Trekmap.Products.get_resource_name_and_value_score(resource_id)
+          {resource_name, _score} =
+            Trekmap.Products.get_resource_name_and_value_score(resource_id)
 
-      occupied_by_fleet_id = Map.get(mining_slot, "fleet_id")
-      occupied_by_fleet_id = if occupied_by_fleet_id != -1, do: occupied_by_fleet_id
+          occupied_by_fleet_id = Map.get(mining_slot, "fleet_id")
+          occupied_by_fleet_id = if occupied_by_fleet_id != -1, do: occupied_by_fleet_id
 
-      occupied_by_user_id = Map.get(mining_slot, "user_id")
-      occupied_by_user_id = if occupied_by_user_id != -1, do: occupied_by_user_id
+          occupied_by_user_id = Map.get(mining_slot, "user_id")
+          occupied_by_user_id = if occupied_by_user_id != -1, do: occupied_by_user_id
 
-      occupy_time = if occupy_time, do: NaiveDateTime.from_iso8601!(occupy_time)
+          occupy_time = if occupy_time, do: NaiveDateTime.from_iso8601!(occupy_time)
 
-      [
-        %MiningNode{
-          id: id,
-          is_active: is_active and not is_expired,
-          is_occupied: is_occupied,
-          occupied_by_fleet_id: occupied_by_fleet_id,
-          occupied_by_user_id: occupied_by_user_id,
-          occupied_at: occupy_time,
-          remaining_count: count,
-          resource_id: resource_id,
-          resource_name: resource_name,
-          system: system
-        }
-      ]
-    end)
+          mining_node = %MiningNode{
+            id: id,
+            index: index,
+            is_active: is_active and not is_expired,
+            is_occupied: is_occupied,
+            occupied_by_fleet_id: occupied_by_fleet_id,
+            occupied_by_user_id: occupied_by_user_id,
+            occupied_at: occupy_time,
+            remaining_count: count,
+            resource_id: resource_id,
+            resource_name: resource_name,
+            system: system
+          }
+
+          {mining_nodes ++ [mining_node], index + 1}
+      end)
+
+    mining_nodes
   end
 
   defp build_resources_list(mining_slots) do

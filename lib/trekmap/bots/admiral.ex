@@ -9,7 +9,7 @@ defmodule Trekmap.Bots.Admiral do
   def init([]) do
     Logger.info("[Admiral] Everything is under control")
     # current_mission_plan = Trekmap.Bots.Admiral.MissionPlans.multitasking_mission_plan()
-    current_mission_plan = Trekmap.Bots.Admiral.MissionPlans.mining_mission_plan()
+    current_mission_plan = Trekmap.Bots.Admiral.MissionPlans.war_mission_plan()
     {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
 
     state = %{
@@ -40,7 +40,7 @@ defmodule Trekmap.Bots.Admiral do
       {"mission_observer", _opts} ->
         []
 
-      {dock_id, {_strategy, ship_opts, _strategy_opts}} ->
+      {_dock_id, {_strategy, ship_opts, _strategy_opts}} ->
         Keyword.get(ship_opts, :crew, [])
     end)
     |> Enum.reject(&(&1 == -1))

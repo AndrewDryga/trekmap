@@ -40,6 +40,14 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
     end
   end
 
+  defp defend_station(ship_set, opts \\ []) do
+    {max_warp_distance, ship_opts} = Keyword.pop(ship_set, :max_warp_distance)
+
+    strategy_opts = [max_warp_distance: max_warp_distance] ++ @pvp_target_level_opts ++ opts
+
+    {Trekmap.Bots.FleetCommander.Strategies.StationDefender, ship_opts, strategy_opts}
+  end
+
   defp hunt_maradeurs(ship_set, opts) do
     {max_warp_distance, ship_opts} = Keyword.pop(ship_set, :max_warp_distance)
 
@@ -75,6 +83,29 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
 
     {Trekmap.Bots.FleetCommander.Strategies.Blockade, ship_opts,
      [max_warp_distance: max_warp_distance] ++ @pvp_target_level_opts ++ opts}
+  end
+
+  def war_mission_plan do
+    overcargo_patrol_systems = Trekmap.Galaxy.fetch_hunting_system_ids!(grade: "***")
+
+    %{
+      Trekmap.Me.Fleet.drydock1_id() =>
+        hunt_miners(Trekmap.Me.Fleet.Setups.mayflower_set(),
+          patrol_systems: overcargo_patrol_systems,
+          min_targets_in_system: 1,
+          min_target_bounty_score: 100_000
+        ),
+      Trekmap.Me.Fleet.drydock2_id() =>
+        hunt_miners(Trekmap.Me.Fleet.Setups.north_star_set(),
+          patrol_systems: overcargo_patrol_systems,
+          min_targets_in_system: 1,
+          min_target_bounty_score: 100_000
+        ),
+      Trekmap.Me.Fleet.drydock3_id() =>
+        defend_hive_or_station(Trekmap.Me.Fleet.Setups.kumari_set()),
+      Trekmap.Me.Fleet.drydock4_id() =>
+        defend_station(Trekmap.Me.Fleet.Setups.vahklas_with_station_defence_set())
+    }
   end
 
   def multitasking_mission_plan do
