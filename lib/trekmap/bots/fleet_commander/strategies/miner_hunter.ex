@@ -139,8 +139,12 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
   end
 
   defp find_targets_in_current_system(fleet, session, config) do
-    system = Trekmap.Me.get_system(fleet.system_id, session)
-    find_targets_in_system(fleet, system, session, config)
+    if fleet.system_id in session.hive_system_ids do
+      {:ok, [], []}
+    else
+      system = Trekmap.Me.get_system(fleet.system_id, session)
+      find_targets_in_system(fleet, system, session, config)
+    end
   end
 
   defp find_targets_in_system(fleet, system, session, config) do
