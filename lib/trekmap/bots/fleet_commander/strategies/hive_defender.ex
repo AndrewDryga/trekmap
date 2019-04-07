@@ -36,11 +36,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
   end
 
   def handle_continue(%{state: :at_dock} = fleet, session, config) do
-    {:ok, targets} = find_targets_in_hive_systems(fleet, session, config)
+    {:ok, targets, high_power_targets} = find_targets_in_hive_systems(fleet, session, config)
 
     targets = Enum.reject(targets, &Trekmap.Locker.locked?(&1.id))
 
-    if length(targets) > 0 do
+    if length(targets) > 0 and length(high_power_targets) < 1 do
       target =
         targets
         |> Enum.sort_by(&distance(&1.coords, fleet.coords))
@@ -67,11 +67,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
   end
 
   def handle_continue(fleet, session, config) do
-    {:ok, targets} = find_targets_in_hive_systems(fleet, session, config)
+    {:ok, targets, high_power_targets} = find_targets_in_hive_systems(fleet, session, config)
 
     targets = Enum.reject(targets, &Trekmap.Locker.locked?(&1.id))
 
-    if length(targets) > 0 do
+    if length(targets) > 0 and length(high_power_targets) < 1 do
       target =
         targets
         |> Enum.sort_by(&distance(&1.coords, fleet.coords))
@@ -101,8 +101,9 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
   defp find_targets_in_hive_systems(fleet, session, config) do
     %{hive_systems: hive_systems} = config
 
-    Enum.reduce_while(hive_systems, {:ok, []}, fn system, return ->
-      with {:ok, []} <- find_targets_in_system(system, fleet, session, config) do
+    Enum.reduce_while(hive_systems, {:ok, [], []}, fn system, return ->
+      with {:ok, [], _high_power_targets} <-
+             find_targets_in_system(system, fleet, session, config) do
         {:cont, return}
       else
         other -> {:halt, other}
@@ -125,11 +126,13 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
       targets =
         spacecrafts
         |> Enum.reject(&ally?(&1, allies))
-        |> Enum.filter(&can_kill?(&1, fleet))
         |> Enum.filter(&can_attack?(&1, min_target_level, max_target_level))
         |> Enum.filter(&should_kill?(&1, enemies, bad_people_ids))
 
-      {:ok, targets}
+      high_power_targets = Enum.reject(targets, &can_kill?(&1, fleet))
+      targets = Enum.filter(targets, &can_kill?(&1, fleet))
+
+      {:ok, targets, high_power_targets}
     else
       {:error, %{"code" => 400}} = error ->
         Logger.error("Can't list targets in system #{inspect(system)}, reason: #{inspect(error)}")

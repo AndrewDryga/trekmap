@@ -58,7 +58,7 @@ defmodule Trekmap.Bots.Guardian do
 
     defence_broken? =
       Enum.any?(defense_stations, fn {_id, defense_station} ->
-        Map.fetch!(defense_station, "damage") > 2000
+        Map.fetch!(defense_station, "damage") > 10000
       end)
 
     Trekmap.Bots.Admiral.update_station_report(%{
@@ -86,7 +86,7 @@ defmodule Trekmap.Bots.Guardian do
         {:noreply, %{state | session: session}}
 
       fleet_damage_ratio > 50 ->
-        Logger.warn("Base is damaged, switching to under attack mode")
+        Logger.warn("Fleet is damaged, switching to under attack mode")
 
         {:ok, session} = full_repair(session)
         Process.send_after(self(), :timeout, 1)

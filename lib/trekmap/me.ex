@@ -522,6 +522,10 @@ defmodule Trekmap.Me do
           finish_fleet_repair(job, session)
         end
 
+      {:error, %{body: "fleet", type: 9}} ->
+        Logger.warn("In battle")
+        :ok
+
       {:error, %{body: "fleet", type: 14}} ->
         Logger.warn("Other ship is already repairing")
 

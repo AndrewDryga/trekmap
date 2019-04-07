@@ -4,7 +4,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
 
   @klingon_elite_systems [395_344_716, 1_090_722_450]
 
-  @pvp_target_level_opts [min_target_level: 20, max_target_level: 33]
+  @pvp_target_level_opts [min_target_level: 20, max_target_level: 45]
 
   defp hunt_miners(ship_set, opts) do
     {max_warp_distance, ship_opts} = Keyword.pop(ship_set, :max_warp_distance)
