@@ -247,6 +247,35 @@ defmodule Trekmap.Galaxy.System.Station do
     end
   end
 
+  def list_system_ids_with_enemy_stations(session) do
+    formula = "{Relation} = 'Enemy'"
+
+    query_params = %{
+      "maxRecords" => 250,
+      "filterByFormula" => formula,
+      "sort[0][field]" => "Profitability",
+      "sort[0][direction]" => "desc"
+    }
+
+    with {:ok, targets} when targets != [] <- Trekmap.AirDB.list(__MODULE__, query_params) do
+      target =
+        targets
+        |> Enum.map(&Trekmap.AirDB.preload(&1, :system))
+        |> Enum.sort_by(fn station ->
+          path =
+            Trekmap.Galaxy.find_path(session.galaxy, session.home_system_id, station.system.id)
+
+          Trekmap.Galaxy.get_path_distance(session.galaxy, path)
+        end)
+        |> Enum.map(& &1.system.id)
+        |> Enum.uniq()
+
+      {:ok, target}
+    else
+      {:ok, []} -> {:error, :not_found}
+    end
+  end
+
   def temporary_shield_enabled?(%__MODULE__{shield_expires_at: nil}) do
     false
   end

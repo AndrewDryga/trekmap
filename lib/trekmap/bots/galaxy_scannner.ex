@@ -76,6 +76,19 @@ defmodule Trekmap.Bots.GalaxyScanner do
     {:ok, systems}
   end
 
+  def scan_systems_by_ids(system_ids, session) do
+    system_ids
+    |> Enum.map(&Trekmap.Me.get_system(&1, session))
+    |> Enum.map(fn system ->
+      {:ok, system} = Trekmap.AirDB.create_or_update(system)
+      system
+    end)
+    |> Task.async_stream(&scan_and_sync_system(&1, session),
+      max_concurrency: 15,
+      timeout: :infinity
+    )
+  end
+
   def scan_and_sync_system(system, session) do
     with {:ok, scan} <- Trekmap.Galaxy.System.scan_system(system, session),
          {:ok, scan} <-

@@ -150,6 +150,8 @@ defmodule Trekmap.Router do
         <a href="/unpause_missions">Unpause All</a><br/>
         <br/>
         <br/>
+        <a href="/scan_enemies">Scan enemies</a><br/>
+        <br/>
         Missions: <br/>
         - <a href="/set_multitasking_mission_plan">Faction + Miners + Defence (default)</a><br/>
         - <a href="/set_mining_mission_plan">Miners + Mining</a><br/>
@@ -223,6 +225,19 @@ defmodule Trekmap.Router do
 
   get "/unpause_missions" do
     :ok = Trekmap.Bots.FleetCommander.unpause_all_missions()
+
+    conn
+    |> put_resp_header("location", "/")
+    |> send_resp(302, "")
+  end
+
+  get "/scan_enemies" do
+    {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
+    {:ok, system_ids} = Trekmap.Galaxy.System.Station.list_system_ids_with_enemy_stations(session)
+
+    Task.start(fn ->
+      Trekmap.Bots.GalaxyScanner.scan_systems_by_ids(system_ids, session)
+    end)
 
     conn
     |> put_resp_header("location", "/")
