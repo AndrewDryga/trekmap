@@ -87,6 +87,7 @@ defmodule Trekmap.Bots.GalaxyScanner do
       max_concurrency: 15,
       timeout: :infinity
     )
+    |> Enum.to_list()
   end
 
   def scan_and_sync_system(system, session) do
