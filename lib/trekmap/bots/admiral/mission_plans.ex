@@ -96,7 +96,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
           min_target_bounty_score: 100_000
         ),
       Trekmap.Me.Fleet.drydock2_id() =>
-        hunt_miners(Trekmap.Me.Fleet.Setups.north_star_set(),
+        hunt_miners(Trekmap.Me.Fleet.Setups.north_star_with_long_warp_set(),
           patrol_systems: overcargo_patrol_systems,
           min_targets_in_system: 1,
           min_target_bounty_score: 100_000
