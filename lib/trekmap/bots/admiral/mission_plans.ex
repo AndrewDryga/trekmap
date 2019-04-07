@@ -101,8 +101,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
           min_targets_in_system: 1,
           min_target_bounty_score: 100_000
         ),
-      Trekmap.Me.Fleet.drydock3_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.kumari_set()),
+      Trekmap.Me.Fleet.drydock3_id() => defend_station(Trekmap.Me.Fleet.Setups.kumari_set()),
       Trekmap.Me.Fleet.drydock4_id() =>
         defend_station(Trekmap.Me.Fleet.Setups.vahklas_with_station_defence_set())
     }
