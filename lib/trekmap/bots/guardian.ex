@@ -100,7 +100,7 @@ defmodule Trekmap.Bots.Guardian do
 
         {:noreply, %{state | session: session}}
 
-      fleet_damage_ratio > 70 ->
+      fleet_damage_ratio > 33 ->
         Logger.warn("Fleet is damaged, do not bait")
 
         {:ok, session} = full_repair(session)
@@ -119,13 +119,13 @@ defmodule Trekmap.Bots.Guardian do
 
       fleet_damage_ratio > 0 ->
         Logger.info("Baiting, damaged by #{trunc(fleet_damage_ratio)}%")
-        Process.send_after(self(), :timeout, 1_000)
+        Process.send_after(self(), :timeout, 1)
         Trekmap.Bots.FleetCommander.continue_all_missions()
         {:noreply, state}
 
       true ->
         Trekmap.Bots.FleetCommander.continue_all_missions()
-        Process.send_after(self(), :timeout, 5_000)
+        Process.send_after(self(), :timeout, 3_000)
         {:noreply, state}
     end
   end
