@@ -90,6 +90,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
         |> List.first()
 
       Trekmap.Locker.lock(target.id)
+      Trekmap.Locker.lock(target.system.id)
 
       if distance(target.coords, fleet.coords) < 7 do
         {{:attack, target}, config}
@@ -103,6 +104,8 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
           {system, targets} = nearby_system_with_targets
           target = List.first(targets)
           Trekmap.Locker.lock(target.id)
+          Trekmap.Locker.lock(target.system.id)
+          Trekmap.Locker.unlock(fleet.system_id)
           {{:fly, system, target.coords}, config}
 
         # fleet.state == :at_dock ->
@@ -199,7 +202,9 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
     stop_on_first_result? = not skip_nearest_system?
 
     {nearby_system_with_targets, _second?} =
-      Enum.sort_by(patrol_systems, fn system_id ->
+      patrol_systems
+      |> Enum.reject(&Trekmap.Locker.locked?(&1))
+      |> Enum.sort_by(fn system_id ->
         path = Trekmap.Galaxy.find_path(session.galaxy, fleet.system_id, system_id)
         Trekmap.Galaxy.get_path_distance(session.galaxy, path)
       end)
