@@ -85,8 +85,8 @@ defmodule Trekmap.Galaxy.System do
 
       mining_nodes = build_mining_slots_list(mining_slots, system)
       stations = build_stations_list(system, player_container, system_static_children)
-      spacecrafts = build_spacecrafts_list(system, mining_nodes, deployed_fleets)
-      marauders = build_marauders_list(marauders, deployed_fleets, system)
+      spacecrafts = build_spacecrafts_list(system, mining_nodes, deployed_fleets, session)
+      marauders = build_marauders_list(marauders, deployed_fleets, system, session)
 
       {:ok,
        %Scan{
@@ -199,7 +199,7 @@ defmodule Trekmap.Galaxy.System do
     end)
   end
 
-  defp build_marauders_list(marauders, deployed_fleets, system) do
+  defp build_marauders_list(marauders, deployed_fleets, system, session) do
     Enum.flat_map(marauders, fn marauder ->
       %{
         "target_fleet_id" => target_fleet_id,
@@ -211,7 +211,7 @@ defmodule Trekmap.Galaxy.System do
       level = levels |> Enum.to_list() |> List.first() |> elem(1)
 
       if marauder_fleet = Map.get(deployed_fleets, to_string(target_fleet_id)) do
-        {x, y} =
+        {{x, y}, hull_id} =
           case marauder_fleet do
             %{
               "current_course" => %{
@@ -221,7 +221,8 @@ defmodule Trekmap.Galaxy.System do
                 "end_y" => ey,
                 "start_time" => started_at,
                 "duration" => duration
-              }
+              },
+              "hull_ids" => [hull_id]
             }
             when not is_nil(sx) and not is_nil(sy) and not is_nil(ex) and not is_nil(ey) ->
               course_progress =
@@ -232,10 +233,11 @@ defmodule Trekmap.Galaxy.System do
 
               course_progress = Enum.max([1, course_progress])
 
-              {sx + trunc((sx + ex) / course_progress), sy + trunc((sy + ey) / course_progress)}
+              {{sx + trunc((sx + ex) / course_progress), sy + trunc((sy + ey) / course_progress)},
+               hull_id}
 
-            %{"current_coords" => %{"x" => x, "y" => y}} ->
-              {x, y}
+            %{"current_coords" => %{"x" => x, "y" => y}, "hull_ids" => [hull_id]} ->
+              {{x, y}, hull_id}
           end
 
         [
@@ -245,6 +247,7 @@ defmodule Trekmap.Galaxy.System do
             system: system,
             coords: {x, y},
             strength: strength,
+            hull_type: Trekmap.Me.Fleet.hull_type(hull_id, session),
             level: level,
             pursuit_fleet_id: Map.get(marauder_fleet, "pursuit_target_id")
           }
@@ -308,14 +311,15 @@ defmodule Trekmap.Galaxy.System do
   defp station_coords(14, {x, y}), do: {x + -57, y + -70}
   defp station_coords(15, {x, y}), do: {x + -8, y + -90}
 
-  defp build_spacecrafts_list(system, mining_slots, deployed_fleets) do
+  defp build_spacecrafts_list(system, mining_slots, deployed_fleets, session) do
     Enum.flat_map(deployed_fleets, fn {_fleet_binary_id, deployed_fleet} ->
       %{
         "fleet_id" => fleet_id,
         "current_coords" => %{"x" => x, "y" => y},
         "uid" => player_id,
         "type" => type,
-        "is_mining" => is_mining
+        "is_mining" => is_mining,
+        "hull_ids" => [hull_id]
       } = deployed_fleet
 
       if type == 1 do
@@ -336,6 +340,7 @@ defmodule Trekmap.Galaxy.System do
             player: %Player{id: player_id},
             system: system,
             id: fleet_id,
+            hull_type: Trekmap.Me.Fleet.hull_type(hull_id, session),
             mining_node: mining_node,
             coords: {x, y},
             pursuit_fleet_id: Map.get(deployed_fleet, "pursuit_target_id")

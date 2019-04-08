@@ -6,6 +6,7 @@ defmodule Trekmap.Galaxy.Spacecraft do
             player: nil,
             id: nil,
             strength: nil,
+            hull_type: nil,
             bounty_score: nil,
             coords: {0, 0},
             mining_node: nil,
