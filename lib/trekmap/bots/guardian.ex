@@ -74,17 +74,6 @@ defmodule Trekmap.Bots.Guardian do
         Process.send_after(self(), :timeout, 1)
         {:noreply, %{state | session: session}}
 
-      fleet_damage_ratio > 95 ->
-        Logger.warn("Fleet at base is very damaged, shielding and switching to under attack mode")
-
-        :ok = Trekmap.Me.activate_shield(session)
-        {:ok, session} = full_repair(session)
-        Process.send_after(self(), :timeout, 1)
-
-        state = under_attack(state)
-
-        {:noreply, %{state | session: session}}
-
       defence_broken? == true and (fleet_damage_ratio > 70 or not base_well_defended?) ->
         Logger.warn("Base defence is damaged, switching to under attack mode")
 
@@ -95,6 +84,20 @@ defmodule Trekmap.Bots.Guardian do
           Logger.warn("Base defence is damaged and no fleet at home, activating shield")
           :ok = Trekmap.Me.activate_shield(session)
         end
+
+        state = under_attack(state)
+
+        {:noreply, %{state | session: session}}
+
+      fleet_damage_ratio > 95 ->
+        Logger.warn("Fleet at base is very damaged, shielding and switching to under attack mode")
+
+        if length(ships_at_base) < 2 do
+          :ok = Trekmap.Me.activate_shield(session)
+        end
+
+        {:ok, session} = full_repair(session)
+        Process.send_after(self(), :timeout, 1)
 
         state = under_attack(state)
 
@@ -144,7 +147,7 @@ defmodule Trekmap.Bots.Guardian do
   end
 
   defp under_attack(state) do
-    Trekmap.Bots.FleetCommander.pause_all_missions(:timer.minutes(120))
+    # Trekmap.Bots.FleetCommander.pause_all_missions(:timer.minutes(120))
 
     if state.under_attack_timer_ref do
       Process.cancel_timer(state.under_attack_timer_ref)
