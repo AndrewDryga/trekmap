@@ -216,6 +216,7 @@ defmodule Trekmap.Me.Fleet do
   def ship_id("Kehra"), do: 809_553_354_052_421_083
   def ship_id("North Star"), do: 793_228_477_045_490_952
   def ship_id("Kumari"), do: 822_579_326_280_352_768
+  def ship_id("Saladin"), do: 842_689_708_634_228_174
   def ship_id("Envoy 1"), do: 788_241_743_887_025_466
   def ship_id("Envoy 2"), do: 813_554_350_852_228_185
   def ship_id("Envoy 3"), do: 824_733_744_035_612_116
@@ -229,6 +230,7 @@ defmodule Trekmap.Me.Fleet do
   def ship_name(809_553_354_052_421_083), do: "Kehra"
   def ship_name(793_228_477_045_490_952), do: "North Star"
   def ship_name(822_579_326_280_352_768), do: "Kumari"
+  def ship_name(842_689_708_634_228_174), do: "Saladin"
   def ship_name(788_241_743_887_025_466), do: "Envoy 1"
   def ship_name(813_554_350_852_228_185), do: "Envoy 2"
   def ship_name(824_733_744_035_612_116), do: "Envoy 3"
@@ -243,6 +245,7 @@ defmodule Trekmap.Me.Fleet do
   def ship_strength(809_553_354_052_421_083), do: 160_000
   def ship_strength(793_228_477_045_490_952), do: 293_000
   def ship_strength(822_579_326_280_352_768), do: 286_000
+  def ship_strength(842_689_708_634_228_174), do: 300_000
   def ship_strength(788_241_743_887_025_466), do: 50_000
   def ship_strength(813_554_350_852_228_185), do: 50_000
   def ship_strength(824_733_744_035_612_116), do: 50_000
@@ -257,6 +260,7 @@ defmodule Trekmap.Me.Fleet do
   def ship_protected_cargo(809_553_354_052_421_083), do: 474
   def ship_protected_cargo(793_228_477_045_490_952), do: 1320
   def ship_protected_cargo(822_579_326_280_352_768), do: 580
+  def ship_protected_cargo(842_689_708_634_228_174), do: 436
   def ship_protected_cargo(788_241_743_887_025_466), do: 10_000
   def ship_protected_cargo(813_554_350_852_228_185), do: 10_000
   def ship_protected_cargo(824_733_744_035_612_116), do: 10_000

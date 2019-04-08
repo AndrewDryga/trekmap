@@ -103,7 +103,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
         ),
       Trekmap.Me.Fleet.drydock3_id() => defend_station(Trekmap.Me.Fleet.Setups.kumari_set()),
       Trekmap.Me.Fleet.drydock4_id() =>
-        defend_station(Trekmap.Me.Fleet.Setups.vahklas_with_station_defence_set())
+        defend_station(Trekmap.Me.Fleet.Setups.saladin_with_station_defence_set())
     }
   end
 
@@ -134,7 +134,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
           min_target_bounty_score: 50_000
         ),
       Trekmap.Me.Fleet.drydock4_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.vahklas_with_station_defence_set())
+        defend_hive_or_station(Trekmap.Me.Fleet.Setups.saladin_with_station_defence_set())
     }
   end
 
@@ -146,7 +146,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
         hunt_miners(Trekmap.Me.Fleet.Setups.mayflower_set(),
           patrol_systems: patrol_systems,
           min_targets_in_system: 2,
-          min_target_bounty_score: 50_000
+          min_target_bounty_score: 30_000
         ),
       Trekmap.Me.Fleet.drydock2_id() =>
         hunt_miners(Trekmap.Me.Fleet.Setups.north_star_set(),
@@ -161,7 +161,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
           min_target_bounty_score: 70_000
         ),
       Trekmap.Me.Fleet.drydock4_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.vahklas_with_station_defence_set())
+        defend_hive_or_station(Trekmap.Me.Fleet.Setups.saladin_with_station_defence_set())
     }
   end
 
@@ -188,7 +188,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
           min_target_bounty_score: 50_000
         ),
       Trekmap.Me.Fleet.drydock4_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.vahklas_with_station_defence_set())
+        defend_hive_or_station(Trekmap.Me.Fleet.Setups.saladin_with_station_defence_set())
     }
   end
 
@@ -214,7 +214,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
           resource_name_filters: ["***"]
         ),
       Trekmap.Me.Fleet.drydock4_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.vahklas_with_station_defence_set())
+        defend_hive_or_station(Trekmap.Me.Fleet.Setups.saladin_with_station_defence_set())
     }
   end
 
@@ -247,7 +247,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
           max_target_level: 33
         ),
       Trekmap.Me.Fleet.drydock4_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.vahklas_with_station_defence_set())
+        defend_hive_or_station(Trekmap.Me.Fleet.Setups.saladin_with_station_defence_set())
     }
   end
 
@@ -278,7 +278,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
           max_target_level: 25
         ),
       Trekmap.Me.Fleet.drydock4_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.vahklas_with_station_defence_set())
+        defend_hive_or_station(Trekmap.Me.Fleet.Setups.saladin_with_station_defence_set())
     }
   end
 
@@ -291,7 +291,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
       Trekmap.Me.Fleet.drydock3_id() =>
         defend_hive_or_station(Trekmap.Me.Fleet.Setups.kumari_set()),
       Trekmap.Me.Fleet.drydock4_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.vahklas_with_station_defence_set())
+        defend_hive_or_station(Trekmap.Me.Fleet.Setups.saladin_with_station_defence_set())
     }
   end
 
@@ -311,7 +311,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
             target_station: target_station
           ),
         Trekmap.Me.Fleet.drydock4_id() =>
-          defend_hive_or_station(Trekmap.Me.Fleet.Setups.vahklas_with_station_defence_set())
+          defend_hive_or_station(Trekmap.Me.Fleet.Setups.saladin_with_station_defence_set())
       }
     else
       %{

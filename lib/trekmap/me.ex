@@ -331,6 +331,7 @@ defmodule Trekmap.Me do
       {:error, %{body: "course", type: 2}} -> :ok
       {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
       {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
+      # TODO: change to {:error, :fighting}
       {:error, %{body: "deployment", type: 5}} -> {:error, :in_warp}
       {:error, %{body: "fleet", type: 9}} -> {:error, :fleet_on_repair}
       {:error, %{body: "course", type: 13}} -> {:error, :invalid_course}

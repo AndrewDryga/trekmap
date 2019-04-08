@@ -24,7 +24,7 @@ defmodule Trekmap.Me.Fleet.Setups do
       194_631_754,
       3_394_864_658,
       2_865_735_742,
-      -1,
+      2_518_604_778,
       -1
     ]
   end
@@ -61,12 +61,12 @@ defmodule Trekmap.Me.Fleet.Setups do
 
   def nero_crew_officers do
     [
-      668_528_267,
-      2_333_021_829,
-      339_936_167,
+      656_972_203,
+      1_983_456_684,
+      2_959_514_562,
       2_235_857_051,
-      98_548_875,
-      2_517_597_941,
+      668_528_267,
+      339_936_167,
       680_147_223,
       2_601_201_375,
       -1,
@@ -150,6 +150,14 @@ defmodule Trekmap.Me.Fleet.Setups do
       ship: "Kumari",
       crew: nero_crew_officers(),
       max_warp_distance: 26
+    ]
+  end
+
+  def saladin_with_station_defence_set do
+    [
+      ship: "Saladin",
+      crew: lower_deck_officers(),
+      max_warp_distance: 23
     ]
   end
 
