@@ -65,7 +65,7 @@ defmodule Trekmap.Me do
            APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
       %{"my_deployed_fleets" => deployed_fleets} = response
       fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
-      {:ok, %{Fleet.build(fleet_map) | state: :charging, remaining_travel_time: 6}}
+      {:ok, %{Fleet.build(fleet_map, session) | state: :charging, remaining_travel_time: 6}}
     else
       {:error, %{body: "course", type: 2}} -> {:ok, fleet}
       {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
@@ -97,7 +97,7 @@ defmodule Trekmap.Me do
            APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
       %{"my_deployed_fleets" => deployed_fleets} = response
       fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
-      {:ok, Fleet.build(fleet_map)}
+      {:ok, Fleet.build(fleet_map, session)}
     else
       {:error, %{body: "course", type: 2}} -> {:ok, fleet}
       {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
@@ -129,7 +129,7 @@ defmodule Trekmap.Me do
            APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
       %{"my_deployed_fleets" => deployed_fleets} = response
       fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
-      {:ok, Fleet.build(fleet_map)}
+      {:ok, Fleet.build(fleet_map, session)}
     else
       {:error, %{body: "course", type: 2}} -> {:ok, fleet}
       {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
@@ -164,7 +164,7 @@ defmodule Trekmap.Me do
       fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
 
       fleet = %{
-        Fleet.build(fleet_map)
+        Fleet.build(fleet_map, session)
         | shield_regeneration_started_at: System.system_time(:microsecond)
       }
 
@@ -210,7 +210,7 @@ defmodule Trekmap.Me do
       fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
 
       fleet = %{
-        Fleet.build(fleet_map)
+        Fleet.build(fleet_map, session)
         | shield_regeneration_started_at: System.system_time(:microsecond)
       }
 
@@ -253,7 +253,7 @@ defmodule Trekmap.Me do
       fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
 
       fleet = %{
-        Fleet.build(fleet_map)
+        Fleet.build(fleet_map, session)
         | shield_regeneration_started_at: System.system_time(:microsecond)
       }
 
@@ -295,7 +295,7 @@ defmodule Trekmap.Me do
       fleet_map = Map.fetch!(deployed_fleets, to_string(fleet.id))
 
       fleet = %{
-        Fleet.build(fleet_map)
+        Fleet.build(fleet_map, session)
         | shield_regeneration_started_at: System.system_time(:microsecond)
       }
 
@@ -323,7 +323,7 @@ defmodule Trekmap.Me do
       %{"my_deployed_fleets" => deployed_fleets} = response
 
       if fleet_map = Map.get(deployed_fleets, to_string(fleet.id)) do
-        {:ok, Fleet.build(fleet_map)}
+        {:ok, Fleet.build(fleet_map, session)}
       else
         :ok
       end

@@ -519,26 +519,9 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
       Trekmap.Me.fetch_current_state(session)
 
     if deployed_fleet = Map.get(deployed_fleets, to_string(fleet_id)) do
-      Fleet.build(deployed_fleet)
+      Fleet.build(deployed_fleet, session)
     else
-      %{"ship_ids" => [ship_id], "officers" => officers} = Map.fetch!(fleets, to_string(fleet_id))
-
-      ship_crew =
-        Enum.map(officers, fn
-          nil -> -1
-          officer -> officer
-        end)
-
-      %{"max_hp" => max_hp, "damage" => damage} = Map.fetch!(ships, to_string(ship_id))
-      hull_health = 100 - Enum.max([0, damage]) / (max_hp / 100)
-
-      %Fleet{
-        id: fleet_id,
-        ship_id: ship_id,
-        system_id: session.home_system_id,
-        hull_health: hull_health,
-        ship_crew: ship_crew
-      }
+      Fleet.build(fleet_id, fleets, ships, session)
     end
   end
 

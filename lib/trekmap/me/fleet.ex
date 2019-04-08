@@ -4,6 +4,8 @@ defmodule Trekmap.Me.Fleet do
 
   defstruct id: nil,
             ship_id: nil,
+            hull_id: nil,
+            hull_type: nil,
             ship_crew: [],
             name: nil,
             system_id: nil,
@@ -24,7 +26,7 @@ defmodule Trekmap.Me.Fleet do
   @modify_fleet_endpoint "https://live-193-web.startrek.digitgaming.com/fleet/modify_fleet"
   @assign_fleet_officers_endpoint "https://live-193-web.startrek.digitgaming.com/officer/assign_fleet_officers"
 
-  def build(deployed_fleet) do
+  def build(deployed_fleet, %Session{} = session) do
     %{
       "fleet_id" => fleet_id,
       "fleet_data" => %{
@@ -45,6 +47,7 @@ defmodule Trekmap.Me.Fleet do
       "ship_dmg" => ship_dmg,
       "ship_hps" => ship_hps,
       "ship_ids" => [ship_id],
+      "hull_ids" => [hull_id],
       "node_address" => %{
         "system" => system_id
       },
@@ -107,6 +110,8 @@ defmodule Trekmap.Me.Fleet do
       id: fleet_id,
       ship_id: ship_id,
       ship_crew: ship_crew,
+      hull_id: hull_id,
+      hull_type: hull_type(hull_id, session),
       name: ship_name(ship_id),
       system_id: system_id,
       cargo_bay_size: cargo_max,
@@ -120,6 +125,33 @@ defmodule Trekmap.Me.Fleet do
       max_warp_distance: warp_distance,
       remaining_travel_time: remaining_travel_time,
       state: state(state)
+    }
+  end
+
+  def build(fleet_id, fleets, ships, %Session{} = session) do
+    %{"ship_ids" => [ship_id], "officers" => officers} = Map.fetch!(fleets, to_string(fleet_id))
+
+    ship_crew =
+      Enum.map(officers, fn
+        nil -> -1
+        officer -> officer
+      end)
+
+    %{"max_hp" => max_hp, "hull_id" => hull_id, "damage" => damage} =
+      Map.fetch!(ships, to_string(ship_id))
+
+    hull_health = 100 - Enum.max([0, damage]) / (max_hp / 100)
+
+    %__MODULE__{
+      id: fleet_id,
+      ship_id: ship_id,
+      ship_crew: ship_crew,
+      hull_id: hull_id,
+      hull_type: hull_type(hull_id, session),
+      name: ship_name(ship_id),
+      system_id: session.home_system_id,
+      hull_health: hull_health,
+      strength: ship_strength(ship_id)
     }
   end
 
@@ -234,16 +266,14 @@ defmodule Trekmap.Me.Fleet do
   def ship_protected_cargo(771_326_161_581_327_453), do: 0
   def ship_protected_cargo(_ship_id), do: 0
 
-  def ship_type(834_523_813_579_670_645), do: :explorer
-  def ship_type(818_908_769_273_857_488), do: :explorer
-  def ship_type(809_553_354_052_421_083), do: :interceptor
-  def ship_type(793_228_477_045_490_952), do: :mining
-  def ship_type(822_579_326_280_352_768), do: :battleship
-  def ship_type(788_241_743_887_025_466), do: :mining
-  def ship_type(813_554_350_852_228_185), do: :mining
-  def ship_type(824_733_744_035_612_116), do: :mining
-  def ship_type(829_530_915_272_475_702), do: :mining
-  def ship_type(771_326_161_581_327_453), do: :mining
+  def hull_type(hull_id, %{game_config: %{hull_specs: hull_specs}}),
+    do: hull_specs |> Map.fetch!(hull_id) |> Map.fetch!("type") |> hull_type_name()
+
+  def hull_type_name(0), do: :interceptor
+  def hull_type_name(1), do: :survey
+  def hull_type_name(2), do: :explorer
+  def hull_type_name(3), do: :battleship
+  def hull_type_name(4), do: :station_defence_system
 
   def drydock_num(771_246_931_724_024_704), do: 1
   def drydock_num(771_331_774_860_311_262), do: 2
