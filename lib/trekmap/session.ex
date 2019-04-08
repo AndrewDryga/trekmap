@@ -13,7 +13,8 @@ defmodule Trekmap.Session do
             home_system_id: nil,
             # [604_074_052, 719_474_967],
             hive_system_ids: [2_136_091_294],
-            galaxy: Graph.new()
+            galaxy: Graph.new(),
+            game_config: %{}
 
   def start_session do
     config = Application.fetch_env!(:trekmap, __MODULE__)

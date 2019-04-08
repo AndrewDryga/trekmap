@@ -28,15 +28,22 @@ defmodule Trekmap.Bots.SessionManager do
 
     home_system_id = starbase["location"]["system"]
 
-    # TODO: add starbase coords
     {:ok,
-     %{session: %{session | fleet_id: fleet_id, home_system_id: home_system_id, galaxy: galaxy}}}
+     %{
+       session: %{
+         session
+         | fleet_id: fleet_id,
+           home_system_id: home_system_id,
+           galaxy: galaxy,
+           game_config: load_game_config()
+       }
+     }}
   end
 
   defp to_integer(binary) when is_binary(binary), do: String.to_integer(binary)
   defp to_integer(numeric), do: numeric
 
-  def start_session_instance(session) do
+  def start_session_instance(%Trekmap.Session{} = session) do
     with {:ok, session} <- Trekmap.Session.start_session_instance(session) do
       {:ok, session}
     else
@@ -45,6 +52,23 @@ defmodule Trekmap.Bots.SessionManager do
         :timer.sleep(5_000)
         start_session_instance(session)
     end
+  end
+
+  def load_game_config do
+    {:ok, %{"hull_specs" => hull_specs}} =
+      Trekmap.APIClient.json_request(
+        :get,
+        "https://live-193-web.startrek.digitgaming.com/static_sync",
+        [],
+        ""
+      )
+
+    hull_specs =
+      for spec <- hull_specs, into: %{} do
+        {Map.fetch!(spec, "id"), spec}
+      end
+
+    %{hull_specs: hull_specs}
   end
 
   def handle_call(:fetch_session, _from, %{session: session} = state) do
