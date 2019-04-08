@@ -85,17 +85,7 @@ defmodule Trekmap.Bots.Guardian do
 
         {:noreply, %{state | session: session}}
 
-      fleet_damage_ratio > 50 ->
-        Logger.warn("Fleet is damaged, switching to under attack mode")
-
-        {:ok, session} = full_repair(session)
-        Process.send_after(self(), :timeout, 1)
-
-        state = under_attack(state)
-
-        {:noreply, %{state | session: session}}
-
-      defence_broken? == true ->
+      defence_broken? == true and fleet_damage_ratio > 50 ->
         Logger.warn("Base defence is damaged, switching to under attack mode")
 
         {:ok, session} = full_repair(session)
@@ -107,6 +97,14 @@ defmodule Trekmap.Bots.Guardian do
         end
 
         state = under_attack(state)
+
+        {:noreply, %{state | session: session}}
+
+      fleet_damage_ratio > 70 ->
+        Logger.warn("Fleet is damaged, do not bait")
+
+        {:ok, session} = full_repair(session)
+        Process.send_after(self(), :timeout, 1)
 
         {:noreply, %{state | session: session}}
 
