@@ -323,9 +323,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
   def loot_mission_plan(target_station) do
     %{
       Trekmap.Me.Fleet.drydock1_id() =>
-        loot_station(Trekmap.Me.Fleet.Setups.envoy1_set(),
-          target_station: target_station
-        ),
+        defend_hive_or_station(Trekmap.Me.Fleet.Setups.mayflower_set()),
       Trekmap.Me.Fleet.drydock2_id() =>
         loot_station(Trekmap.Me.Fleet.Setups.envoy2_set(),
           target_station: target_station
