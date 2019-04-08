@@ -526,6 +526,9 @@ defmodule Trekmap.Me do
         Logger.warn("In battle")
         :ok
 
+      {:error, %{"code" => 400}} ->
+        :ok
+
       {:error, %{body: "fleet", type: 14}} ->
         Logger.warn("Other ship is already repairing")
 

@@ -160,6 +160,7 @@ defmodule Trekmap.Router do
         - <a href="/set_faction_hunting_mission_plan">Hunt Klingons</a><br/>
         - <a href="/set_elite_faction_hunting_mission_plan">Hunt Klingons Elite</a><br/>
         - <a href="/set_raid_mission_plan">Raid</a><br/>
+        - <a href="/set_passive_defence_mission_plan">Return all ships to defend station</a><br/>
         <br/><br/>
         Raid: <br/>
         <form action="/set_raid_mission_plan">
@@ -291,6 +292,15 @@ defmodule Trekmap.Router do
 
   get "/set_elite_faction_hunting_mission_plan" do
     mission_plan = Trekmap.Bots.Admiral.MissionPlans.elite_faction_hunting_mission_plan()
+    Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
+
+    conn
+    |> put_resp_header("location", "/")
+    |> send_resp(302, "")
+  end
+
+  get "/set_passive_defence_mission_plan" do
+    mission_plan = Trekmap.Bots.Admiral.MissionPlans.passive_defence_mission_plan()
     Trekmap.Bots.Admiral.set_mission_plan(mission_plan)
 
     conn
