@@ -85,7 +85,7 @@ defmodule Trekmap.Bots.Guardian do
 
         {:noreply, %{state | session: session}}
 
-      defence_broken? == true and fleet_damage_ratio > 50 ->
+      defence_broken? == true and (fleet_damage_ratio > 50 or not base_well_defended?) ->
         Logger.warn("Base defence is damaged, switching to under attack mode")
 
         {:ok, session} = full_repair(session)
