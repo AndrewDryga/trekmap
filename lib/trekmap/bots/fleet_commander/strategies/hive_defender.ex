@@ -146,10 +146,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.HiveDefender do
   end
 
   defp can_kill?(ship, fleet) do
-    if is_nil(fleet.strength) do
-      ship.strength < 250_000
+    if ship.strength do
+      ship.strength * Trekmap.Me.Fleet.hull_power_ratio(ship.hull_type, fleet.hull_type) <
+        fleet.strength * Trekmap.Me.Fleet.hull_power_ratio(fleet.hull_type, ship.hull_type)
     else
-      ship.strength < fleet.strength
+      false
     end
   end
 

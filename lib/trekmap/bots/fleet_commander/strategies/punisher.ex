@@ -179,10 +179,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.Punisher do
   end
 
   defp can_kill?(ship, fleet) do
-    cond do
-      is_nil(fleet.strength) -> ship.strength < 240_000
-      not is_nil(ship.strength) -> ship.strength < fleet.strength
-      true -> false
+    if ship.strength do
+      ship.strength * Trekmap.Me.Fleet.hull_power_ratio(ship.hull_type, fleet.hull_type) <
+        fleet.strength * Trekmap.Me.Fleet.hull_power_ratio(fleet.hull_type, ship.hull_type)
+    else
+      false
     end
   end
 

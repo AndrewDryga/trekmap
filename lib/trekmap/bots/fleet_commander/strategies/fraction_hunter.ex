@@ -166,11 +166,8 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
   end
 
   defp can_kill?(marauder, fleet) do
-    cond do
-      is_nil(fleet.strength) -> marauder.strength < 150_000
-      not is_nil(marauder.strength) -> marauder.strength < fleet.strength
-      true -> false
-    end
+    marauder.strength * Trekmap.Me.Fleet.hull_power_ratio(marauder.hull_type, fleet.hull_type) <
+      fleet.strength * Trekmap.Me.Fleet.hull_power_ratio(fleet.hull_type, marauder.hull_type)
   end
 
   defp safe_distance({x1, y1}, {x2, y2}, []) do
