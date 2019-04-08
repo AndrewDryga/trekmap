@@ -102,7 +102,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
       cond do
         nearby_system_with_targets = find_targets_in_nearby_system(fleet, session, config) ->
           {system, targets} = nearby_system_with_targets
-          target = List.first(targets)
+          target = targets |> Enum.take(2) |> Enum.random()
           Trekmap.Locker.lock(target.id)
           Trekmap.Locker.lock(target.system.id)
           Trekmap.Locker.unlock(fleet.system_id)
