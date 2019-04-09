@@ -284,14 +284,11 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
 
   def passive_defence_mission_plan do
     %{
-      Trekmap.Me.Fleet.drydock1_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.mayflower_set()),
-      Trekmap.Me.Fleet.drydock2_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.north_star_set()),
-      Trekmap.Me.Fleet.drydock3_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.kumari_set()),
+      Trekmap.Me.Fleet.drydock1_id() => defend_station(Trekmap.Me.Fleet.Setups.mayflower_set()),
+      Trekmap.Me.Fleet.drydock2_id() => defend_station(Trekmap.Me.Fleet.Setups.north_star_set()),
+      Trekmap.Me.Fleet.drydock3_id() => defend_station(Trekmap.Me.Fleet.Setups.kumari_set()),
       Trekmap.Me.Fleet.drydock4_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.saladin_with_station_defence_set())
+        defend_station(Trekmap.Me.Fleet.Setups.saladin_with_station_defence_set())
     }
   end
 

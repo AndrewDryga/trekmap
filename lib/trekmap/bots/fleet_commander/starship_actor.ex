@@ -206,6 +206,14 @@ defmodule Trekmap.Bots.FleetCommander.StartshipActor do
 
   @impl true
   def handle_info({:continue, fleet}, %{mission_paused: true} = state) do
+    Trekmap.Bots.Admiral.update_fleet_report(%{
+      clearence_granted: state.clearence_granted,
+      mission_paused: state.mission_paused,
+      strategy: state.strategy,
+      fleet_id: state.fleet_id,
+      fleet: fleet
+    })
+
     perform_fleet_action(fleet, :recall, state)
     {:noreply, state}
   end
