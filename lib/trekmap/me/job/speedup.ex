@@ -54,7 +54,7 @@ defmodule Trekmap.Me.Job.Speedup do
     amount = trunc(amount)
     Logger.info("Using Thritanium repair token to boost station repair #{job_id}, #{amount}")
 
-    additional_headers = Session.session_headers(session)
+    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "1"}]
 
     body =
       Jason.encode!(%{
@@ -62,9 +62,9 @@ defmodule Trekmap.Me.Job.Speedup do
         "expected_cost" => [%{"Key" => @free_station_repair_token_id, "Value" => amount}]
       })
 
-    with {:ok, _resp} <-
+    with {:ok, response} <-
            APIClient.json_request(:post, @free_speedup_job_endpoint, additional_headers, body) do
-      :ok
+      {:ok, response}
     else
       {:error, %{"code" => 400}} ->
         :error
@@ -72,7 +72,7 @@ defmodule Trekmap.Me.Job.Speedup do
   end
 
   def boost_job(job_id, @free_ship_repair_token, session) do
-    additional_headers = Session.session_headers(session)
+    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "1"}]
 
     body =
       Jason.encode!(%{
@@ -80,10 +80,10 @@ defmodule Trekmap.Me.Job.Speedup do
         "expected_cost" => [%{"Key" => @free_ship_repair_token_id, "Value" => 0}]
       })
 
-    with {:ok, _resp} <-
+    with {:ok, response} <-
            APIClient.json_request(:post, @free_speedup_job_endpoint, additional_headers, body) do
       Logger.info("Used free repair token to boost ship repair #{job_id}")
-      :ok
+      {:ok, response}
     else
       {:error, %{"code" => 400}} ->
         :error
@@ -92,7 +92,7 @@ defmodule Trekmap.Me.Job.Speedup do
 
   def boost_job(job_id, {duration, _cost, id} = token, session) do
     Logger.debug("Using custom repair token to boost ship repair #{job_id}, #{inspect(token)}")
-    additional_headers = Session.session_headers(session)
+    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "1"}]
 
     body =
       Jason.encode!(%{
@@ -101,33 +101,33 @@ defmodule Trekmap.Me.Job.Speedup do
         "time_reduction" => duration
       })
 
-    with {:ok, _resp} <-
+    with {:ok, response} <-
            APIClient.json_request(:post, @paid_speedup_job_endpoint, additional_headers, body) do
       Logger.info("Used paid repair token for #{duration} seconds to boost ship job #{job_id}")
-      :ok
+      {:ok, response}
     else
       {:error, %{"code" => 400}} ->
         :error
 
       {:error, %{body: "resources", type: 2}} ->
-        with :ok <- buy_resources(id, session) do
+        with {:ok, _response} <- buy_resources(id, session) do
           boost_job(job_id, token, session)
         end
     end
   end
 
   def buy_resources(resource_id, session) do
-    additional_headers = Session.session_headers(session)
+    additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "1"}]
 
     body =
       Jason.encode!(%{
         "resource_dicts" => [%{"resource_id" => resource_id, "amount" => 1}]
       })
 
-    with {:ok, _resp} <-
+    with {:ok, response} <-
            APIClient.json_request(:post, @buy_resources_endpoint, additional_headers, body) do
       Logger.info("Purchased additional repair token ID #{resource_id}")
-      :ok
+      {:ok, response}
     else
       {:error, %{body: "resources", type: 1}} ->
         {:error, :invalid_resource}

@@ -69,6 +69,7 @@ defmodule Trekmap.Me do
     else
       {:error, %{body: "course", type: 2}} -> {:ok, fleet}
       {:error, %{body: "course", type: 6}} -> {:error, :in_warp}
+      {:error, %{body: "course", type: 17}} -> {:error, :in_warp}
       {:error, %{body: "game_world", type: 1}} -> {:error, :in_warp}
       {:error, %{body: "deployment", type: 5}} -> {:error, :in_warp}
       {:error, %{body: "fleet", type: 9}} -> {:error, :fleet_on_repair}
@@ -431,8 +432,9 @@ defmodule Trekmap.Me do
     boost_token = Job.Speedup.get_station_repair_token()
     amount = Float.ceil(duration / Job.Speedup.get_station_repair_cost())
 
-    with :ok <- Job.Speedup.boost_job(id, boost_token, amount, session),
-         {:error, :not_found} <- fetch_station_repair_job(session) do
+    with {:ok, response} <- Job.Speedup.boost_job(id, boost_token, amount, session),
+         %{"user_jobs" => user_jobs, "server_time" => server_time} = response,
+         {:error, :not_found} <- Job.fetch_station_repair_job(user_jobs, server_time) do
       :ok
     else
       {:ok, repair_job} ->
@@ -546,8 +548,9 @@ defmodule Trekmap.Me do
     Logger.info("Finishing repair job #{id} with current duration #{duration}")
     boost_token = Job.Speedup.get_next_ship_repair_token(duration)
 
-    with :ok <- Job.Speedup.boost_job(id, boost_token, session),
-         {:error, :not_found} <- fetch_ship_repair_job(session) do
+    with {:ok, response} <- Job.Speedup.boost_job(id, boost_token, session),
+         %{"user_jobs" => user_jobs, "server_time" => server_time} = response,
+         {:error, :not_found} <- Job.fetch_ship_repair_job(user_jobs, server_time) do
       :ok
     else
       :error ->
