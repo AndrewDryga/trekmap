@@ -8,7 +8,7 @@ defmodule Trekmap.Bots.NameChanger do
 
   def init([]) do
     {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
-    {:ok, %{session: session}, 0}
+    {:ok, %{session: session}, :timer.minutes(3)}
   end
 
   def handle_info(:timeout, %{session: session} = state) do

@@ -29,7 +29,7 @@ defmodule Trekmap.Bots.HiveScanner do
        kos: kos,
        last_scans: [],
        under_attack: []
-     }, 0}
+     }, :timer.minutes(1)}
   end
 
   def handle_info(:timeout, %{last_scans: []} = state) do
