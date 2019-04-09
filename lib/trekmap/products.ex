@@ -35,14 +35,14 @@ defmodule Trekmap.Products do
 
   def get_shield_token(1, :hour), do: {3_788_095_604, 60}
 
-  def buy_resources(resource_id, _amount \\ 1, session) do
+  def buy_resources(resource_id, amount \\ 1, session) do
     Logger.info("Purchasing additional repair token ID #{resource_id}")
 
     additional_headers = Session.session_headers(session)
 
     body =
       Jason.encode!(%{
-        "resource_dicts" => [%{"resource_id" => resource_id, "amount" => 1}]
+        "resource_dicts" => [%{"resource_id" => resource_id, "amount" => amount}]
       })
 
     APIClient.json_request(:post, @buy_resources_endpoint, additional_headers, body)
