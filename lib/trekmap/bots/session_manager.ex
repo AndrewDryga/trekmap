@@ -13,8 +13,7 @@ defmodule Trekmap.Bots.SessionManager do
   def init([]) do
     Logger.info("Starting new auth session")
 
-    {:ok, session} = Trekmap.Session.start_session()
-    {:ok, session} = start_session_instance(session)
+    {:ok, session} = start_session()
 
     {:ok, galaxy} = Trekmap.Galaxy.build_systems_graph(session)
 
@@ -43,7 +42,19 @@ defmodule Trekmap.Bots.SessionManager do
   defp to_integer(binary) when is_binary(binary), do: String.to_integer(binary)
   defp to_integer(numeric), do: numeric
 
-  def start_session_instance(%Trekmap.Session{} = session) do
+  def start_session do
+    with {:ok, session} <- Trekmap.Session.start_session(),
+         {:ok, session} <- start_session_instance(session) do
+      {:ok, session}
+    else
+      other ->
+        Logger.error("Can't start session: #{inspect(other)}")
+        :timer.sleep(5_000)
+        start_session()
+    end
+  end
+
+  defp start_session_instance(%Trekmap.Session{} = session) do
     with {:ok, session} <- Trekmap.Session.start_session_instance(session) do
       {:ok, session}
     else
