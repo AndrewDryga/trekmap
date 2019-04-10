@@ -282,7 +282,7 @@ defmodule Trekmap.Me.Fleet do
   def hull_power_ratio(:explorer, :interceptor), do: 1.3
   def hull_power_ratio(:interceptor, :battleship), do: 1.3
   def hull_power_ratio(:battleship, :explorer), do: 1.3
-  def hull_power_ratio(:survey, _), do: 0.8
+  def hull_power_ratio(:survey, _), do: 0.7
   def hull_power_ratio(_, _), do: 1
 
   def drydock_num(771_246_931_724_024_704), do: 1
