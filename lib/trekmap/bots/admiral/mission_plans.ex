@@ -332,27 +332,45 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
   end
 
   def loot_mission_plan(target_station) do
-    %{
-      Trekmap.Me.Fleet.drydock1_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.mayflower_set()),
-      Trekmap.Me.Fleet.drydock2_id() =>
-        loot_station(Trekmap.Me.Fleet.Setups.envoy2_set(),
-          target_station: target_station
-        ),
-      Trekmap.Me.Fleet.drydock3_id() =>
-        loot_station(Trekmap.Me.Fleet.Setups.envoy3_set(),
-          target_station: target_station
-        ),
-      Trekmap.Me.Fleet.drydock4_id() =>
-        loot_station(Trekmap.Me.Fleet.Setups.horizon_set(),
-          target_station: target_station
-        ),
-      "mission_observer" =>
-        {Trekmap.Bots.FleetCommander.Observers.RaidObserver,
-         [
-           target_station: target_station
-         ]}
-    }
+    if target_station.player.level < 27 do
+      %{
+        Trekmap.Me.Fleet.drydock1_id() =>
+          defend_hive_or_station(Trekmap.Me.Fleet.Setups.mayflower_set()),
+        Trekmap.Me.Fleet.drydock2_id() =>
+          loot_station(Trekmap.Me.Fleet.Setups.envoy2_set(),
+            target_station: target_station
+          ),
+        Trekmap.Me.Fleet.drydock3_id() =>
+          loot_station(Trekmap.Me.Fleet.Setups.envoy3_set(),
+            target_station: target_station
+          ),
+        Trekmap.Me.Fleet.drydock4_id() =>
+          loot_station(Trekmap.Me.Fleet.Setups.horizon_set(),
+            target_station: target_station
+          ),
+        "mission_observer" =>
+          {Trekmap.Bots.FleetCommander.Observers.RaidObserver,
+           [
+             target_station: target_station
+           ]}
+      }
+    else
+      %{
+        Trekmap.Me.Fleet.drydock1_id() => defend_station(Trekmap.Me.Fleet.Setups.mayflower_set()),
+        Trekmap.Me.Fleet.drydock2_id() =>
+          defend_station(Trekmap.Me.Fleet.Setups.north_star_set()),
+        Trekmap.Me.Fleet.drydock3_id() => defend_station(Trekmap.Me.Fleet.Setups.kumari_set()),
+        Trekmap.Me.Fleet.drydock4_id() =>
+          loot_station(Trekmap.Me.Fleet.Setups.horizon_set(),
+            target_station: target_station
+          ),
+        "mission_observer" =>
+          {Trekmap.Bots.FleetCommander.Observers.RaidObserver,
+           [
+             target_station: target_station
+           ]}
+      }
+    end
   end
 
   def raid_mission_plan(%{strength: strength} = target_station) when strength < 0 do
