@@ -359,7 +359,8 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
         Trekmap.Me.Fleet.drydock1_id() => defend_station(Trekmap.Me.Fleet.Setups.mayflower_set()),
         Trekmap.Me.Fleet.drydock2_id() =>
           defend_station(Trekmap.Me.Fleet.Setups.north_star_set()),
-        Trekmap.Me.Fleet.drydock3_id() => defend_station(Trekmap.Me.Fleet.Setups.kumari_set()),
+        Trekmap.Me.Fleet.drydock3_id() =>
+          defend_station(Trekmap.Me.Fleet.Setups.saladin_with_station_defence_set()),
         Trekmap.Me.Fleet.drydock4_id() =>
           loot_station(Trekmap.Me.Fleet.Setups.horizon_set(),
             target_station: target_station
