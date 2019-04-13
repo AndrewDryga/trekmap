@@ -109,29 +109,28 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
   end
 
   def multitasking_mission_plan do
-    # {:ok, faction_patrol_systems} = Trekmap.Galaxy.list_systems_for_faction("Klingon", 29)
+    {:ok, faction_patrol_systems} = Trekmap.Galaxy.list_systems_for_faction("Klingon", 29)
+    {:ok, mining_systems} = Trekmap.Galaxy.list_mining_systems("***")
     overcargo_patrol_systems = Trekmap.Galaxy.fetch_hunting_system_ids!(grade: "***")
 
     %{
-      #   hunt_maradeurs(Trekmap.Me.Fleet.Setups.mayflower_set(),
-      #     fraction_ids: [@fraction_klingon],
-      #     patrol_systems: faction_patrol_systems,
-      #     min_targets_in_system: 2,
-      #     min_target_level: 29,
-      #     max_target_level: 33
-      #   ),
       Trekmap.Me.Fleet.drydock1_id() =>
-        defend_hive_or_station(Trekmap.Me.Fleet.Setups.mayflower_set()),
+        hunt_maradeurs(Trekmap.Me.Fleet.Setups.mayflower_set(),
+          fraction_ids: [@fraction_klingon],
+          patrol_systems: faction_patrol_systems,
+          min_targets_in_system: 3,
+          min_target_level: 29,
+          max_target_level: 33
+        ),
       Trekmap.Me.Fleet.drydock2_id() =>
-        hunt_miners(Trekmap.Me.Fleet.Setups.north_star_set(),
-          patrol_systems: overcargo_patrol_systems,
-          min_targets_in_system: 1,
-          min_target_bounty_score: 30_000
+        mine(Trekmap.Me.Fleet.Setups.north_star_with_long_warp_set(),
+          patrol_systems: mining_systems,
+          resource_name_filters: ["***"]
         ),
       Trekmap.Me.Fleet.drydock3_id() =>
         hunt_miners(Trekmap.Me.Fleet.Setups.kumari_set(),
           patrol_systems: overcargo_patrol_systems,
-          min_targets_in_system: 2,
+          min_targets_in_system: 1,
           min_target_bounty_score: 50_000
         ),
       Trekmap.Me.Fleet.drydock4_id() =>
@@ -150,7 +149,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
           min_target_bounty_score: 30_000
         ),
       Trekmap.Me.Fleet.drydock2_id() =>
-        hunt_miners(Trekmap.Me.Fleet.Setups.north_star_set(),
+        hunt_miners(Trekmap.Me.Fleet.Setups.north_star_with_long_warp_set(),
           patrol_systems: patrol_systems,
           min_targets_in_system: 1,
           min_target_bounty_score: 30_000
@@ -177,7 +176,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
           min_target_bounty_score: 50_000
         ),
       Trekmap.Me.Fleet.drydock2_id() =>
-        hunt_miners(Trekmap.Me.Fleet.Setups.north_star_set(),
+        hunt_miners(Trekmap.Me.Fleet.Setups.north_star_with_long_warp_set(),
           patrol_systems: patrol_systems,
           min_targets_in_system: 1,
           min_target_bounty_score: 50_000
@@ -205,7 +204,7 @@ defmodule Trekmap.Bots.Admiral.MissionPlans do
           min_target_bounty_score: 50_000
         ),
       Trekmap.Me.Fleet.drydock2_id() =>
-        mine(Trekmap.Me.Fleet.Setups.north_star_set(),
+        mine(Trekmap.Me.Fleet.Setups.north_star_with_long_warp_set(),
           patrol_systems: mining_systems,
           resource_name_filters: ["***"]
         ),

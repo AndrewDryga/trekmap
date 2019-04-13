@@ -8,8 +8,8 @@ defmodule Trekmap.Bots.Admiral do
 
   def init([]) do
     Logger.info("[Admiral] Everything is under control")
-    # current_mission_plan = Trekmap.Bots.Admiral.MissionPlans.multitasking_mission_plan()
-    current_mission_plan = Trekmap.Bots.Admiral.MissionPlans.war_mission_plan()
+    current_mission_plan = Trekmap.Bots.Admiral.MissionPlans.multitasking_mission_plan()
+    # current_mission_plan = Trekmap.Bots.Admiral.MissionPlans.war_mission_plan()
     {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
 
     state = %{

@@ -114,6 +114,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
         |> Enum.filter(&enemy_fraction?(&1, fraction_ids))
         |> Enum.filter(&should_kill?(&1, min_target_level, max_target_level))
         |> Enum.filter(&can_kill?(&1, fleet))
+        |> Enum.filter(&not_stronger_ship_type?(&1, fleet))
 
       pursuiters = Enum.filter(hostiles, &(&1.pursuit_fleet_id == fleet.id))
 
@@ -163,6 +164,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.FractionHunter do
 
   defp should_kill?(marauder, min_target_level, max_target_level) do
     min_target_level <= marauder.level and marauder.level <= max_target_level
+  end
+
+  defp not_stronger_ship_type?(marauder, fleet) do
+    Trekmap.Me.Fleet.hull_power_ratio(marauder.hull_type, fleet.hull_type) <=
+      Trekmap.Me.Fleet.hull_power_ratio(fleet.hull_type, marauder.hull_type)
   end
 
   defp can_kill?(marauder, fleet) do
