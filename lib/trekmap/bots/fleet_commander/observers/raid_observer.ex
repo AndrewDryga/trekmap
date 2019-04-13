@@ -43,8 +43,6 @@ defmodule Trekmap.Bots.FleetCommander.Observers.RaidObserver do
   def handle_cast({:abort, %{id: id} = station}, %{target_station: %{id: id}} = state) do
     Logger.info("[#{inspect(__MODULE__)}] Aborting raid")
 
-    {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
-
     Logger.info("[#{inspect(__MODULE__)}] Scanning raided system")
     station = Trekmap.AirDB.preload(station, [:system, :player, :planet])
 
@@ -56,6 +54,7 @@ defmodule Trekmap.Bots.FleetCommander.Observers.RaidObserver do
 
     Trekmap.Bots.GalaxyScanner.sync_station(station.system, station)
 
+    # {:ok, session} = Trekmap.Bots.SessionManager.fetch_session()
     # with {:noreply, state} <- find_and_raid_next(state, session) do
     #   {:noreply, state}
     # else
