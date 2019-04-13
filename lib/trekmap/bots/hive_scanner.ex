@@ -91,16 +91,16 @@ defmodule Trekmap.Bots.HiveScanner do
         enemy?(spacecraft, enemies) ->
           ("**Enemy #{player_name(spacecraft)} #{startship_action(action, spacecraft)}**. " <>
              "@everyone")
-          |> Trekmap.Discord.send_message()
+          |> Trekmap.Discord.log_hive_change()
 
         kos?(spacecraft, kos) or bad_guy?(spacecraft, bad_people_ids) ->
           ("**KOS #{player_name(spacecraft)} #{startship_action(action, spacecraft)}**. " <>
              "@everyone")
-          |> Trekmap.Discord.send_message()
+          |> Trekmap.Discord.log_hive_change()
 
         true ->
           "Neutral #{player_name(spacecraft)} #{startship_action(action, spacecraft)}"
-          |> Trekmap.Discord.send_message()
+          |> Trekmap.Discord.log_hive_change()
       end
     end)
 
@@ -114,7 +114,7 @@ defmodule Trekmap.Bots.HiveScanner do
           ally?(station, allies) and station.hull_health < 80 ->
             ("**Ally station IS UNDER ATTACK #{player_name(station)} at #{location(station)}**. " <>
                "@everyone")
-            |> Trekmap.Discord.send_message()
+            |> Trekmap.Discord.log_hive_change()
 
             [station.id]
 
@@ -128,19 +128,19 @@ defmodule Trekmap.Bots.HiveScanner do
       cond do
         ally?(station, allies) ->
           "Ally #{player_name(station)} #{station_action(action, station)}"
-          |> Trekmap.Discord.send_message()
+          |> Trekmap.Discord.log_hive_change()
 
         enemy?(station, enemies) ->
           "**Enemy #{player_name(station)} #{station_action(action, station)}**. @everyone"
-          |> Trekmap.Discord.send_message()
+          |> Trekmap.Discord.log_hive_change()
 
         kos?(station, kos) or bad_guy?(station, bad_people_ids) ->
           "**KOS #{player_name(station)} #{station_action(action, station)}**. @everyone"
-          |> Trekmap.Discord.send_message()
+          |> Trekmap.Discord.log_hive_change()
 
         true ->
           "Neutral #{player_name(station)} #{station_action(action, station)}."
-          |> Trekmap.Discord.send_message()
+          |> Trekmap.Discord.log_hive_change()
       end
     end)
 
