@@ -74,6 +74,21 @@ defmodule Trekmap.Me.Fleet.Setups do
     ]
   end
 
+  def klingon_patriots_officers do
+    [
+      1_465_017_198,
+      98_548_875,
+      2_475_235_160,
+      3_880_112_208,
+      3_221_819_893,
+      2_567_136_252,
+      -1,
+      -1,
+      -1,
+      -1
+    ]
+  end
+
   def lower_deck_officers do
     [
       4_219_901_626,
