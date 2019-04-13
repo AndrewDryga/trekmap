@@ -17,6 +17,8 @@ defmodule Trekmap.Me.Chests do
     648_529_260
   ]
 
+  @max_refinery_batch_quantity 2
+
   def open_all_chests(%Session{} = session) do
     {:ok, refinery_chests} = list_available_refinery_chests(session)
     {:ok, bonus_chests} = list_available_bonus_chests(session)
@@ -64,10 +66,15 @@ defmodule Trekmap.Me.Chests do
 
       bundles =
         Enum.flat_map(bundles, fn bundle ->
-          %{"offer_details" => %{"valid_count" => valid_count}} = bundle
+          %{"offer_details" => %{"valid_count" => valid_count}, "cost" => cost} = bundle
 
           if valid_count > 0 do
-            [bundle]
+            cost =
+              Enum.reject(cost, fn %{"quantity" => quantity} ->
+                quantity > @max_refinery_batch_quantity
+              end)
+
+            [Map.put(bundle, "cost", cost)]
           else
             []
           end
