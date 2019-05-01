@@ -204,7 +204,7 @@ defmodule Trekmap.Me do
 
     additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
 
-    with false <- shield_enabled?(session),
+    with false <- non_temporary_shield_enabled?(session),
          {:ok, %{response: response}} <-
            APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
       %{"my_deployed_fleets" => deployed_fleets} = response
@@ -247,7 +247,7 @@ defmodule Trekmap.Me do
 
     additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
 
-    with false <- shield_enabled?(session),
+    with false <- non_temporary_shield_enabled?(session),
          {:ok, %{response: response}} <-
            APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
       %{"my_deployed_fleets" => deployed_fleets} = response
@@ -289,7 +289,7 @@ defmodule Trekmap.Me do
 
     additional_headers = Session.session_headers(session) ++ [{"X-PRIME-SYNC", "2"}]
 
-    with false <- shield_enabled?(session),
+    with false <- non_temporary_shield_enabled?(session),
          {:ok, %{response: response}} <-
            APIClient.protobuf_request(:post, @fleet_course_endpoint, additional_headers, body) do
       %{"my_deployed_fleets" => deployed_fleets} = response
@@ -351,6 +351,24 @@ defmodule Trekmap.Me do
         NaiveDateTime.from_iso8601!(shield_expiry_time),
         NaiveDateTime.utc_now()
       ) == :gt
+    end
+  end
+
+  def non_temporary_shield_enabled?(%Session{} = session) do
+    with {:ok, result} <- Trekmap.Galaxy.scan_players([session.account_id], %Session{} = session) do
+      %{
+        "attributes" => %{"player_shield" => %{"expiry_time" => shield_expiry_time}}
+      } = Map.fetch!(result, to_string(session.account_id))
+
+      shield_expires_at = NaiveDateTime.from_iso8601!(shield_expiry_time)
+      now = NaiveDateTime.utc_now()
+
+      diff = NaiveDateTime.diff(shield_expires_at, now)
+      temporary_shield_enabled? = 0 <= diff and diff <= 600
+
+      shield_enabled? = NaiveDateTime.compare(shield_expires_at, now) == :gt
+
+      shield_enabled? and not temporary_shield_enabled?
     end
   end
 
