@@ -14,7 +14,7 @@ defmodule Trekmap.Bots.SupervisorChild do
       Trekmap.Bots.Admiral,
       Trekmap.Bots.Guardian,
       Trekmap.Bots.GalaxyScanner,
-      Trekmap.Bots.Helper,
+      # Trekmap.Bots.Helper,
       Trekmap.Bots.ChestCollector
       # Trekmap.Bots.HiveScanner,
       # Trekmap.Bots.NameChanger
