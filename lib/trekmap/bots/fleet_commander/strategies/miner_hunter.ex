@@ -92,11 +92,11 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
       Trekmap.Locker.lock(target.id)
       Trekmap.Locker.lock(target.system.id)
 
-      if distance(target.coords, fleet.coords) < 7 do
+      if distance(target.coords, fleet.coords) < 18 do
         {{:attack, target}, config}
       else
         system = Trekmap.Me.get_system(fleet.system_id, session)
-        {{:fly, system, target.coords}, config}
+        {{:fly, system, random_shift_coords(target.coords)}, config}
       end
     else
       cond do
@@ -106,7 +106,7 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
           Trekmap.Locker.lock(target.id)
           Trekmap.Locker.lock(target.system.id)
           Trekmap.Locker.unlock(fleet.system_id)
-          {{:fly, system, target.coords}, config}
+          {{:fly, system, random_shift_coords(target.coords)}, config}
 
         # fleet.state == :at_dock ->
         #   Trekmap.Locker.unlock_caller_locks()
@@ -118,6 +118,12 @@ defmodule Trekmap.Bots.FleetCommander.Strategies.MinerHunter do
           {:recall, config}
       end
     end
+  end
+
+  defp random_shift_coords({x, y}) do
+    x = x + Enum.random(-8..8)
+    y = y + Enum.random(-8..8)
+    {x, y}
   end
 
   defp need_evacuation?(_fleet, []), do: false
