@@ -287,7 +287,7 @@ defmodule Trekmap.Galaxy.System.Station do
         NaiveDateTime.utc_now()
       )
 
-    0 <= diff and diff <= 300
+    0 <= diff and diff <= 600
   end
 
   def shield_enabled?(%__MODULE__{shield_expires_at: nil}) do
