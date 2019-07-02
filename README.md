@@ -12,4 +12,6 @@ This is an example how a bot for Star Trek Fleet Command (a game for iOS and And
 
 4. Ships and ship IDs are also hardcoded because this is an example and I'm lazy to generalize everything :).
 
+5. You can use Gigalixir to deploy it so that it runs 24/7. Keep in mind that it's not possible to log in from two devices so you would need to pause bot every time you want to log in.
+
 Have fun.
