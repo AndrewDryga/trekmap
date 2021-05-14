@@ -2,6 +2,10 @@
 
 This is an example how a bot for Star Trek Fleet Command (a game for iOS and Android) can look like. It's provided only for EDUCATIONAL purposes DO NOT USE IT WITH REAL GAME or your account would be banned.
 
+It was tested 2 years ago when with some investment (refunded later rebating in-app purchase via Apple because game is buggy) allowed to dominate over entire server.
+
+The code is not clean, it's built pretty ad-hoc to in-game situation.
+
 ## How to make it run?
 
 1. Example includes inactive account and server data for one of STFC servers in Asia, they need to be replaced. [Authentication requests with your tokens can be recorded with Charles proxy](https://www.raywenderlich.com/1827524-charles-proxy-tutorial-for-ios). 
